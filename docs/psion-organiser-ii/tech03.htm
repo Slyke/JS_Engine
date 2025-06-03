@@ -1,0 +1,443 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 3 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech03.htm", "name": "Chapter 3" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 3</li>
+</ol>
+
+
+<PRE>                                 CHAPTER 3
+
+                            __________________
+                            POWER SUPPLY BOARD
+
+
+
+     _______
+<a id="p3.1">3.1</a>  GENERAL
+
+     The Power Supply Board controls power regulation and  distribution  to
+the  system,  and  also  carries signals from the System board to the three
+external device connectors and buzzer element.
+
+     Figure 3.1 is a schematic of the board circuit  diagram.   Connections
+through  to  the  slots  are  dealt  with  in  section  4, and this section
+concentrates on the power supply functions.
+
+     The board  has  been  designed  to  operate  under  a  wide  range  of
+conditions.   Supply  voltage  from the battery or external source may vary
+between 5.5 and 11 volts.   Regulated  supplies  are  required  at  current
+levels between 30 microamp and 170 milliamp in various operating states.
+
+
+
+     _________________________
+<a id="p3.2">3.2</a>  POWER SUPPLY REQUIREMENTS
+
+     The power supply provides five supply rails to various  parts  of  the
+system :-
+
+      -  The VCC1 rail supplies the  main  System  board  circuit,  and  is
+         required  at  all  times.   When  the  Organiser  is off this rail
+         supports the real-time clock and system  board  RAM,  and  a  rail
+         voltage  of  3-5  volts  is  required  with a load of typically 30
+         microamp.  When the Organiser is on, this rail must  be  regulated
+         to 5 volt +/- 5 percent under loads up to 25 mA.
+
+      -  The VCC2 rail supplies the system board LCD drivers.   It  is  not
+         required  when  the  Organiser  is  off,  and  when  on  should be
+         regulated to 5 volts +/- 5 percent with a load of typically 1 mA.
+
+      -  The V_LCD rail is the negative voltage rail for the  System  board
+         LCD.   It  is  not required when the Organiser is off, and when on
+         should be adjustable by the thumbwheel to provide a V_LCD  voltage
+         of  between +1.2 and -3 volts to set display contrast, with a load
+         of typically 100-200 microamp.
+
+      -  The SVCC rail supplies the external  slot  devices.   It  is  only
+         required  when  the  slots  need  to be active, and so is switched
+         under software control.  When on it should be regulated to 5 volts
+         +/- 5 percent with variable loads up to 170 mA.
+
+      -  The SVPP rail is a  secondary  rail  to  slots  1  and  2  of  the
+         Organiser.   It is only required when the slots need to be active,
+         and is switched with SVCC.  When on it is normally at a voltage of
+         4.5  volts,  but  when  programming  datapacks can be raised to 21
+         volts +/- 2 percent in a pulsed mode.
+
+
+     The power supply provides and switches these rails  under  control  of
+the  system  board,  from  a  battery  or external supply with a voltage of
+between 5.5 and 11 volts.
+
+     The main operating states are defined by the ON_B and PACON_B  signals
+from  the  system  board.   ON_B  is high when the Organiser is off, and is
+pulled low by  the  control  IC  to  switch  the  system  on.   PACON_B  is
+controlled  directly  by  software from the processor port 6, and is pulled
+low to switch the slot rails on.  The main operating states are  summarised
+in the following table :-
+
+       ON_B     PACON_B         VCC1    VCC2    V_LCD   SVCC    SVPP
+----------------------------------------------------------------------
+
+  1    high      high           3-5     off     off     off     off
+  2    low       high           5       5       -3-+1   off     off
+  3    low       low            5       5       -3-+1   5       4.5
+  4    low       low            5       5       -3-+1   5       21
+----------------------------------------------------------------------
+
+
+     In state 1, only the VCC1 rail is active, and total system load on the
+supply  rail is typically 40 microamp, made up of 30 microamp load from the
+system board and 10 microamp quiescent current in  the  power  supply  (i.e.
+power  required  by  the  power  supply  itself  in  order  to  perform its
+functions.).
+
+     In state 2, VCC1,VCC2 and V_LCD are active with VCC1  and  VCC2  fully
+regulated.   In  this state, total system power consumption is dependent on
+the processor operating mode.  If the processor is fully active and running
+code,  overall power consumption is typically 25 mA.  When the processor is
+in sleep mode, total power consumption is reduced to typically 4 mA.
+
+     In state 3, all rails are active with SVCC regulated to 5  volts,  and
+SVPP  at 4.5 volts.  Power consumption is dependent on the external devices
+plugged in,  but  without  any  devices  present  it  is  typically  25  mA
+internally since the processor is normally fully active in this state.  The
+power levels of each device type are listed in the relevant sections of the
+manual.
+
+     In state 4, the SVPP rail is raised to 21 volts.  This  is  a  special
+case  and  only  occurs  when  programming  datapacks,  in  a  pulsed  mode
+controlled by the PULSE,READY,ALARM and OE_B signals.
+
+
+
+     ____________
+<a id="p3.3">3.3</a>  SUPPLY RAILS
+
+     VB is the main system supply rail from which  all  regulated  supplies
+can  be derived.  This is available at the top slot VB pin, and hence power
+input to this pin can supply the whole system.  This rail should  be  at  a
+voltage  between  5.5  and  11  volts  for  proper  system  operation, when
+supplying up to 200 mA peak system loads.
+
+     The battery supplies the VB rail via the forward diode D1.  Where loss
+of  voltage  across  this  diode  would affect system performance, a direct
+connection to the relevant regulators is also made (TR6 and TR10).
+
+     The PP3 battery should be of a type with a low internal resistance  so
+that  it  can  supply  peak  system  loads  of 200 milliamp.  Two types are
+commonly used :-
+
+      -  The long-life alkaline type is not rechargeable and has a  typical
+         capacity of 400-500 mAh (milli-amp hours).
+
+      -  The nickel-cadmium type is rechargeable and has a typical capacity
+         of 100 mAh between charges.
+
+
+     For both types, a new battery will give an off-load voltage of  up  to
+10.5  volts,  decreasing  through  its  life  to  the minimum system supply
+voltage of 5.5 volts.
+
+
+
+     _______ _________
+<a id="p3.4">3.4</a>  STANDBY REGULATOR
+
+     The Standby regulator supplies power to the VCC1 rail  when  the  main
+system  regulators  are  shut down (i.e.  with ON_B high).  In this mode the
+System board drains typically 30  microamp  to  keep  the  real-time  clock
+running  and  to  retain  data.   The  VCC1 voltage in this state should be
+between 3 and 5  volts,  and  current  consumption  reduces  with  reducing
+voltage.
+
+     The standby regulator is formed from TR1,TR2,TR3,R2,R3, and  R4.   TR3
+is  a  pass transistor supplying current to VCC1 from the VB rail.  TR1 and
+TR3 are configured as a darlington pair, with base  current  supplied  from
+R2.   Without  any feedback this circuit would hold the VCC1 voltage at 1.2
+volts (two VB-E drops) below the VB rail.  Feedback is implemented  through
+TR2,  which switches on with approx.  5 volts on the base of TR3.  TR2 robs
+base current from TR1 and the circuit settles in this state,  holding  VCC1
+at nominally 4.5 volts.
+
+     The circuit is not a good regulator since it relies on  the  TR2  VB-E
+drop  as  its  feedback  reference.  Furthermore, its current capability is
+dependent on the VB voltage, since this defines the base current  available
+through  R2.   When  VB is lower than 6 volts, the VCC1 standby voltage may
+fall below its nominal value to compensate.  These effects  are  not  large
+enough to take it outside the 3-5 volt operating range.
+
+     The circuit has a low quiescent current, so that it is itself draining
+the minimum of power from the supply.  Under worst case conditions, with VB
+at 11 volts, the current drawn  by  the  regulator  would  be  approx.   10
+microamp,  split  equally  between  the  R3,R4  divider chain and collector
+current through TR2.
+
+     The C3 capacitor decouples  VCC1,  and  when  the  supply  is  removed
+supports  the  VCC1  rail  until the supply is re-connected.  The capacitor
+will hold VCC1 above 3 volts for 2-3 minutes in this case, but only if  the
+circuit is in standby mode during this time (i.e.  Organiser off).
+
+
+
+     ___________________
+<a id="p3.5">3.5</a>  VCC1/VCC2 REGULATOR
+
+     To switch the system into active mode, the control IC  on  the  System
+board  pulls  the  ON_B signal low.  When this happens, TR15 is switched on
+through its base resistor R23, and the VCC2 rail is powered on to a voltage
+of  VCC1  minus 0.2 volts (TR15 VC-E drop).  VCC2 powers the main regulator
+op-amp (OPA1) and the regulator  voltage  reference  (RD1),  and  the  main
+VCC1/VCC2  regulator  is  switched on.  In turn, this now supplies the VCC1
+rail and regulates it to 5 volts +/- 5 percent.  While the  main  regulator
+is  being  activated,  the  VCC1 and VCC2 rails are supported by C3 and the
+standby regulator.  In active  mode,  the  current  demand  from  the  main
+regulator is built up from three elements :-
+
+     1.  The System board requires up to 25 milliamp  from  VCC1  when  the
+         processor is fully active.
+
+     2.  The LCD drivers on the system board take approx.  1 milliamp  from
+         the VCC2 rail (supplied from VCC1 via TR15).
+
+     3.  The regulator op-amp and reference source take approx.  1  milliamp
+         from  the  VCC2  rail.   (this  is  effectively  the  power supply
+         quiescent current when in active mode).
+
+
+     The LM324 op-amp is  a  quad  device  having  four  individual  op-amp
+circuits.   These  are  used  in  various ways in the circuit.  The voltage
+reference diode (type 9491BJ) is a temperature-compensated  bandgap  device
+with  a  voltage  of 1.22 volts +/- 2 percent.  This voltage is used in all
+regulators as a feedback reference.
+
+     The VCC1/VCC2 regulator is formed  from  R5,R6,R7,R18,TR5,TR6,TR4  and
+the  op-amp  pins 8,9,10.  TR5 and TR6 are PNP pass transistors arranged in
+tandem, to supply the VCC1 rail from either VB or directly from VBAT.   PNP
+transistors  are  used  to  minimise the regulator drop-out voltage (i.e.  a
+VB-E drop is not lost as with NPN pass elements).  The  tandem  arrangement
+is  so  that  the  drop across D1 is not lost when the battery is the power
+source.  The regulator will operate from whichever is the higher of VB  and
+VBAT.   The  divider  chain  R5,R18,R6  monitors  the  VCC1 voltage, and is
+arranged so that 1.22 volts is present at the op-amp input when VCC1  is  5
+volts.   The  op-amp compares this to the reference voltage, and its output
+controls the pass transistors via TR4.  R7 limits the pass transistor  base
+current.   If  VCC1  is lower than 5 volts, then TR4 is switched on to draw
+more current through the pass transistor.  Conversely, if  VCC1  is  higher
+than  5  volts, TR4 is switched off.  In practice, the circuit settles at a
+VCC1 of 5 volts supplying a current equal to the demand.
+
+     The regulator functions down to  a  supply  voltage  of  approx.   5.3
+volts.   Below this the VCC1 rail will follow the supply voltage at approx.
+0.3 volt below it.  In this case TR4 will be switched hard  on,  since  the
+op-amp  input  from  the divider chain will be below the reference voltage.
+At a point where VCC1 is approx.  2 percent  below  its  nominal  regulated
+voltage,  the  op-amp  section  pins 12,13,14 will switch to set the LOWBAT
+signal high to the System board.
+
+
+
+     ______________
+<a id="p3.6">3.6</a>  SVCC REGULATOR
+
+     The SVCC rail is used to supply external devices in the  three  slots.
+It  is switched on and off by the PACON_B signal from the system board, and
+when on, regulates to 5 volts +/- 5 percent.  It  also  supplies  the  SVPP
+rail  through  a  forward diode.  The load on the regulator is dependent on
+devices plugged in.  Maximum load is 170 mA, set essentially by the  rating
+of  the pass transistors, which is 1 watt.  For a worst case supply voltage
+of 11 volts and an output voltage of 5 volts, this rating is met  when  170
+mA is drawn.
+
+     The regulator design is similar to the VCC1/VCC2 regulator above.  TR9
+and  TR10  are  PNP pass transistors from the VB and VBAT rails.  R8 and R9
+form the feedback divider chain to the op-amp pin 6, and  are  compared  to
+the  reference  voltage.   TR7  controls  the  pass  transistors, with base
+current being limited by R10.
+
+     The PACON_B signal switches the regulator on and off.  When PACON_B is
+high,  TR8  is switched off and base current from the regulator is blocked.
+Note that in this state TR7 will be hard on since SVCC is  below  5  volts,
+but  nevertheless  no  base  current  is available to the pass transistors.
+When PACON_B is low, TR8 is switched on and the regulator can operate.   If
+there  is  no  load, (i.e.  no devices are plugged in) then the base current
+through the pass transistors will be minimal, and so the quiescent  current
+of this regulator is negligible.
+
+
+
+     _____
+<a id="p3.7">3.7</a>  V_LCD
+
+     V_LCD is the negative rail used by  the  LCD  drivers  on  the  System
+board.   It is adjusted by the thumbwheel variable resistor to set contrast
+on the display.  Current consumption is 100-300 microamp dependent  on  the
+voltage set, between +1.2 and -3 volts.
+
+     V_LCD is generated directly from the OSC signal from the system board.
+When  the Organiser is on, this gives a 1024 Hz square wave signal from the
+control IC.  R20 and the VR1 variable resistor limit the current, and  then
+drive  the series capacitor C8.  When OSC is high, charge is pushed from C8
+and is drained to ground through the forward diode of D3.   When  OSC  goes
+low,  charge  is pulled to C8 making the C8/D3 track negative.  The reverse
+diode of D3 transfers charge from the storage capacitor C1.  With no  load,
+the voltage at C1 would be the inverse of the OSC voltage less the D3 diode
+drop.  Note that the maximum positive voltage on the  V_LCD  rail  will  be
++1.2 volts, since it is tied to ground through the two diode drops of D3.
+
+     This form of voltage inverter is not precise and can only supply a low
+current.   In  this  application,  however,  the circuit is adjusted by the
+operator, and the voltage set is not important  as  long  as  the  contrast
+range is sufficient.
+
+
+
+     ____________
+<a id="p3.8">3.8</a>  VOLTAGE PUMP
+
+     The voltage pump is used by the  system  when  programming  datapacks.
+Two  stages are required to transfer the voltage required to the SVCC rail.
+Firstly the pump is used to charge up a  storage  capacitor  to  35  volts.
+This  is  then  regulated  to  21 volts and switched to the SVCC rail under
+program control.  The storage capacitor contains enough charge to programme
+an Eprom byte.  This sequence is repeated for each byte to be programmed.
+
+     The voltage pump is formed from  TR11,TR12,R16,R17,L1,D5,ZN1  and  C6.
+The inductor L1 is the energy transfer element and C6 is the charge storage
+capacitor.  Pumping is controlled by  the  PULSE  signal  from  the  System
+board,  and  the  zener  diode  ZN1  provides  feedback to the processor by
+setting the READY line high when C6 is charged sufficiently  for  the  next
+byte programming operation.
+
+     In steady-state conditions (before pump  operation),  the  PULSE  line
+will  be low, with the darlington pair TR11 and TR12 switched off.  C6 will
+be charged to the VB voltage, less a diode drop across D5.  The READY  line
+will  be  low  since  C6 is well below the 35 volt switching voltage.  Note
+also that TR14 should be off (i.e.  the 21 volt regulator  is  not  switched
+on) and so their is no load on the C6 rail.
+
+     To operate the pump, the processor enables the PULSE signal  from  the
+control  IC.   PULSE  then oscillates at 32768 Hz frequency.  When PULSE is
+high, TR11 and TR12 are switched on, with TR12 in saturation  bringing  its
+collector  voltage to 0.3 volts.  Current is now drawn through the inductor
+to  the  V=L <u>d</u>I/dt  law,  (where  V  is  the  voltage  across  the  inductor
+VB-Vcollector,  L is the 1 mH inductance and t is the time from Pulse being
+set high.).  After 15 microsec, PULSE goes low and TR12  is  switched  off.
+Current  continues to flow through the inductor, raising the voltage at the
+TR12 collector until it can flow  through  the  forward  diode  D5  to  the
+storage capacitor C6.  The inductor now discharges into the capacitor under
+its V=L <u>d</u>I/dt law (where V is now  the  reverse  voltage  between  the  TR12
+collector  and  VB,  set by the current C6 voltage plus the D5 diode drop).
+This process is repeated on every  cycle  of  PULSE,  and  the  C6  voltage
+steadily  rises.   When C6 reaches the zener voltage of 33 volts, it starts
+to pull the READY line up, and this will be seen as high by  the  processor
+when  a further 2 volts are added.  (During this sequence the ready line is
+pulled low by the 47k resistor from the ACOUT signal on the  System  board,
+so  leakage  through  the  zener  is  drained).  On reading ready high, the
+processor should disable PULSE and can proceed with programming a  datapack
+byte.
+
+
+
+     ______________
+<a id="p3.9">3.9</a>  SVPP REGULATOR
+
+     The SVPP regulator is  used  to  regulate  the  C6  storage  capacitor
+voltage to 21 volts and to switch this onto the SVPP rail to the slots.  It
+is only used during  datapack  programming  and  in  conjunction  with  the
+voltage pump above.
+
+     The regulator is  formed  from  TR13,TR14,R11,R12,R13,R14,D4  and  the
+op-amp section pins 1,2 and 3.  In operation it is similar to the VCC1/VCC2
+regulator, with the divider chain R11/R12 forming the feedback loop to  set
+the  op-amp  input  at  1.22  volts when the SVPP rail is at 21 volts.  The
+regulator is switched on and off by a combination of the PACON_B, OE_B  and
+ALARM  signals  from  the  system board.  To switch on, PACON_B must be low
+(i.e.  SVCC on), and both ALARM and OE_B must be high.  The software ensures
+that  this  condition  only arises when the SVPP regulator is required, and
+this imposes conditions on the  use  of  the  buzzer  when  the  slots  are
+switched  on.   If  PACON_B  is  high,  base  current  from  the  TR14 pass
+transistor is blocked by TR8.  If either ALARM or OE_B are  low,  then  the
+base  of  TR13  is pulled low to switch it off irrespective of the state of
+the op-amp output at pin1.  (When the Organiser is on, the op-amp output is
+normally  high  since  SVPP  is  normally lower than the 21 volt regulating
+voltage.)
+
+     When the regulator is switched  on,  it  draws  current  from  the  C6
+storage  capacitor,  and  the  voltage at C6 falls as it loses charge.  The
+capacitor has sufficient charge to  maintain  21  volts  at  the  regulator
+output  for  50  msec  under a SVPP load of 50 milliamp.  The software must
+limit switch-on time to this maximum, switch off the regulator and  re-pump
+the  capacitor  if it requires any further datapack bytes to be programmed.
+The SVPP rail can be in one of three states :-
+
+      -  OV if the PACON_B is high and the slots are switched off
+
+      -  4.5 volts when PACON_B is low, fed by the forward  diode  D2  from
+         the SVCC rail
+
+      -  21 volts when the SVPP regulator is switched on.
+
+
+
+      ________________
+<a id="p3.10">3.10</a>  REMOTE SWITCH ON
+
+     The AC_B signal from the top slot can be used to switch the  Organiser
+on.  The AC_B line is pulled high to VCC1 by the internal 47k resistor R24.
+If an external device pulls this input low, then TR16 is switched  on,  and
+the  AC signal to the system board goes high to switch the system on.  Note
+that this will only happen if the ON_B signal to the  emitter  of  TR16  is
+high  (i.e.   Organiser  off).   As soon as ON_B goes low, the AC_B input is
+disconnected an has no effect.
+
+
+
+      ______
+<a id="p3.11">3.11</a>  BUZZER
+
+     The piezoelectric buzzer element is driven from  the  ALARM  signal,
+through the 1k resistor R15.
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech02.htm">Ch. 2</a></li>
+<li class=navactive>Ch. 3</li>
+<li><a href="tech04.htm">Ch. 4</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

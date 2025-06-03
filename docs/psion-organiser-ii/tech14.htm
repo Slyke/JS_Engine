@@ -1,0 +1,474 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 14 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech14.htm", "name": "Chapter 14" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 14</li>
+</ol>
+
+
+<PRE>                                CHAPTER 14
+
+                                  ______
+                                  EDITOR
+
+
+
+There are two distinct editors in the operating system.  In OS itself,  the
+LANGUAGE  EDITOR  is used for editing OPL programs, and the LINE-EDITOR, is
+used in all other editing situations; the editors can however each be  used
+in a wide range of circumstances.  Both can be called by the programmer, so
+I will now give a basic outline  of  some  of  the  differences.   Detailed
+descriptions are given in sections <a href="#p14.1">14.1</a> and <a href="#p14.2">14.2</a> on system services.
+
+
+The line-editor is used for editing a maximum  of  255  characters  in  the
+editor buffer, RTT_BF.  Any text on the display prior to calling the editor
+will be treated as a prompt, with  the  text  that  is  editable  displayed
+directly  after  it.   If  required,  a string can be set up for editing by
+copying it into the editor buffer before calling the editor.
+
+
+The language editor can be used for editing any text files.  The amount  of
+text  that  can be edited is limited only by memory availability.  Free RAM
+is allocated to the editor as required.  An existing file can be loaded for
+editing in this memory.  A file can be saved with a block file type between
+$81 and $8F inclusive, as specified by the programmer (see  chapter  12  on
+file handling).  When exiting the editor, the user has the choice of
+
+     1.  translating an OPL program,
+
+     2.  saving the file,
+
+     3.  quitting, in which case everything typed in the editing session is
+         lost.
+
+Since any type of text file can be edited (not only  OPL  procedures),  the
+programmer can choose to <u>prevent</u> the option to translate the edited file.
+
+
+
+      ___________________________
+<a id="p14.1">14.1</a>  LINE-EDITOR SYSTEM SERVICES
+
+        _______
+<a id="p14.1.1">14.1.1</a>  ED$EPOS
+
+VECTOR NUMBER:          029
+INPUT PARAMETERS:       A register - Bit 0 clear for single-line editing.
+                                     Bit 0 set for multi-line editing.
+                                     Bit 7 clear for exit on MODE key.
+                                     Bit 7 set for <u>no</u> exit on MODE key.
+                        B register - Maximum input length.
+                        UTW_S0     - Position within line to start editing.
+OUTPUT VALUES:          B register - Terminating key.
+
+DESCRIPTION
+
+    This is the standard input line-editor.  The OPL EDIT command uses this
+    service.
+
+    A maximum of B characters may  be  edited.   There  are  two  modes  of
+    operation, multi-line and single-line editing.  With multi-line editing
+    the down arrow key starts a new line of text,  while  with  single-line
+    editing the up and down arrow keys send the cursor to the beginning and
+    end of the editable text respectively.  A new line  is  represented  in
+    the  editor  buffer  by  a  TAB  character  (ASCII  value 9).  Bit 0 of
+    register A is cleared for single-line and set for  multi-line  editing.
+    The  MODE  key causes the editor to exit only if <u>bit 7</u> of register A is
+    clear.
+
+    The characters displayed prior to calling the editor are treated  as  a
+    prompt.   Any  characters  in  the editor buffer RTT_BF are used as the
+    default  string  for  editing.   Since  a  TAB  in  the  editor  buffer
+    represents  a  new  line,  including  any  in  the  default  string  in
+    single-line mode produces unpredictable results.  The default string is
+    displayed   directly   after  the  prompt.   The  cursor  is  initially
+    positioned UTW_S0 characters beyond the end of the prompt in the  first
+    line  (UTW_S0  is  0  for  the first editable character).  If UTW_S0 is
+    greater than the length of the editable line, the cursor  goes  to  the
+    end  of  the  line.  After editing, the input is returned in the editor
+    buffer.  The terminating character is returned in the B register.
+
+    The editor is exited when the EXE key is pressed, or when the  ON/CLEAR
+    key  is pressed with an empty editor buffer.  When the editor buffer is
+    <u>not</u> empty, the ON/CLEAR key clears it and does not cause an  exit.  As
+    explained  above,  the programmer can also choose whether to allow exit
+    from the editor when the user presses the MODE key.
+
+EXAMPLE:
+
+    Displays the prompt "Code: " and inputs the code number in single-line
+    mode, preventing an exit on pressing MODE. The default code number is
+    "0235". The cursor is positioned at the end of the default string (as
+    one extra character is expected to be input by the user).
+
+; Display the prompt
+        OS      UT$DISP         ; Display the prompt
+        .BYTE   #D_FF           ; Clear screen (control character 12)
+        .ASCIZ  "Code: "
+; Set up editor buffer RTT_BF of length RTB_BL with default string
+        LDD     #$3032          ; A='0' and B='2'
+        STD     RTT_BF
+        LDD     #$3335          ; A='3' and B='5'
+        STD     RTT_BF+2
+        LDA     B,#4            ; Length of default
+        STA     B,RTB_BL
+;
+        INC     B               ; Maximum input of 5 characters
+        CLR     A
+        STD     UTW_S0:         ; Cursor at end of line initially
+        LDA     A,#80           ; Single-line edit, with no exit on MODE
+        OS      ED$EPOS
+
+ERRORS:                None.
+
+BUGS
+    In single-line mode, TABs in the default string will still  be  treated
+    as new-line markers but will not be handled predictably.
+
+
+
+        _______
+<a id="p14.1.2">14.1.2</a>  ED$EDIT
+
+VECTOR NUMBER:          028
+INPUT PARAMETERS:       A register - Bit 0 clear for single-line editing.
+                                     Bit 0 set for multi-line editing.
+                                     Bit 7 clear for exit on MODE key.
+                                     Bit 7 set for <u>no</u> exit on MODE key.
+                        B register - Maximum input length.
+OUTPUT VALUES:          B register - Terminating key.
+
+DESCRIPTION
+
+    Calls the line-editor service routine ED$EPOS  with  0  in  UTW_S0  for
+    positioning the cursor initially on the first editable character.
+
+    See ED$EPOS for a full description.
+
+EXAMPLE:
+
+    Input a name.
+
+; Display the prompt
+        OS      UT$DISP         ; Display the prompt
+        .BYTE   #DFF            ; Clear screen (control character 12)
+        .ASCIZ  "Name: "
+        CLR     RTB_BL          ; No default string
+        LDA     B,#8            ; Maximum input of 8 characters to input
+        CLR     A               ; Single-line edit, with exit on MODE
+        OS      ED$EDIT         ; Get the name
+        CMP     B,#K_MODE       ; Terminated with MODE key?
+        BEQ     1$
+        RTS
+1$:                             ; Here if MODE pressed to stop editing
+
+ERRORS:                 None.
+
+
+
+        _______
+<a id="p14.1.3">14.1.3</a>  ED$VIEW
+
+VECTOR NUMBER:          030
+INPUT PARAMETERS:       X register - 0 to continue viewing where it left
+                                     off last time called; non-zero for
+                                     1st view or to start again.
+                        UTW_S0     - Initial delay before scrolling (in
+                                     1/20 second units).
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    Allows the user to view the string  that  is  in  the  run-time  buffer
+    RTT_BF with length RTB_BL.  Called by the OPL VIEW function.
+
+    New lines are specified by TABs, and the up and down arrow keys control
+    the  line being scrolled.  Two spaces are displayed between the end and
+    beginning of any scrolling text.  The left and  right  arrow  keys  are
+    used  to  stop, start and change direction of scrolling.  Any other key
+    pressed is returned in the B register.
+
+    When called with a new string in RTT_BF (or when the display  has  been
+    used since the last call), the X register must be non-zero to view from
+    the beginning of the  text.   After  exiting  from  this  routine,  the
+    programmer  can  cause  the display to continue at the same place as it
+    last stopped, by calling it again with the X register set to 0.
+
+    UTW_S0 specifies the delay (in 1/20 second units) before a line  starts
+    scrolling.
+
+    The cursor is switched off during this routine  but  the  cursor  state
+    prior  to  the  call  is  maintained.   Corrupts  location DPB_CPOS the
+    current cursor position.
+
+EXAMPLE:
+
+    View the 3 lines in VIEW_BUFFER until the EXE key is pressed.
+
+VIEW_BUFFER:
+        .ASCII  "(Some interesting data)"
+        .BYTE   9                               ; TAB for new-line
+        .ASCII  "(End of data)"
+        .BYTE   9
+        .ASCII  "Press EXECUTE to continue"
+END_BUFFER:
+
+DO_VIEW:
+        LDD     #END_BUFFER-VIEW_BUFFER
+        STD     UTW_S0:                 ; Length of buffer to be copied
+        STA     B,RTBBL         ; Set up run time buffer's length
+        LDX     #VIEW_BUFFER            ; Source buffer
+        LDD     #RTT_BF                 ; Destination buffer
+        PSHX                            ; Save non-zero X
+        OS      UT$CPYB                 ; Copy VIEW_BUFFER to RTT_BF
+        PULX                            ; Restore non-zero X for 1st view
+LOOP:
+        LDD     #40
+        STD     UTW_S0:                 ; Wait 2 seconds before scrolling
+        OS      ED$VIEW
+        LDX     #0                      ; X=0 for subsequent views
+        CMP     B,#13                   ; EXE key pressed?
+        BNE     LOOP                    ; No, so loop
+        RTS
+
+ERRORS:                 None.
+
+BUGS
+    Calling initially with the X register equal to 0 produces unpredictable
+    results.
+
+
+
+      ________ ______ ______ ________
+<a id="p14.2">14.2</a>  LANGUAGE EDITOR SYSTEM SERVICES
+
+      _______
+<a id="p14.3">14.3</a>  LG$RLED
+
+VECTOR NUMBER:          078
+INPUT PARAMETERS:       None.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    Handles RUN, LIST, EDIT and DELETE commands in the  top  level  PROGRAM
+    menu.   LIST,  EDIT  and DELETE can operate on any text file, while RUN
+    operates on OPL procedures only.  The name of the file to  be  operated
+    on must be in the find buffer RTT_FF with length RTB_FL.  The file must
+    exist or an error message will be displayed - <u>new</u> files can be  created
+    and edited using the service LG$NEWP.
+
+    The system variable TLB_MODE must be set by the programmer  to  control
+    which of the top level commands is performed.  The appropriate settings
+    are 1) EDIT         3
+    2) LIST             4
+    3) RUN              7
+    4) DELETE   8
+
+    The standard input language editor can be used  for  editing  any  text
+    files  (with  size  limited  only by memory availability).  The file is
+    loaded into RAM specially allocated to the language editor.  An  edited
+    file can be saved with a block file type between $82 and $8F inclusive,
+    as specified by the programmer in the  system  variable  LGB_LANT  (see
+    chapter  12  on  file handling).  The types from $81 to $84 are already
+    used for specialised file types.
+             $82                block file  - saved DIARY
+             $83                block file  - OPL procedure
+             $84                block file  - saved RS232 setup
+
+    <u>Users wishing to use any of the remaining block file types $85  to  $8F
+    should  first  contact  Psion, to avoid incompatibility with any future
+    products.</u>
+
+    The system variable LGB_LANT must be set to  the  required  block  file
+    type for all the operations handled by LG$RLED.
+
+    When exiting the editor, the user has the choice of
+
+    1.  translating an OPL program,
+
+    2.  saving the file,
+
+    3.  quitting, in which case everything typed in the editing session  is
+        lost.
+
+    Since any type of text file can be edited (not  only  OPL  files),  the
+    programmer  can  choose  to  <u>prevent</u> the option to translate the edited
+    file, by setting the system variable LGB_MENU to  any  non-zero  value.
+    Attempting  to  translate  a  non-OPL file will simply produce an error
+    message.
+
+    The language editor differs from the line-editor (ED$EPOS) in  the  use
+    of cursor and control keys.
+
+    1.  The ON/CLEAR key deletes only  the  current  line  (not  the  whole
+        record).
+
+    2.  The down arrow key moves the cursor one line down  the  file.   (It
+        does not create a new line).
+
+    3.  The EXE key creates a new line.  (It does not exit the editor).
+
+    4.  A line can be split in two using the EXE key.
+
+
+EXAMPLE:
+
+    Allows the editing of the non-OPL (type $8F) text file named "P".
+
+        LDD     #256+^A/P/      ; A=1, B='P'
+        STD     RTB_FL          ; FIND buffer contains 'P'
+        LDD     #$8F01          ; Block file type and also no translate
+        STD     LGB_LANT        ; Set LGB_LANT and LGB_MENU which are in
+                                ;   consecutive bytes in memory
+        LDA     A,#3
+        STA     B,TLB_MODE:     ; Edit mode for LG$RLED
+        OS      LG$RLED
+
+ERRORS:                 None.
+
+
+
+      _______
+<a id="p14.4">14.4</a>  LG$NEWP
+
+VECTOR NUMBER:          077
+INPUT PARAMETERS:       None.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    Calls the language editor to create a new file.
+
+    This is identical to LG$RLED when  it  is  operating  in  editing  mode
+    except that the file to be edited is created.
+
+    See LG$RLED.
+
+EXAMPLE:
+
+    Creates the OPL file "Q" and lets the user edit and translate it.
+
+        LDD     #256+A/Q/       ; A=1, B='Q'
+        STD     RTB_FL          ; FIND buffer contains 'Q'
+        LDD     #$8300          ; OPL block file type and allow translation
+        STD     LGB_LANT        ; Set LGB_LANT and LGB_MENU which are in
+                                ;   consecutive bytes in memory
+        OS      LG$NEWP
+
+ERRORS:                 None.
+
+
+
+      _______
+<a id="p14.5">14.5</a>  TL$XXMD
+
+VECTOR NUMBER:          104
+INPUT PARAMETERS:       A register - Bit 0 clear for single-line editing.
+                                     Bit 0 set for multi-line editing.
+                        B register - Maximum input length.
+                        X register - Addr of prompt excluding " D:"
+                                        (leading count byte string)
+OUTPUT VALUES:          Carry flag - Set if ON/CLEAR pressed.
+
+DESCRIPTION
+
+    Typically used to edit a filename, with the  MODE  key  being  used  to
+    select a PACK as in "FIND A:".
+
+    TL$XXMD clears the screen, prints a leading  count  byte  string  at  X
+    followed  by  a  space,  a  device  letter 'A' to 'C' and a colon.  The
+    system service ED$EDIT is then called to edit a line of text, typically
+    a  file  name.   ED$EDIT  will edit text in the form of a leading count
+    byte string at RTB_BL.  The A and B registers are saved at the start of
+    TL$XXMD  and  passed  to ED$EDIT.  The A register will usually be zero,
+    indicating single line editing and that ED$EDIT should  exit  when  the
+    MODE key is pressed.  B is the maximum input length.
+
+    The device letter is determined  by  TLB_CPAK.   If  the  MODE  key  is
+    pressed,  the  device  letter  displays  the  next  available pack, and
+    TLB_CPAK is set appropriately.  TL$XXMD  returns  when  either  EXE  or
+    ON/CLEAR  is  pressed.   If  EXE  was pressed to exit from TL$XXMD, the
+    carry is returned clear.  If ON/CLEAR is pressed, the carry is set, but
+    the  B  register  is undefined.  On exit the device selected is held in
+    TLB_CPAK.
+
+    See section <a href="#p14.1.2">14.1.2</a> ED$EDIT.
+
+    NOTE :  TL$XXMD will not work if bit 7 of A is set since  this  ED$EDIT
+    will not exit when MODE is pressed.
+
+    ERRORS
+
+        carry is set if ON/CLEAR pressed, but B is undefined
+
+    EXAMPLE
+
+    ;   TO INPUT A FILE NAME, STORE IT AS A LEADING COUNT BYTE STRING AT
+    ;   FILE_NAME IN THE FORM "D:NNNNNNNN"
+
+                CLR     RTB_BL          ; NO PREVIOUS NAME IN EDITOR WORK AREA
+    1$: LDX     #PROMPT
+        LDD     #8              ; A=0, B=MAX INPUT LENGTH
+        OS      TL$XXMD
+        BCS     ON_CLEAR_PRESSED
+
+        LDD     #^A/A:/         ; MAKE INTO THE FORM "A:NNNN"
+        ADD     A,TLB_CPAK:     ; A = TLB_CPAK+'A'
+        STD     FILE_NAME+1
+        LDA     B,RTB_BL        ; GET LENGTH OF EDITED TEXT
+        BEQ     1$              ; IF ZERO LENGTH, TRY AGAIN
+
+    ;   COPY TO DESTINATION
+
+        CLR     A
+        STD     UTW_S0:         ; NUMBER OF BYTES TO COPY
+        ADD     B,#2            ; TWO MORE INCLUDING "A:"
+        STA     B,FILE_NAME     ; STORE NEW LENGTH BYTE
+        LDX     #RTT_BF         ; COPY FROM EDITOR WORK AREA
+        LDD     #FILE_NAME+3
+        OS      UT$CPYB
+
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech13.htm">Ch. 13</a></li>
+<li class=navactive>Ch. 14</li>
+<li><a href="tech15.htm">Ch. 15</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

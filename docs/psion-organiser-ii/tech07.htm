@@ -1,0 +1,1533 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 7 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech07.htm", "name": "Chapter 7" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 7</li>
+</ol>
+
+
+<PRE>                                 CHAPTER 7
+
+                                 ________
+                                 KEYBOARD
+
+
+
+The keyboard consists of 36  keys  which  are  polled  on  interrupt  at  a
+variable  interval,  initially  set  to  50ms.   The  keys auto-repeat at a
+variable rate and key presses are  stored  in  a  16  character  type-ahead
+buffer.   The  keyboard look-up table, the polling, the key translation and
+the shift status can all be altered through the use of the keyboard vectors
+and  variables.  The SHIFT key can be disabled and the keys for CAP and NUM
+can be changed.
+
+The keyboard interrupts also control alarm checking and display timing, and
+increment a frame counter.
+
+While testing for a key, the datapacks or the machine itself may switch off
+and a low battery test is made.
+
+
+
+     ______________________
+<a id="p7.1">7.1</a>  OPERATING THE KEYBOARD
+
+The keyboard consists of a 6 by 6 matrix of keys, diagrammed below.
+
+    |---------|---------|---------|---------|---------|---------|
+    |  clear  |         |   cap   |   num   |         |         |
+                             |         |         -         -
+    |  [ ON ] |  [MODE] |  [ ^ ]  |  [ v ]  |  [ &lt; ]  |  [ &gt; ]  |
+    |---------|---------|---------|---------|---------|---------|
+    |    &lt;    |    &gt;    |    (    |    )    |    %    |    /    |
+    |  [ A ]  |  [ B ]  |  [ C ]  |  [ D ]  |  [ E ]  |  [ F ]  |
+    |---------|---------*******************************---------|
+    |    =    |    "    *    7    |    8    |    9    *    *    |
+    |  [ G ]  |  [ H ]  *  [ I ]  |  [ J ]  |  [ K ]  *  [ L ]  |
+    |---------|---------*---------|---------|---------*---------|
+    |    ,    |    $    *    4    |    5    |    6    *    -    |
+    |  [ M ]  |  [ N ]  *  [ O ]  |  [ P ]  |  [ Q ]  *  [ R ]  |
+    |---------|---------*---------|---------|---------*---------|
+    |    ;    |    :    *    1    |    2    |    3    *    +    |
+    |  [ S ]  |  [ T ]  *  [ U ]  |  [ V ]  |  [ W ]  *  [ X ]  |
+    |---------|---------*---------|---------***********---------|
+    |         |         *    0    |    .    *         |         |
+    | [SHIFT] |  [DEL]  *  [ Y ]  |  [ Z ]  * [SPACE] |  [EXE]  |
+    |---------|---------*********************---------|---------|
+
+The  letter  keys  normally  produce  upper-case  letters  and  return  the
+corresponding  ascii value.  By holding down the SHIFT key and pressing one
+of the letters you can access the symbols  and  numbers  marked  above  the
+keys.
+
+To select lower-case letters, hold down the SHIFT key  and  press  the  CAP
+key.  Repeat this to return the keyboard to upper-case mode.
+
+Pressing the SHIFT and NUM keys, puts you permanently in  'shift'  mode  so
+that the function of the SHIFT key is now reversed.  The functions of SHIFT
+NUM, SHIFT CAP and SHIFT DEL, however,  are  not  affected.   (DEL  deletes
+characters to the left and SHIFT DEL deletes characters from the right)
+
+The top row of keys and some on the bottom row  are  special.   These  keys
+return the following values:
+
+                KEY             VALUE
+                ---             -----
+                ON/CLEAR          1
+                MODE              2
+                |
+                ^                 3
+                |
+                v                 4
+                -
+                &lt;                 5
+                -
+                &gt;                 6
+                SHIFT DEL         7
+                DEL               8
+                EXE               13
+
+The SHIFT key, the CAP key and  the  NUM  key  do  not  return  values  but
+immediately carry out their function.
+
+
+
+     _________________
+<a id="p7.2">7.2</a>  KEYBOARD SCANNING
+
+The ON/CLEAR key is polled independently of the others.  The  remaining  35
+keys are polled on a 5 by 7 matrix.
+
+
+
+       ________________
+<a id="p7.2.1">7.2.1</a>  THE ON/CLEAR KEY
+
+Testing for the ON/CLEAR key is done by reading bit 7 of  port  5  (address
+$15).   If the key is pressed, bit 7 will be set, otherwise bit 7 is clear.
+Hence, the ON/CLEAR key can be  tested  directly  and  very  quickly.   The
+following routine waits for it to be pressed:
+
+
+TESTKEY:
+        LDA     A,POB_PORT5:    ;READ ADDRESS $15
+        BPL     TESTKEY         ;BRANCH IF BIT 7 IS CLEAR
+
+
+In some applications it is necessary to protect against 'key bounce' and it
+is  recommended  that a delay of approximately 50ms is used.  The following
+routine waits for the ON/CLEAR key to be released and then pauses for 50ms:
+
+DEBOUNCE:
+        LDA     A,POB_PORT5:    ;READ ADDRESS $15
+        BMI     DEBOUNCE        ;BRANCH IF BIT 7 IS SET
+        LDX     #11600          ;FOR DELAY OF 50MS
+1$:     DEX
+        BNE     1$
+
+Note that if keyboard  interrupts  are  enabled  while  running  the  above
+procedure, holding down the ON/CLEAR key will fill up the keyboard buffer.
+
+A system service, KB$BREK, is provided to  test  if  the  ON/CLEAR  key  is
+pressed or if an ON/CLEAR key is in the keyboard buffer.
+
+
+
+       ______________
+<a id="p7.2.2">7.2.2</a>  THE KEY MATRIX
+
+The key matrix consists of 7 columns, controlled  by  the  SEMI-CUSTOM-CHIP
+'COUNTER',  and  5  rows  which can be read as bits 2 to 6 of PORT 5.  (The
+ON/CLEAR key uses bit 7).  The layout is as follows:
+
+                                        COUNTER
+                                        ~~~~~~~
+                K2       K3       K4       K7       K5       K6       K1
+
+                v        v        v        v        v        v        v
+                |        |        |        |        |        |        |
+                             |        |        -        -
+PORT 5          |  MDE   |   ^    |   v    |   &lt;    |   &gt;    |        |
+~~~~~~          |  ===   |  ===   |  ===   |  ===   |  ===   |        |
+                |  | |   |  | |   |  | |   |  | |   |  | |   |        |
+                |  | +---|--|-+---|--|-+---|--|-+---|--|-+---|--------+
+             A  |  |  B  |  |  C  |  |  D  |  |  E  |  |  F  |
+            === |  | === |  | === |  | === |  | === |  | === |
+            | +-+  | | +-+  | | +-+  | | +-+  | | +-+  | | +-+
+  6   &lt;-----+---|--|-+---|--|-+---|--|-+---|--|-+---|--+-+   |
+             G  |  |  H  |  |  I  |  |  J  |  |  K  |     L  |
+            === |  | === |  | === |  | === |  | === |    === |
+            | +-+  | | +-+  | | +-+  | | +-+  | | +-+    | +-+
+  5   &lt;-----+---|--|-+---|--|-+---|--|-+---|--+-+---|----+   |
+             M  |  |  N  |  |  O  |  |  P  |     Q  |     R  |
+            === |  | === |  | === |  | === |    === |    === |
+            | +-+  | | +-+  | | +-+  | | +-+    | +-+    | +-+
+  4   &lt;-----+---|--|-+---|--|-+---|--+-+---|----+---|----+   |
+             S  |  |  T  |  |  U  |     V  |     W  |     X  |
+            === |  | === |  | === |    === |    === |    === |
+            | +-+  | | +-+  | | +-+    | +-+    | +-+    | +-+
+  3   &lt;-----+---|--|-+---|--+-+---|----+---|----+---|----+   |
+            SHF |  | DEL |     Y  |     Z  |    SPC |    EXE |
+            === |  | === |    === |    === |    === |    === |
+            | +-+  | | +-+    | +-+    | +-+    | +-+    | +-+
+  2   &lt;-----+---|--+-+---|----+---|----+---|----+---|----+
+
+
+To control the COUNTER lines, there are two significant addresses:
+
+     1.  SCA_COUNTERRESET (address $300) - sets all lines to zero.
+
+     2.  SCA_COUNTERCLOCK (address $340) - increments  COUNTER  address  by
+         one.
+
+
+To carry out these functions,  simply  read  or  write  to  the  respective
+address.   The following will set the contents of the counter to $3F, i.e. K1
+to K6 high and K7 low:
+
+        TST     SCA_COUNTERRESET        ;SET COUNTER TO ZERO
+        LDA     A,#$3F
+1$:     TST     SCA_COUNTERCLOCK        ;INCREMENT COUNTER
+        DEC     A
+        BNE     1$
+
+When a key is pressed, a connection is made from one of K1 to K7 to one  of
+the  PORT  5 lines.  The lines on PORT 5 are pulled high, so by setting one
+of K1 to K7 low, a specific key press can be detected.  For example, if  K7
+only is low, the 'D' key can be detected by bit 6 of PORT 5 going low.
+
+Polling the entire keyboard involves setting each of K1 to K7 low in  turn,
+reading  PORT  5,  and  decoding  the  key.   By  setting  all  7 lines low
+simultaneously, a quick check for any  key  can  be  made.   The  following
+routine will test for any key press:
+
+        TST     SCA_COUNTERRESET        ;SET K1 TO K7 LOW
+        LDA     A,POB_PORT5:            ;READ PORT 5
+        BMI     CLRKEY                  ;BRANCH IF ON/CLEAR KEY IS PRESSED
+        AND     A,#$7C                  ;IGNORE BITS 7,1 AND 0
+        CMP     A,#$7C                  ;CHECK IF ANY BIT IS LOW
+        BNE     AKEY                    ;BRANCH IF KEY PRESS DETECTED
+
+The method of keyboard scanning is explained in the next section.
+
+
+
+       ____________
+<a id="p7.2.3">7.2.3</a>  KEY SCANNING
+
+     The keyboard is scanned as fast as possible using the routine  pointed
+to  by  the  ram  vector  BTA_POLL.   For maximum efficiency, the following
+method is used:
+
+     1.  Check if ON/CLEAR key is pressed and exit if it is.
+
+     2.  Check quickly if any other key is pressed and exit if not.
+
+     3.  Determine which key is pressed and check if the SHIFT key is  also
+         pressed.
+
+
+Steps 1 and 2 are described in sections <a href="#p7.2.1">7.2.1</a> and <a href="#p7.2.2">7.2.2</a>.  Step  3  involves
+setting  each of the SEMI-CUSTOM-CHIP COUNTER lines (K1 to K7) low in turn.
+This is done most efficiently by setting K7 low first then K6 down to K1:
+
+
+K7      K6      K5      K4      K3      K2      K1      COUNTER VALUE
+
+0       1       1       1       1       1       1            $3F
+1       0       1       1       1       1       1            $5F
+1       1       0       1       1       1       1            $6F
+1       1       1       0       1       1       1            $77
+1       1       1       1       0       1       1            $7B
+1       1       1       1       1       0       1            $7D
+1       1       1       1       1       1       0            $7E
+
+The following code will set the values $3F,$5F...  etc on the COUNTER:
+
+        TST     SCA_COUNTERRESET        ;READ ADDRESS $300 TO ZERO COUNTER
+        LDA     B,#$40
+        PSH     B
+        DEC     B                       ;INITIAL VALUE $3F
+        BRA     CLOCKB
+NEXTCOL:
+        PSH     B
+CLOCKB:
+        TST     SCA_COUNTERCLOCK        ;READ ADDRESS $340 TO INC COUNTER
+        DEC     B                       ;DO IT B TIMES
+        BNE     CLOCKB
+        BSR     READPORT5               ;READ PORT 5 HERE AND DECODE KEY
+        PUL     B
+        LSR     B
+        BNE     NEXTCOL                 ;REPEAT FOR COLUMNS K7 to K1
+
+The SHIFT key is in column K2 so scanning of the  keyboard  must  continue,
+even after one key has been found, to check if SHIFT is also pressed.
+
+This method results in the following approximate keyboard scan times:
+
+        KEYBOARD STATE                  TIME TAKEN TO SCAN KEYBOARD
+        ==============                  ===========================
+        NO KEY PRESSED                            0.3ms
+        ON/CLEAR KEY PRESSED                      0.2ms
+        ANY OTHER KEY PRESSED                     1.9ms
+
+Note that the time taken for the entire keyboard interrupt may be increased
+by one or more of the following:
+
+     1.  The variable key click, 1ms by default
+
+     2.  The 'buffer-full' beep which lasts 10ms.
+
+     3.  Alarm checking and/or ringing which may last up to 2  mins.   (see
+         section <a href="tech19.htm#p19.3">19.3</a>)
+
+
+
+
+     ___________________
+<a id="p7.3">7.3</a>  KEYBOARD INTERRUPTS
+
+     The keyboard scanning routine is called at regular intervals  from  an
+interrupt  generated by the processors's TIMER 1 counter.  This is a 16 bit
+FREE RUNNING COUNTER (FRC) (address $09,$0A) incremented by  the  processor
+clock.
+
+The interrupt is generated when the value in the FRC matches a value set up
+in  the TIMER 1 OUTPUT COMPARE REGISTER 1 (address $0B,$0C) and is directed
+to the address contained in the rom  at  address  $FFF4.   The  ram  vector
+BTA_OCI is then used to jump to the interrupt service routine, i.e.:
+
+        LDX     BTA_OCI
+        JMP     0,X
+
+The code in the interrupt service routine handles the following:
+
+     1.  Polling the keyboard using a routine at BTA_POLL
+
+     2.  Translating any key found using a routine at BTA_TRAN
+
+     3.  Producing a key 'click'
+
+     4.  Checking for alarms
+
+     5.  Incrementing a frame-counter
+
+     6.  Decrementing a display-timer
+
+
+
+
+       ____________
+<a id="p7.3.1">7.3.1</a>  INITIALISING
+
+     Keyboard interrupts are fully initialised  on  a  cold  start  of  the
+machine  only,  using  the  system  service  KB$INIT.   When each interrupt
+occurs, the first task is to set up the FREE  RUNNING  COUNTER  and  OUTPUT
+COMPARE REGISTER for the next interrupt, i.e.:
+
+        LDA     A,POB_TCSR1:    ;MUST BE READ SO THAT A SUBSEQUENT WRITE TO
+        CLR     A               ; - OCR1 WILL CLEAR THE OUTPUT COMPARE FLAG
+        CLR     B               ; - SEE ACCOMPANYING 6301 BOOK
+        STD     POW_FRC:        ;RESET FREE RUNNING COUNTER TO ZERO
+        LDD     KBW_TDEL:       ;GET VALUE FOR KEYBOARD INTERRUPT RATE
+        STD     POW_OCR1:       ;SET OUTPUT COMPARE REGISTER
+
+
+When the machine switches off, the value in TIMER CONTROL STATUS REGISTER 1
+and  the state of the INTERRUPT MASK are saved so that on a warm start they
+can be restored.  Also, the keyboard buffer is  flushed  on  a  warm  start
+using system service KB$FLSH.
+
+
+
+       _______
+<a id="p7.3.2">7.3.2</a>  POLLING
+
+     The routine to poll the keyboard is  called  through  the  ram  vector
+BTA_POLL.   The function of this routine is to scan the keyboard and return
+the key pressed in the A register and to set  any  flags  required  by  the
+translating routine at ram vector BTA_TRAN.  The following code can be used
+to poll the keyboard and will return the key pressed in the A register as a
+value between 0 and 36 (0 means no key):
+
+KB_POLL:
+        TST     SCA_COUNTERRESET        ;SET COUNTER TO ZERO
+        AIM     #&lt;$FF-KY_SHFT&gt;,KBB_STAT:        ;NO SHIFT KEY YET
+        LDA     B,POB_PORT5:            ;TEST FOR ON/CLEAR KEY
+        BPL     NOTCLR                  ;BRANCH IF NOT PRESSED
+        LDA     A,#36                   ;36 REPRESENTS THE ON/CLEAR KEY
+        RTS
+
+NOTCLR:
+        CLR     A                       ;NO KEY YET
+        STA     A,KBB_KNUM:             ;KEY NUMBER BECOMES 0
+        PSH     A                       ;PSH 0
+        BSR     LOOKKEY                 ;ANY KEY IS PRESSED? SETS Z IF NOT
+        PUL     A                       ;DOES NOT AFFECT Z FLAG
+        BEQ     ENDKYBD                 ;BRANCH IF NO KEY FOUND IN LOOKKEY
+        LDA     B,#$40
+        PSH     B
+        DEC     B
+        BRA     CLOCKB
+
+NEXTCOL:
+        PSH     B
+CLOCKB:
+        PSH     A
+1$:     TST     SCA_COUNTERCLOCK        ;READ ADDRESS $340 TO INC COUNTER
+        DEC     B                       ;DO IT B TIMES
+        BNE     1$
+        BSR     LOOKKEY                 ;SETS B TO ROW NUMBER, IF KEY FOUND
+        PUL     A                       ;IN THIS COLUMN
+        BEQ     NOPSH                   ;BRANCH IF NO KEY IN THIS COLUMN
+        ADD     B,KBB_KNUM:             ;GOT A KEY BUT MUST CONTINUE,
+        TBA                             ;TO CHECK IF SHIFT IS ALSO PRESSED
+NOPSH:  LDA     B,KBB_KNUM:
+        ADD     B,#5
+        STA     B,KBB_KNUM:             ;POINT TO NEXT COLUMN
+        PUL     B
+        LSR     B                       ;SELECT NEXT COLUMN
+        BNE     NEXTCOL
+ENDKYBD:
+        RTS
+
+
+
+LOOKKEY:
+                ;SETS B TO ROW NUMBER (1-5) OF KEY IN CURRENT COLUMN
+                ;B WILL BE ZERO IF NO KEY IN THIS COLUMN (OR JUST SHIFT)
+                ;SETS KY_SHFT FLAG IF SHIFT IS PRESSED
+                ;SETS Z ON B
+                ;PRESERVES X
+
+        LDA     B,#5            ;CHECK 5 ROWS
+        LDA     A,POB_PORT5:    ;READ PORT 5
+        ASL     A               ;IGNORE BIT 7
+NEXTROW:ASL     A               ;ROTATE KEY INTO CARRY, CLR IF KEY PRESSED
+        BCC     GOTKEY          ;BRANCH IF KEY PRESS DETECTED
+        DEC     B
+        BNE     NEXTROW         ;CHECK NEXT ROW
+        RTS                     ;RETURN WITH B=0 IF NO KEY FOUND
+
+GOTKEY:                         ;B IS POSITION IN ROW
+        TST     KBB_SHFK        ;TEST SHIFT ENABLE FLAG
+        BNE     11$             ;EXIT IF SHIFT DISABLED, B IS NOT ZERO
+        PSH     A
+        LDA     A,KBB_KNUM:     ;GET CURRENT KEY NUMBER
+        CMP     A,#25           ;IS IT 6TH COLUMN, CONTAINING SHIFT KEY?
+        PUL     A
+        BNE     11$             ;EXIT IF NOT, B IS NOT ZERO
+        DEC     B               ;COMPARE B WITH ROW 1 (ROW WITH SHIFT KEY)
+        BEQ     10$             ;BRANCH IF THIS IS THE SHIFT KEY (B IS 0)
+
+        PSH     B               ;ELSE CHECK IF SHIFT ALSO PRESSED
+1$:     ASL     A
+        DEC     B
+        BNE     1$
+        PUL     B
+        INC     B               ;RESTORE B TO REAL KEY PRESSED
+        BCS     11$             ;BRANCH IF C SET (FROM ASL A)
+
+10$:    OIM     #KY_SHFT,KBB_STAT:      ;SET SHIFT-PRESSED FLAG
+        TST     B                       ;SET Z FLAG ON B
+11$:    RTS
+
+The auto-repeat of the  keys  is  accomplished  using  KBB_PREV,  KBB_DLAY,
+KBB_REPT and KBB_CNTR in the following manner:
+
+        LDX     BTA_POLL                ;POLL KEYBOARD (SEE ABOVE)
+        JSR     0,X                     ;RETURN KEY PRESS IN A
+        CMP     A,KBB_PREV:             ;IS SAME KEY STILL PRESSED ?
+        BEQ     1$                      ;BRANCH IF YES
+        STA     A,KBB_PREV:             ;SAVE NEW KEY
+        LDA     B,KBB_DLAY:             ;DELAY BEFORE AUTO-REPEATING BEGINS
+        BRA     2$
+
+1$:     LDA     B,KBB_REPT:             ;DELAY BETWEEN KEYS DURING REPEAT
+        TST     KBB_CNTR                ;TEST DELAY COUNTER
+        BEQ     2$                      ;BRANCH IF TIME TO RETURN KEY
+        LDA     B,KBB_CNTR:
+        DEC     B                       ;TO DECREMENT DELAY COUNTER
+        CLR     A                       ;NO KEY UNTIL COUNTER IS ZERO
+
+2$:     STA     B,KBB_CNTR:             ;SET DELAY COUNTER
+        LDX     BTA_TRAN
+        JSR     0,X                     ;TRANSLATE KEY IN A REGISTER
+
+        TIM     #KY_CPNM,KBB_STAT:      ;IS IT CAP OR NUM.
+        BNE     DOCLICK                 ;IF SO, JUST EMIT KEY CLICK
+
+        TST     A                       ;TEST IF KEY PRESSED
+        BEQ     END                     ;END OF INTERRUPT IF NOT
+
+                ;INSERT KEY INTO BUFFER - SEE SECTION <a href="#p7.3.4">7.3.4</a>.
+DOCLICK:
+                ;EMIT KEY CLICK         - SEE SECTION <a href="#p7.3.5">7.3.5</a>.
+
+END:    RTI                             ;RETURN FROM INTERRUPT
+
+
+
+
+       ___________
+<a id="p7.3.3">7.3.3</a>  TRANSLATING
+
+     The ram vector BTA_TRAN points to the routine used  to  translate  the
+key  returned  from BTA_POLL.  The function of this routine is to translate
+the key number passed in the A register into an ascii character and  return
+it in the A register.
+
+The following code can be used to translate a key number (0 to 36) into the
+ascii  key  it  represents  on the standard Organiser.  It uses KBB_STAT to
+decide whether 'shifted' characters, or lower-case characters are  returned
+and  also  to  refresh the cursor in the correct state (block or line).  If
+the key pressed is SHIFT CAP or SHIFT NUM, no key is returned (i.e.   the  A
+register is 0) but the KY_CPNM flag is set.
+
+KB_TRAN:
+        LDA     B,KBB_STAT:             ;GET KEYBOARD STATUS FLAGS
+        AND     B,#&lt;$FF-KY_CPNM&gt;        ;CLEAR CAP/NUM FLAG
+        BPL     3$                      ;BRANCH IF NOT SHIFT, NOT CAP OR NUM
+        CMP     A,KBB_CAPK              ;IS IT THE CAP KEY ?
+        BNE     1$                      ;BRANCH IF NOT
+        EOR     B,#KY_CAPS              ;TOGGLE CAPS FLAG
+        BRA     2$
+1$:     CMP     A,KBB_NUMK              ;IS IT THE NUM KEY ?
+        BNE     3$                      ;BRANCH IF NOT
+        EOR     B,#KY_NUMB              ;TOGGLE NUM FLAG
+2$:     ORA     B,#KY_CPNM              ;SET CAP/NUM FLAG
+        CLR     A                       ;RETURN NO KEY
+
+3$:     PSH     A                       ;SAVE KEY PRESSED
+        OS      KB$STAT                 ;SET KEYBOARD STATE
+                                        ;PRESERVES B
+        TBA                             ;SET A TO KBB_STAT
+        PUL     B                       ;B IS KEY PRESSED
+        TST     B
+        BEQ     9$                      ;BRANCH IF NO KEY PRESSED
+        PSH     B
+        LDX     BTA_TABL                ;ADDRESS OF KEYBOARD LOOK-UP TABLE
+        DEX                             ;SO KEY 1 IS FIRST KEY IN TABLE
+        LDA     B,KBB_STAT:             ;GET KEYBOARD STATUS
+        ASL     B                       ;EXCLUSIVE OR KY_SHFT WITH KY_NUMB
+        BVC     4$                      ;BRANCH IF NOT 'SHIFT' MODE
+        LDA     B, 36
+        ABX                             ;SKIP TO 'SHIFTED' LOOK-UP TABLE
+4$:     PUL     B
+        ABX                             ;INDEX INTO TABLE
+        LDA     B,0,X                   ;GET ASCII KEY FROM TABLE
+        LSR     A                       ;TEST CAPS FLAG
+        BCS     5$                      ;IF SET LEAVE AS LOWER CASE
+        CMP     B,#^a/a/
+        BCS     5$
+        CMP     B,#^a/z/
+        BHI     5$
+        ADD     B,#^a/A/-^a/a/          ;CONVERT B TO UPPER CASE
+5$:
+        CMP     B,#K_DEL                ;IS IT DELETE KEY
+        BNE     9$                      ;BRANCH IF NOT
+        ASL     A                       ;TEST SHFT FLAG
+        BPL     9$                      ;BRANCH IF NOT SHIFT
+        DEC     B                       ;SHIFT DEL IS ALWAYS DEL RIGHT
+9$:     TBA                             ;RETURN TRANSLATED KEY IN A
+        RTS
+
+
+The keyboard table pointer  KBA_TABL  points  to  the  following  table  by
+default:
+
+KBT_TABL:
+        .ASCII  /zvpjd/
+        .BYTE   K_EXE
+        .ASCII  /xrlf/
+        .ASCII  / wqke/
+        .ASCII  /yuoic/
+        .BYTE   K_DEL
+        .ASCII  /tnhb/
+        .ASCII  /?smga/         ;(?=SHIFT - NOT RETURNED EVER !)
+        .BYTE   K_MODE
+        .BYTE   K_UP,K_DOWN
+        .BYTE   K_LEFT,K_RGHT
+        .BYTE   K_AC            ;ON/CLEAR KEY
+
+        ;SHIFTED CHARACTERS
+        ;==================
+
+        .ASCII  /.258)/
+        .BYTE   K_EXE
+                   $
+        .ASCII  $+-$
+        .ASCII  $/$
+        .ASCII  / 369%/
+        .ASCII  /0147(/
+        .BYTE   K_DEL
+        .ASCII  /:$"&gt;/
+        .ASCII  /?;,=&lt;/         ;(?=SHIFT - NOT RETURNED EVER)
+        .BYTE   K_MODE
+        .BYTE   K_UP,K_DOWN
+        .BYTE   K_LEFT,K_RGHT
+        .BYTE   K_AC            ;ON/CLEAR KEY
+
+
+This vector can be changed to point to a new  translation  table,  but  the
+table  must  contain  72  characters unless the translation routine is also
+altered.
+
+
+
+       _________
+<a id="p7.3.4">7.3.4</a>  BUFFERING
+
+When a key press is detected, the ascii character for that key is placed in
+a 16 byte wrap-around buffer, KBT_BUFF.  An offset into the buffer KBB_BACK
+and a count of the number of characters in the buffer KBB_NKYS are used  to
+implement  the  buffering.  If the buffer is already full, the character is
+not stored,  but  a  'buffer-full'  beep  is  emitted  lasting  10ms.   The
+following code can be used to buffer the character in the A register:
+
+        LDA     B,KBB_NKYS:             ;GET NUMBER OF KEYS IN BUFFER
+        LDX     #10                     ;10MS FOR 'BUFFER-FULL' BEEP
+        CMP     B,#16                   ;IS BUFFER FULL ?
+        BEQ     DOBUZ                   ;BRANCH IF YES
+        LDX     #KBT_BUFF               ;ADDRESS OF KEYBOARD BUFFER
+        ADD     B,KBB_BACK:             ;OFFSET INTO BUFFER
+        AND     B,#$0F                  ;WRAP AROUND
+        ABX
+        STA     A,0,X                   ;STORE ASCII KEY IN BUFFER
+        INC     KBB_NKYS                ;INCREMENT NUMBER OF KEYS
+DOCLICK:
+        LDA     B,KBB_CLIK              ;LENGTH OF KEY CLICK
+        BEQ     END                     ;NO CLICK IF ZERO
+        DEC     B                       ;LENGTH 1 WILL GIVE &lt; 1MS CLICK
+        CLR     A
+        XGDX                            ;DURATION IN X
+DOBUZ:  LDD     TMW_TCNT                ;SIZE OF SWITCH OFF TIME OUT
+        STD     TMW_TOUT:               ;RESET TIMEOUT COUNT IF KEY PRESSED
+        LDD     #56                     ;A GOOD NOTE
+        OS      BZ$TONE                 ;BEEP FOR X MS
+END:
+
+
+The keyboard buffer can be cleared out using  system  service  KB$FLSH  and
+there  is  a  facility for inserting a key into a 1 byte buffer KBB_WAIT by
+using system service KB$UGET.  KBB_WAIT is always tested for a  key  before
+looking in the main keyboard buffer KBT_BUFF.
+
+Keys can also be inserted into KBT_BUFF, but keyboard  interrupts  must  be
+prevented  while  this  is  done.   The  following code will insert the key
+contained in the A register:
+
+PUTA:
+        SEI                             ;STOP INTERRUPTS OCCURRING IN HERE
+        LDA     B,KBB_NKYS:             ;GET NUMBER OF KEYS IN BUFFER
+        CMP     B,#16                   ;IS BUFFER FULL ?
+        BEQ     NOPUT                   ;BRANCH IF YES
+        LDX     #KBT_BUFF               ;ADDRESS OF KEYBOARD BUFFER
+        ADD     B,KBB_BACK:             ;OFFSET INTO BUFFER
+        AND     B,#$0F                  ;WRAP AROUND
+        ABX
+        STA     A,0,X                   ;STORE ASCII KEY IN BUFFER
+        INC     KBB_NKYS                ;INCREMENT NUMBER OF KEYS
+NOPUT:  CLI                             ;RESTORE INTERRUPTS
+
+
+
+
+       _________
+<a id="p7.3.5">7.3.5</a>  KEY CLICK
+
+     The key click is produced in  the  keyboard  interrupt  by  using  the
+routine for system service BZ$TONE, using the following code:
+
+
+KEYCLICK:
+        LDA     B,KBB_CLIK              ;LENGTH OF KEY CLICK
+        BEQ     END                     ;NO CLICK IF ZERO
+        DEC     B                       ;LENGTH 1 WILL GIVE &lt; 1MS CLICK
+        CLR     A
+        XGDX                            ;DURATION IN X
+        LDD     #56                     ;A GOOD NOTE
+        JSR     BZ_TONE                 ;BEEP FOR X MS
+END:
+
+<u>Note</u>:  BZ_TONE is JSR'ed to and <u>not</u> called as an operating system  service.
+Hence,  intercepting operating system calls to BZ$TONE (by re-vectoring SWI
+- see section <a href="tech05.htm#p5.5.3">5.5.3</a>) will not affect the key click.  JSR'ing or JMP'ing  to
+operating  system services can <u>only</u> be done <u>within</u> the operating system and
+<u>not</u> by external routines.
+
+The length of the key click, KBB_CLIK, can be changed.  Zero  will  disable
+the  click  and any value up to $FF will specify the length of the click in
+milliseconds.
+
+<u>Warning:</u>  BZ_TONE toggles the  alarm  line  to  produce  the  click  (using
+addresses  SCA_ALARMHIGH  and  SCA_ALARMLOW)  but  if  SOE_B is high, it is
+possible that 21v will appear on any devices present, see chapter  9.   For
+example  if  an  eprom device is selected, a byte may be blown on the pack.
+Since the  click  occurs  on  interrupt,  care  must  be  taken  to  ensure
+interrupts are disabled whenever SOE_B is set high.
+
+
+
+       ______________
+<a id="p7.3.6">7.3.6</a>  ALARM CHECKING
+
+Alarms and diary alarms are checked for only when the flag AMB_DOIT is  set
+(e.g.  by the NMI on a minute boundary):
+
+        TST     AMB_DOIT                ;TEST DOIT FLAG
+        BEQ     1$                      ;BRANCH IF CLEAR
+
+        ;ALARM CHECKING CODE GOES HERE
+
+        CLR     AMB_DOIT                ;CLEAR DOIT FLAG
+1$:
+
+     The method of alarm checking is described in chapter 19.  AMB_DOIT  is
+cleared  when  alarm  checking  is finished to prevent it being done on the
+next interrupt.
+
+
+
+       _____________
+<a id="p7.3.7">7.3.7</a>  FRAME-COUNTER
+
+     A 16 bit frame-counter, TMW_FRAM (address $20CB,$20CC), is incremented
+by one by the keyboard interrupt and wraps around every 64k:
+
+        LDX     TMW_FRAM
+        INX
+        STX     TMW_FRAM
+
+It can be used as a random number or for timing.  The rate that the counter
+runs at is the keyboard interrupt rate and so can be calculated as follows:
+
+        TIME BETWEEN INCREMENTS (IN SECS) = ( KBW_TDEL + 35 ) / 921600
+
+        KBW_TDEL IS $B3DD BY DEFAULT, GIVING:
+
+        TIME = ( $B3DD + 35 ) / 921600
+
+             = 0.05 SECS
+
+KBW_TDEL can  be  changed  to  adjust  the  timing  but  will  also  affect
+everything else controlled by the keyboard interrupts, e.g. key repeat rate.
+
+Note that the rate of  the  frame-counter  is  not  100%  accurate  because
+interrupts are disabled while running some parts of the operating system.
+
+
+
+       _______ ______
+<a id="p7.3.8">7.3.8</a>  DISPLAY TIMING
+
+     The rate of horizontal and vertical scrolling on the display is  timed
+using  DPW_REDY (address $006D,$006E).  This variable is decremented by one
+by each keyboard interrupt until it reaches zero, i.e.:
+
+        LDX     DPW_REDY:
+        BEQ     NODEX
+        DEX
+        STX     DPW_REDY:
+NODEX:
+
+
+
+
+     ________________
+<a id="p7.4">7.4</a>  TESTING FOR KEYS
+
+     Keys are tested for by looking in the keyboard buffer.  While  testing
+for a key, if no key is found, the packs may be switched off, a low battery
+test is made, and the machine itself may switch off.
+
+
+
+       __________________
+<a id="p7.4.1">7.4.1</a>  KEYTEST AND KEYGET
+
+     The system service KB$TEST will return the  first  key  found  in  the
+keyboard  buffer (zero if no key) but will not remove it.  KB$GETK uses the
+same routine as KB$TEST but will wait for a key  to  be  pressed  and  then
+remove it from the buffer.
+
+If the function of key testing is to be changed, both KB$TEST  and  KB$GETK
+must be re-vectored by intercepting system calls through SWI, (KB$GETK does
+not call KB$TEST through the SWI).  For example, KB$TEST may be  re-written
+to carry out a different task when low battery is detected.
+
+
+
+       _______________
+<a id="p7.4.2">7.4.2</a>  PACK SWITCH OFF
+
+     If KB$TEST finds no keys in the keyboard buffer,  the  pack-switch-off
+flag  KBB_PKOF is tested.  If it is non-zero, the packs are switched off by
+calling the system service PK$PKOF (see chapter 9).
+
+
+
+       ________________
+<a id="p7.4.3">7.4.3</a>  LOW BATTERY TEST
+
+     If KB$TEST finds no keys in the keyboard buffer, a low battery test is
+made.   Bit  0 of PORT 5 is set when the battery supply voltage drops below
+approximately 5.2v.  If this is the case, the message BATTERY  TOO  LOW  is
+displayed  and  the  machine  will  switch  off  after 4 seconds.  When the
+machine is revived, the program will continue in KB$TEST where it left off.
+
+
+
+       __________________
+<a id="p7.4.4">7.4.4</a>  MACHINE SWITCH OFF
+
+     If KB$TEST finds no keys in the keyboard buffer,  the  auto-switch-off
+flag,  TMB_SWOF,  is  tested.   If  it  is  non-zero, the time remaining in
+seconds before switch off occurs, TMW_TOUT,  is  tested.   If  TMW_TOUT  is
+zero,  the  machine  is switched off by calling system service BT$SWOF (see
+chapter 9).  When the machine is revived,  the  program  will  continue  in
+KB$TEST where it left off.
+
+
+
+     ______________________________
+<a id="p7.5">7.5</a>  KEYBOARD VECTORS AND VARIABLES
+
+     The following vectors and variables allow the function of the keyboard
+to  be  customised  very  easily.   They  can  all  be  read and written to
+directly, except for KBB_STAT, which should only be written to using system
+service KB$STAT.
+
+
+
+       ________
+<a id="p7.5.1">7.5.1</a>  KBB_STAT
+
+     KBB_STAT stores the following flags:
+
+        FLAG            BIT OF KBB_STAT         DESCRIPTION
+        ====            ===============         ===========
+        KY_SHFT               7                 SET IF SHIFT KEY PRESSED
+        KY_NUMB               6                 SET IF NUMERIC LOCK
+        KY_CPNM               1                 SET IF CAP OR NUM KEY
+        KY_CAPS               0                 SET IF LOWER CASE LOCK
+
+KBB_STAT can be read directly, but system service KB$STAT should be used to
+write to it (see section <a href="#p7.6.7">7.6.7</a>).
+
+
+
+       ________
+<a id="p7.5.2">7.5.2</a>  BTA_POLL
+
+     This vector points to the routine which polls the keyboard.   It  must
+return  the number of the key pressed in the A register (e.g.  0 to 36 - see
+section <a href="#p7.3.2">7.3.2</a>) and can set flags to be used by BTA_TRAN (e.g.   shift,  cap,
+num flags in KBB_STAT).
+
+
+
+       ________
+<a id="p7.5.3">7.5.3</a>  BTA_TRAN
+
+     This vector points to the routine  which  translates  the  key  number
+supplied  from  BTA_POLL  in  the  A  register  into the ascii character it
+represents, returned in the A register.  The routine will use  flags  which
+have  been  set by BTA_POLL, to decide how to translate the character.  For
+example, if the SHIFT flag is set, a 'shifted' set of  characters  will  be
+returned,  or  if  a CAP flag is set, the characters will be returned as
+lower case.  To decode the character, a table of characters pointed  to  by
+BTA_TABL is used.
+
+
+
+       ________
+<a id="p7.5.4">7.5.4</a>  BTA_TABL
+
+     This is the vector which points to  a  table  of  characters  used  to
+translate a key press into an ascii character.  For an example, see section
+<a href="#p7.3.3">7.3.3</a>.  The vector can be changed to point to a new set of  characters  and
+should  contain  72  characters  (36  'shifted')  unless,  of  course,  the
+translate routine has been changed or SHIFT has been disabled.
+
+
+
+       ________
+<a id="p7.5.5">7.5.5</a>  KBB_SHFK
+
+     This flag is used to disable the SHIFT function.  It is tested only in
+the  keyboard  poll  routine  at  BTA_POLL.   If the flag is set, the SHIFT
+function is disabled and the SHIFT key will act as a normal key.  Hence, it
+will return the 26th character of the lookup table which is currently a "?"
+character (see section <a href="#p7.3.2">7.3.2</a>)
+
+
+
+       ________
+<a id="p7.5.6">7.5.6</a>  KBB_CAPK
+
+     This byte contains the number of the key (1 to 36) required to be  the
+CAP  key.   It  is used only by the keyboard translate routine at BTA_TRAN.
+By default it is set to 32 (the up-arrow key).   To  disable  the  CAP  key
+altogether, a number greater than 36 should be stored in KBB_CAPK.
+
+
+
+       ________
+<a id="p7.5.7">7.5.7</a>  KBB_NUMK
+
+     This byte contains the number of the key required to be the  NUM  key.
+It works in exactly the same way as KBB_CAPK.
+
+
+
+       ________
+<a id="p7.5.8">7.5.8</a>  KBW_TDEL
+
+     This word controls the rate of keyboard interrupts.  When an interrupt
+occurs  the  value  in  KBW_TDEL  is  stored  in the TIMER 1 OUTPUT COMPARE
+REGISTER 1, and the FREE RUNNING COUNTER is set to zero, so that  the  next
+interrupt will occur after KBW_TDEL clock cycles.
+
+Hence, the time between interrupts = ( KBW_TDEL + 35 ) / 921600 secs
+
+There is an overhead of 35 cycles for each interrupt.   The  default  value
+for  KBW_TDEL  is  $B3DD, giving a time interval of 0.05 secs.  Note that a
+value of zero in KBW_TDEL, will cause the machine to lock up.
+
+
+
+       ________
+<a id="p7.5.9">7.5.9</a>  KBB_DLAY
+
+     This byte stores the delay before auto-repeat of the  keys  begins  in
+terms  of  the  number of keyboard interrupts.  The default value is 14, so
+with interrupts running at 20 times per second, the delay is 0.7 secs.
+
+
+
+        ________
+<a id="p7.5.10">7.5.10</a>  KBB_REPT
+
+     This byte stores the delay between keys when auto-repeating  in  terms
+of keyboard interrupts.  The default value is 0 which is the fastest value.
+A value of 1 will repeat at half normal speed, 2 at a  third  normal  speed
+etc.
+
+
+
+        ________
+<a id="p7.5.11">7.5.11</a>  KBB_CLIK
+
+     This byte stores the length of the keyboard click in ms.  A  value  of
+zero will turn off the key click altogether.  The default value is 1 giving
+the shortest possible click.
+
+
+
+        ________
+<a id="p7.5.12">7.5.12</a>  KBB_PKOF
+
+     This flag controls whether the packs are switched off by KB$TEST.   If
+it  is  non-zero,  which  it  is by default, the packs will be switched off
+whenever KB$TEST is called and there is are no keys in the keyboard buffer.
+
+
+
+     _______________
+<a id="p7.6">7.6</a>  SYSTEM SERVICES
+
+     This section  describes  the  operating  system  calls  available  for
+keyboard handling.
+
+
+
+<a id="p7.6.1">7.6.1</a>  KB$INIT
+
+VECTOR NUMBER:          073
+INPUT PARAMETERS:       None.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    Initialises keyboard interrupts.  The following tasks are  carried  out
+    by this routine:
+
+    1.  The keyboard buffer is flushed of any characters.
+
+    2.  The keyboard interrupt rate KBW_TDEL is set to $B3DD.
+
+    3.  The initial delay and key repeat rate KBB_DLAY, KBB_REPT are set to
+        14 and 0 respectively.
+
+    4.  The keyboard status flags, in KBB_STAT are set to  0,  i.e.  KY_SHFT,
+        KY_CPNM, KY_CAPS and KY_NUMB are cleared.
+
+    5.  The length of the key click, KBB_CLIK, is set to 1.
+
+    6.  The interrupts are enabled:  FREE RUNNING  COUNTER  is  set  to  0,
+        TIMER 1 OUTPUT COMPARE REGISTER 1 is set to $B3DD, bit 3 of TIMER 1
+        CONTROL STATUS REGISTER 1 is set, to enable the interrupt, and  the
+        I mask bit of the condition code register is cleared.
+
+
+EXAMPLE:
+
+        OS      KB$INIT         ;INITIALISE KEYBOARD
+
+ERRORS:                 None.
+
+
+
+<a id="p7.6.2">7.6.2</a>  KB$TEST
+
+VECTOR NUMBER:          075
+INPUT PARAMETERS:       None.
+OUTPUT VALUES:          B register - ascii value of next key in buffer
+                                     (0 if no key).
+REGISTERS PRESERVED:    A,X
+
+DESCRIPTION
+
+    Looks in keyboard buffer for a key but does  not  remove  it.   If  the
+    buffer  is  not  empty,  the  ascii value of the first key found in the
+    buffer is returned in the B register.  The  unget  buffer  KBB_WAIT  is
+    tested  for a key before looking in KBT_BUFF.  If KBB_WAIT is empty and
+    there is a key in KBT_BUFF, it is transferred to KBB_WAIT.
+
+    If no keys are found, the following will occur:
+
+    1.  If KBB_PKOF is non-zero, the pack  will  switch  off  using  system
+        service PK$PKOF.
+
+    2.  If TMB_SWOF is non-zero and TMW_TOUT  is  zero,  the  machine  will
+        switch off using system service BT$SWOF.
+
+    3.  If low battery is detected, BATTERY TOO LOW will be displayed for 4
+        secs before the machine switches off.
+
+
+    If the I mask (bit 4)  of  the  condition  code  register  is  set  (i.e.
+    interrupts  are  disabled)  when  KB$TEST  is  called, it will poll the
+    keyboard itself allowing the operating system to  run  with  interrupts
+    disabled.   Every function of the keyboard interrupt routine is carried
+    out except alarm checking.  Any keys found  are  put  in  the  keyboard
+    buffer,  the  frame-counter  is  incremented  and  the display timer is
+    decremented etc.  There  is  a  50ms  fixed  delay  after  polling  the
+    keyboard so that if KB$TEST is called in a loop, the keyboard is polled
+    approximately every 50ms.  After polling the keyboard  itself,  KB$TEST
+    looks in the keyboard buffer as usual.
+
+EXAMPLE:
+
+        OS      KB$TEST         ;LOOK IN KEYBOARD BUFFER
+        TST     B               ;TEST IF KEY
+        BEQ     NOKEY           ;BRANCH IF NO KEY FOUND
+
+        ;HERE IF KEY FOUND
+
+NOKEY:
+
+ERRORS:                 None.
+
+
+
+<a id="p7.6.3">7.6.3</a>  KB$GETK
+
+VECTOR NUMBER:          072
+INPUT PARAMETERS:       None.
+OUTPUT VALUES:          B register - ascii value of key taken from buffer.
+REGISTERS PRESERVED:    A,X
+
+DESCRIPTION
+
+    Waits for a key press and returns it in the B register.   This  routine
+    uses  the  same  code as KB$TEST.  If there are no keys in the keyboard
+    buffer, a SLP instruction is executed before next testing for a key, in
+    order  to  save  power.  When a key is detected, it is removed from the
+    buffer simply by clearing KBB_WAIT.
+
+    The auto-switch-off timeout counter TMW_TOUT is reset to the  value  in
+    TMW_TCNT  at  the start of this routine, so the machine will not switch
+    off in this routine for TMW_TCNT seconds.
+
+EXAMPLE:
+
+        OS      KB$GETK                 ;WAIT FOR KEY PRESS
+        CMP     B,#K_EXE
+        BEQ     EXEKEY                  ;BRANCH IF EXECUTE KEY
+
+        ;HERE IF ANY OTHER KEY
+
+EXEKEY:
+
+ERRORS:                 None.
+
+
+
+<a id="p7.6.4">7.6.4</a>  KB$BREK
+
+VECTOR NUMBER:          070
+INPUT PARAMETERS:       None.
+OUTPUT VALUES:          Carry flag is set if ON/CLEAR key is pressed.
+
+DESCRIPTION
+
+    Tests if ON/CLEAR key is pressed.  The key is tested  for  directly  by
+    reading  PORT  5 and then searched for in the keyboard buffer KBT_BUFF.
+    If ON/CLEAR is detected, KB$BREK waits for  it  to  be  released,  then
+    flushes  the  keyboard  buffer  and  returns the carry flag set.  If no
+    ON/CLEAR key is found, the carry flag is cleared.
+
+EXAMPLE:
+
+        OS      KB$BREK         ;TEST FOR ON/CLEAR
+        BCC     NOCLR           ;BRANCH IF ON/CLEAR NOT PRESSED
+
+        ;HERE IF ON/CLEAR KEY WAS PRESSED (AND RELEASED)
+
+NOCLR:
+
+ERRORS:                 None.
+
+
+
+<a id="p7.6.5">7.6.5</a>  KB$FLSH
+
+VECTOR NUMBER:          071
+INPUT PARAMETERS:       None.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    Flushes keyboard of any characters  in  type-ahead  buffer.   KBB_BACK,
+    KBB_NKYS, KBB_PREV and KBB_WAIT are all set to zero.
+
+EXAMPLE:
+        OS      KB$FLSH         ;FLUSH KEYBOARD BUFFER
+
+ERRORS:                 None.
+
+
+
+<a id="p7.6.6">7.6.6</a>  KB$UGET
+
+VECTOR NUMBER:          076
+INPUT PARAMETERS:       B register - key to be placed in buffer.
+OUTPUT VALUES:          None.
+REGISTERS PRESERVED:    A,B,X
+
+DESCRIPTION
+
+    Puts the key supplied in the  B  register  into  the  keyboard  'unget'
+    buffer,  KBB_WAIT.   The  buffer can only hold 1 key.  If the buffer is
+    already full, the key is <u>not</u> placed in the buffer.
+
+EXAMPLE:
+
+        LDA     B,#K_AC         ;ON/CLEAR KEY
+        OS      KB$UGET         ;INSERT INTO BUFFER
+
+ERRORS:                 None.
+
+
+
+<a id="p7.6.7">7.6.7</a>  KB$STAT
+
+VECTOR NUMBER:          074
+INPUT PARAMETERS:       B register - keyboard state byte.
+OUTPUT VALUES:          None.
+REGISTERS PRESERVED:    B
+
+DESCRIPTION
+
+    Sets the state of the keyboard.  The B register is stored into keyboard
+    status byte KBB_STAT.
+
+                IF BIT 0 OF B REG IS SET THEN LOWER CASE
+                IF BIT 0 OF B REG IS CLEAR THEN UPPER CASE
+                IF BIT 6 OF B REG IS SET THEN NUMERIC LOCK
+                IF BIT 6 OF B REG IS CLEAR THEN NOT IN NUMERIC LOCK
+
+    Note that some other bits of KBB_STAT are used as flags and should  not
+    be  affected.   Hence  KBB_STAT  should be read and bits 0 and 6 either
+    cleared or set before calling KB$STAT, see example below.
+
+    The state of the cursor (block  or  line)  is  determined  by  the  new
+    keyboard  status  and stored in DPB_CUST.  A line cursor is for 'shift'
+    mode,  otherwise  it's  a  block  cursor.   The  new  cursor  type   is
+    immediately refreshed on the display.
+
+EXAMPLE:
+
+        LDA     B,KBB_STAT:     ;GET CURRENT KEYBOARD STATUS
+        ORA     B,#KY_NUMB      ;NUMERIC LOCK. LINE CURSOR.
+        OS      KB$STAT         ;SET KEYBOARD STATUS
+
+
+ERRORS:                 None.
+
+
+
+
+     _______
+<a id="p7.7">7.7</a>  EXAMPLE
+
+
+       ____________________________
+<a id="p7.7.1">7.7.1</a>  FULL ASCII SET FROM KEYBOARD
+
+This example enables the whole ascii character set to be accessed from  the
+keyboard.   The LEFT-ARROW and RIGHT-ARROW keys become two more SHIFT keys.
+Holding down LEFT-ARROW and pressing the P key,  for  example  will  return
+ascii character 16 which, if displayed on the Organiser, is translated as a
+bell character.  For all the characters returned in each 'shift' mode,  see
+the table at the end of the example.
+
+This example is taken from the code used in the RS232  device  in  terminal
+mode, to enable the whole ascii set to be typed from the keyboard.
+
+There are two routines provided below:  KB_NEW and KB_OLD.  KB_NEW must  be
+called  to set up the new keyboard and KB_OLD must be called to restore the
+normal keyboard.
+
+
+KB_NEW:                         ;INSTALL NEW KEYBOARD
+        TPA
+        PSH     A
+        SEI
+        BSR     GETP
+        XGDX
+        OS      UT$CPYB         ;COPY OLD VECTORS TO SAVEVCT
+        BSR     GETP
+        LDX     #NEWVCT
+        OS      UT$CPYB         ;COPY NEW VECTORS IN
+        PUL     A
+        TAP
+        RTS
+
+KB_OLD:                         ;RESTORE OLD KEYBOARD
+        TPA
+        PSH     A
+        SEI
+        BSR     GETP
+        OS      UT$CPYB         ;RESTORE OLD VECTORS
+        PUL     A
+        TAP
+        RTS
+
+NEWVCT:
+        .WORD   NEWPOLL,NEWTRAN,NEWTABL         ;ADDRESSES OF NEW ROUTINES
+SAVEVCT:
+        .WORD   0,0,0           ;6 BYTES TO SAVE OLD VECTORS IN.
+
+GETP:   LDD     #6
+        STD     UTW_S0:
+        LDD     #BTA_POLL
+        LDX     #SAVEVCT
+        RTS
+
+
+NEWPOLL:
+
+;TURBO CHARGED KEYBOARD POLL ROUTINE
+;CHECKS FOR A/C FIRST
+;CHECKS FOR ANY KEY QUICKLY, THEN FINDS WHICH KEY WITH DOUBLE COUNTING
+;A := KEY PRESSED (0-36, 0=NOKEY)
+;KTABPOSN POINTS TO LAST CHAR IN EACH COLUMN IN TURN
+;PRESERVES X
+
+        TST     SCA_COUNTERRESET                        ;CLEAR COUNTER
+        AIM     #&lt;$FF-&lt;KY_SHFT!KY_SHFT2!KY_SHFT3&gt;&gt;,KBB_STAT:
+        CLR     A                                       ;NO KEY YET
+        LDA     B,POB_PORT5:
+        BPL     NOAC
+        LDA     A,#36
+RTS5:   RTS
+
+NOAC:   STA     A,KBB_KNUM:     ;TABPOSN:=0
+        PSH     A
+        BSR     LOOKKEY         ;ZERO IF NO KEY FOUND
+        PUL     A
+        BEQ     ENDKYBD         ;BRANCH IF NO KEY FOUND
+        LDA     B,#$40
+        PSH     B
+        DEC     B
+        BRA     PP
+
+GOCOL:  PSH     B
+PP:     PSH     A
+1$:     TST     SCA_COUNTERCLOCK        ;CLOCK COUNTER B TIMES
+        DEC     B
+        BNE     1$
+        BSR     LOOKKEY         ;B:= OFFSET IN COL (IF KEY FOUND)
+        PUL     A
+        BEQ     NOPSH           ;BRANCH IF NO KEY IN THIS COL
+        ADD     B,KBB_KNUM:
+        TBA                     ;GOT KEY BUT MUST CHECK IF SHIFT
+NOPSH:  LDA     B,KBB_KNUM:
+        ADD     B,#5
+        STA     B,KBB_KNUM:     ;POINT TO NEXT COL
+        PUL     B
+        LSR     B               ;SELECT NEXT COL
+        BNE     GOCOL
+ENDKYBD:
+        RTS
+
+
+
+LOOKKEY:
+
+;B:=KEY OFFSET IN COL (1-5)
+;B:=0 IF NOKEY IN THIS COL (OR JUST SHIFT)
+;SETS KY_SHFT FLAG IF SHIFT PRESSED
+;SETS KY_SHFT2 IF &lt;LEFT-ARROW&gt; PRESSED
+;SETS KY_SHFT3 IF &lt;RIGHT-ARROW&gt; PRESSED
+;SETS Z ON B
+;PRESERVES X
+
+        LDA     B,#5
+        LDA     A,POB_PORT5:
+        ASL     A
+NEXTROW:
+        ASL     A               ;ROTATE KEY INTO CARRY
+        BCC     GOTKEY          ;CARRY CLEAR IF KEY PRESSED
+        DEC     B
+        BNE     NEXTROW
+        RTS
+
+GOTKEY:                         ;B IS POSITION IN COL
+        TST     KBB_SHFK        ;CLR IF SHIFT ENABLED
+        BNE     13$             ;B IS NOT ZERO
+        PSH     A
+        LDA     A,KBB_KNUM:
+        CMP     A,#25           ;IS IT COL 6 (COL CONTAINING SHIFT) ?
+        BNE     11$             ;B IS NOT ZERO
+        PUL     A
+        DEC     B
+        BEQ     10$             ;BRANCH IF B WAS 1 IE SHIFT
+
+        PSH     B               ;ELSE CHECK IF SHIFT PRESSED AS WELL
+1$:     ASL     A
+        DEC     B
+        BNE     1$
+        PUL     B
+        INC     B               ;RESTORE B
+        BCS     13$             ;BRANCH IF C SET FROM ASL A
+
+10$:    OIM     #KY_SHFT,KBB_STAT:
+        TST     B
+        RTS
+
+11$:    CMP     A,#30           ;COL CONTAINING &lt;LEFT&gt;, &lt;RIGHT&gt; ARROWS ?
+        PUL     A
+        BNE     13$             ;B IS NON-ZERO
+        CMP     B,#4            ;LEFT ?
+        BEQ     12$
+        CMP     B,#5            ;RIGHT ?
+        BNE     13$
+        OIM     #KY_SHFT3,KBB_STAT:
+        CLR     B               ;SET Z
+        RTS
+12$:
+        OIM     #KY_SHFT2,KBB_STAT:
+        CLR     B               ;SET Z
+13$:    RTS
+
+
+NEWTRAN:
+
+;TRANSLATE KEY NUMBER IN A (0-36) INTO ASCII KEY USING KBB_STAT
+;SETS DPB_CUST APPROPRIATELY + REFRESHES CURSOR STATE
+;SETS Z=1 IF A=0 (NOKEY)
+;SETS KY_CPNM IF CAP OR NUM
+
+        AIM     #&lt;$FF-KY_CPNM&gt;,KBB_STAT:
+        TAB
+        TST     KBB_STAT
+        BPL     2$                      ;BRANCH IF CAN'T BE CAP OR NUM
+        CMP     A,KBB_CAPK              ; - CAPS KEY
+        BNE     1$
+        EIM     #KY_CAPS,KBB_STAT:
+        OIM     #KY_CPNM,KBB_STAT:
+        CLR     B
+1$:     CMP     A,KBB_NUMK              ; - NUM KEY
+        BNE     2$
+        EIM     #KY_NUMB,KBB_STAT:
+        OIM     #KY_CPNM,KBB_STAT:
+        CLR     B
+2$:     BSR     KCUST                   ;FIX CURSOR STATE FOR KBB_STAT
+                                        ;RETURNS X POINTING TO APPROPRIATE
+                                        ;KEYBOARD TABLE !
+                                        ;DISPLAYS CURSOR TYPE. PRESERVES B
+        TST     B
+        BEQ     9$
+        ABX
+        LDA     B,0,X                   ;GET ASCII KEY FROM TABLE
+        LDA     A,KBB_STAT:
+        LSR     A
+        BCS     4$                      ;IF SET LEAVE AS LOWER CASE
+        CMP     B,#^A/A/
+        BCS     21$
+        CMP     B,#^A/Z/
+        BHI     21$
+        ADD     B,#^A/a/-^A/A/          ;CONVERT TO UPPER CASE
+21$:
+4$:     CMP     B,#K_DEL
+        BNE     9$
+        LDA     A,KBB_STAT:
+        BPL     9$
+        LDA     B,#$7F          ;DEL
+9$:     TBA
+        RTS
+
+KCUST:
+        LDX     BTA_TABL                ;ADDRESS OF KEYBOARD TABLE
+        DEX
+        LDA     A,KBB_STAT:
+        ASL     A
+        ASL     A
+        BMI     DO2
+        ASL     A
+        BMI     DO3
+        LDA     A,KBB_STAT:
+        ASL     A
+        BVS     DOSHFT
+
+        AIM     #&lt;$FF-CURSOR_LINE&gt;,DPB_CUST:    ;BLOCK CURSOR
+        BRA     DP_CTYP                 ;REFRESH CURSOR TYPE ON LCD
+
+DO3:    BSR     ADD36
+DO2:    BSR     ADD36
+DOSHFT: OIM     #CURSOR_LINE,DPB_CUST:  ;LINE CURSOR FOR SHIFTED CHARS
+        BSR     ADD36
+
+DP_CTYP:
+        LDA     A,#$0C
+        TIM     #CURS_ON,DPB_CUST:
+        BEQ     1$                      ;BRANCH IF CURSOR OFF
+        ORA     A,#$02
+        TIM     #CURSOR_LINE,DPB_CUST:
+        BNE     1$                      ;BRANCH IF CURSOR IN LINE FORM
+        ORA     A,#$01
+1$:     TST     SCA_LCDCONTROL
+        BMI     1$
+        STA     A,SCA_LCDCONTROL
+        RTS
+
+ADD36:
+        PSH     B
+        LDA     B,#36
+        ABX
+        PUL     B
+        RTS
+
+
+NEWTABL:
+        .ASCII  /ZVPJD/
+        .BYTE   K_EXE
+        .ASCII  /XRLF/
+        .ASCII  / WQKE/
+        .ASCII  /YUOIC/
+        .BYTE   K_DEL
+        .ASCII  /TNHB/
+        .BYTE   0
+        .ASCII  /SMGA/
+        .BYTE   $81
+        .BYTE   $82,$83
+        .BYTE   K_LEFT,K_RGHT
+        .BYTE   $80
+
+SHFT1:
+        .ASCII  /.258)/
+        .BYTE   K_EXE
+                   $
+        .ASCII  $+-$
+        .ASCII  $/$
+        .ASCII  / 369%/
+        .ASCII  /0147(/
+        .BYTE   K_DEL
+        .ASCII  /:$"&gt;/
+        .BYTE   0
+        .ASCII  /;,=&lt;/
+        .BYTE   $81
+        .BYTE   $82,$83         ;UP, DOWN
+        .BYTE   K_LEFT,K_RGHT
+        .BYTE   $80             ;A/C KEY
+SHFT2:
+        .BYTE   26,22,16,10,4
+        .BYTE   13,24,18,12,6
+        .BYTE   32,23,17,11,5
+        .BYTE   25,21,15,9,3
+        .BYTE   K_DEL,20,14,8,2
+        .BYTE   0,19,13,7,1
+        .BYTE   $81
+        .BYTE   $82,$83         ;UP, DOWN
+        .BYTE   K_LEFT,K_RGHT
+        .BYTE   $80             ;A/C KEY
+
+SHFT3:
+        .ASCII  /?/
+        .BYTE   127,95,63,30
+
+        .BYTE   K_EXE
+        .ASCII  /?/
+        .BYTE   123,91,33
+
+        .ASCII  / ?/
+        .BYTE   96,64,31
+
+        .ASCII  /?/
+        .BYTE   126,94,39,29
+
+        .BYTE   K_DEL
+        .BYTE   125,93,38,28
+
+        .BYTE   0,124,92,35,27
+        .BYTE   $81
+        .BYTE   $82,$83         ;UP, DOWN
+        .BYTE   K_LEFT,K_RGHT
+        .BYTE   $80             ;A/C KEY
+
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech06.htm">Ch. 6</a></li>
+<li class=navactive>Ch. 7</li>
+<li><a href="tech08.htm">Ch. 8</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

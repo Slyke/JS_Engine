@@ -1,0 +1,471 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 8 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech08.htm", "name": "Chapter 8" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 8</li>
+</ol>
+
+
+<PRE>
+                                 CHAPTER 8
+
+                                  _______
+                                  DISPLAY
+
+
+
+     ________
+<a id="p8.1">8.1</a>  HARDWARE
+
+     The display used in the Organiser II is a Hitachi LR039 Liquid Crystal
+Display (LCD) driven by a Hitachi HD44780 LCD controller.
+
+     It consists of two lines of 16 characters.  Each character is  defined
+by  a  5 x 8 dot matrix with the 8th line normally left blank as it is used
+for the single line cursor.
+
+     The character generator in the LCD controller contains 192 displayable
+characters  (ASCII  values  32  to  256).   There are also 8 user definable
+characters which are repeated twice in the character set ASCII values 0  to
+7 and 8 to 15.
+
+     The full specification and operation of the controller is given in the
+accompanying data book "Hitachi MOS LSI Data Book, LCD Driver LSI" on pages
+79 to 128.  It is recommended that this be read for a full understanding of
+the LCD.
+
+     A full hardware description of the LCD and controller  is  in  section
+<a href="tech02.htm#p2.7">2.7</a>.
+
+
+
+     ________
+<a id="p8.2">8.2</a>  SOFTWARE
+
+     As described in the LCD  Data  Book  the  LCD  controller  contains  a
+control register and a data register.  These are accessed via the following
+addresses:-
+
+
+     $0180      SCA_LCDCONTROL          The LCD control register
+
+     $0181      SCA_LCDDATA             The LCD data register
+
+
+
+       _______
+<a id="p8.2.1">8.2.1</a>  EXAMPLE
+
+     The following machine code program stores a pound sign in UDG 0 (ascii
+characters  0  and  8).   The  data for the pound sign is read from address
+DATA.
+
+
+SAVUDG:
+; Set LCD address to $40 the address of the first UDG.
+        LDA     A,#$40          ;A is LCD address
+; Wait for busy low.
+1$:     TST     SCA_LCDCONTROL
+        BMI     1$
+; Store address
+        STA     A,SCA_LCDCONTROL
+; Now store data
+        LDX     #DATA
+        LDA     B,#8
+2$:     LDA     A,0,X
+; Wait for busy low.
+3$:     TST     SCA_LCDCONTROL
+        BMI     3$
+; Store data. (LCD address auto increments)
+        STA     A,SCA_LCDDATA
+        INX
+        DEC     B
+        BNE     2$
+        RTS
+
+DATA:
+        FCB     6,9,9,12,8,24,31,0      ;Pattern for pound sign
+
+
+
+       ______________
+<a id="p8.2.2">8.2.2</a>  VARIABLE USAGE
+
+     The following variables are used by the display system services:
+
+    dpt_tlin    16 byte buffer containing contents of top line of
+                the display.
+    dpt_blin    16 byte buffer containing contents of bottom line of
+                the display.
+    dpb_cpos    Current cursor position (0-31)
+    dpb_cust    Cursor state (as passed in DP$STAT)
+    dpb_vlin    Used in view
+    dpb_vsiz    Used in view
+    dpb_vdir    Used in view
+    dpw_sped    Horizontal scrolling rate (in 50ms intervals)
+                Delay before scrolling is four times dpw_sped
+    dpw_dely    Vertical scrolling rate.
+    dpw_redy    Decremented every 50ms. Used for timing. See DP$WRDY.
+    dpa_vadd    Used in view.
+    dpb_spos    Saved cursor position. Used by DP$SAVE and DP$REST.
+    dpb_scus    Saved cursor state. Used by DP$SAVE and DP$REST.
+    dpt_save    32 byte buffer containing saved display text. Used by
+                DP$SAVE and DP$REST.
+
+
+
+     _______________
+<a id="p8.3">8.3</a>  SYSTEM SERVICES
+
+     This section describes the operating system calls for writing  to  the
+LCD display.
+
+
+
+       _______
+<a id="p8.3.1">8.3.1</a>  DP$STAT
+
+VECTOR NUMBER:         020
+INPUT PARAMETERS:      A register - Cursor position 0 - 31.
+                       B register - Cursor status.
+OUTPUT VALUES:         None
+
+
+DESCRIPTION
+
+
+    Displays the cursor at position A register and according
+    to the B register as follows : -
+
+        Bit 7 - On  = Display cursor.
+                Off = Remove cursor.
+        Bit 0 - On  = Display the cursor as a line.
+                Off = Display the cursor as a block.
+    The new cursor position is stored in dpb_cpos and the new cursor  state
+    is stored in dpb_cust by this routine.
+
+EXAMPLE
+
+;       Move the cursor to the 2nd position on the 2nd line (position 17)
+;       and display as a block cursor
+
+        LDA     A,#17
+        LDA     B,#$80
+        OS      DP$STAT
+
+
+ERRORS:                None
+
+
+
+       _______
+<a id="p8.3.2">8.3.2</a>  DP$VIEW
+
+VECTOR NUMBER:         021
+INPUT PARAMETERS:      A register - 0 for top line or 1 for bottom line.
+                                    If the top bit is set then the routine
+                                    will not allow the use of any arrow
+                                    keys and will return on any key press.
+                       B register - Length of string to view
+                       X register - Address of string to view
+                       UTW_S0     - Time to delay before scrolling
+                                    in 1/20 second.
+
+OUTPUT VALUES:         B register - Key press that terminated scrolling.
+
+
+DESCRIPTION
+
+
+         Displays the string  and  then  starts  to  scroll  to  the  right
+    wrapping  around  with  two spaces in between, on the line specified in
+    the A register.
+
+         The A register is ANDed with 1 so that values of 2,4 etc would all
+    indicate the top line.
+
+         Pressing the left and right arrow keys alters the scrolling action
+    if top bit of A register is clear when passed to the routine.
+
+         Any other key press is returned in the B register.
+
+         If the returned key is not of interest and scrolling of  the  same
+    string is to be continued then VIEW can be called again with an address
+    of 0 in the X register.  No other calls to the display driver should be
+    used between the subsequent calls of DP$VIEW with X = 0.
+
+         The cursor is switched off during  this  routine  but  the  cursor
+    state prior to the call is maintained.
+
+         After this call the cursor position as used by the PRINT and  EMIT
+    routines will be trashed.
+
+         Corrupts location dpb_cpos the current cursor position.
+
+EXAMPLE
+
+    The following example displays the first 16 characters of the string
+    "HELLO THERE PLEASE PRESS EXECUTE" for 2 seconds on the second line
+    of the LCD. Then continually scrolls the whole string until the
+    execute key is pressed. Pressing the arrow keys will stop, start
+    and change the direction of the scrolling.
+
+DISP:
+        LDD     #40
+        STD     UTW_S0                  ; wait 2 seconds before scrolling
+        LDA     A,#1                    ; display on second line
+        LDX     #STRING                 ; address of string
+        LDA     B,#ENDSTR-STRING        ; length of string
+1$:
+        OS      DP$VIEW
+        LDX     #0                      ; continue viewing unless
+        CMP     B,#13                   ; execute key was pressed
+        BNE     1$                      ; if so return
+        RTS
+
+STRING:
+        .ASCII  "HELLO THERE PLEASE PRESS EXECUTE"
+ENDSTR:
+
+ERRORS:                None.
+
+BUGS
+
+    If the string is less than the screen width then no scrolling
+    will occur but the routine will still wait for a key and will
+    discard left and right arrow key presses.
+
+    If a call is made initially with the X register equal to 0
+    then anything can and probably will happen.
+
+
+
+       _______
+<a id="p8.3.3">8.3.3</a>  DP$PRNT
+
+VECTOR NUMBER:         017
+INPUT PARAMETERS:      B register - Number of characters to print.
+                       X register - Address of string to be printed.
+OUTPUT VALUES:         None.
+
+
+DESCRIPTION
+
+
+         Prints B characters from X one at a time using DP$EMIT.
+
+EXAMPLE
+
+    The following example clears the top line and then prints
+    "TOP LINE" on the top line.
+
+
+        LDX     #STRING
+        LDA     B,#ENDSTR-STRING
+        OS      DP$PRNT
+        RTS
+
+STRING:
+        .BYTE   $0E
+        .ASCII  "TOP LINE"
+ENDSTR:
+
+ERRORS:                None.
+
+
+
+       _______
+<a id="p8.3.4">8.3.4</a>  DP$EMIT
+
+VECTOR NUMBER:         016
+INPUT PARAMETERS:      A register - Character to be emitted.
+OUTPUT VALUES:         None.
+
+
+
+DESCRIPTION
+
+
+         Outputs a character to the LCD display.  Control characters  ASCII
+    0 to 7 display the 8 user definable graphics characters.
+
+         The buffers dpt_tlin or dpt_blin are updated by  this  routine  to
+    give an accurate reflection of what is actually on the screen.
+
+         The  cursor  position  is  automatically  incremented   when   any
+    displayable  (i.e.  non control characters) are output.  When the cursor
+    reaches the end of the top line it will wrap around to the beginning of
+    the  bottom  line.   When the cursor reaches the end of the bottom line
+    the bottom line will be scrolled to the left.
+
+         Certain of the ASCII control characters are  intercepted  by  this
+    routine to control the display as follows :-
+
+      ASCII DEC HEX OCT DESCRIPTION
+
+        BS   8  08  10  Moves cursor left 1 character.
+        HT   9  09  11  Moves cursor to the nearest position modulo 8.
+        LF  10  0A  12  Goes on to the next line.
+        VT  11  0B  13  Moves the cursor to the top left of display.
+        FF  12  0C  14  Clears both lines of the display.
+        CR  13  0D  15  Returns the cursor to the beginning of line.
+        SO  14  0E  16  Clears the top line. Cursor at top left.
+        SI  15  0F  17  Clears the bottom line. Cursor at bottom left.
+        DLE 16  10  20  Rings the bell.
+        DC1 17  11  21  Refreshes display from the top and bottom buffers.
+        DC2 18  12  22  Refreshes display from the top buffer.
+        DC3 19  13  23  Refreshes display from the bottom buffer.
+
+ Refreshing the top buffer is done by redisplaying the data in dpt_tlin.
+ Refreshing the bottom buffer is done by redisplaying the data in dpt_blin.
+
+EXAMPLE
+
+    The following example refreshes the display on the top line, clears
+    then displays the character "?" on the bottom line.
+
+        LDA     A,#$12
+        OS      DP$EMIT         ; redisplay top line
+        LDA     A,#$0F
+        OS      DP$EMIT         ; clear bottom line
+        LDA     A,#$3F
+        OS      DP$EMIT         ; display question mark
+        RTS
+
+ERRORS:                None.
+
+
+
+       _______
+<a id="p8.3.5">8.3.5</a>  DP$SAVE
+
+VECTOR NUMBER:         019
+INPUT PARAMETERS:      None.
+OUTPUT VALUES:         None.
+
+
+DESCRIPTION
+
+
+         Saves the current screen state including the cursor  position  and
+    status in the following variables:-
+
+    dpb_spos    Saved cursor position.
+    dpb_scus    Saved cursor state.
+    dpt_save    32 byte buffer containing saved display text.
+
+         Note that since this routine saves the screen state  in  a  static
+    buffer, calls to DP$SAVE and DP$REST cannot be nested.
+
+         Note that this routine should not  be  called  unless  alarms  are
+    disabled  as  the  alarm  software calls this routine as well.  This is
+    explained in section <a href="tech19.htm#p19.3">19.3</a>.  Also the pack sizing routine (PK$SETP) uses
+    these calls when displaying "SIZING PACK B" etc.
+
+
+ERRORS:                None.
+
+
+
+
+       _______
+<a id="p8.3.6">8.3.6</a>  DP$REST
+
+VECTOR NUMBER:         018
+INPUT PARAMETERS:      None.
+OUTPUT VALUES:         None.
+
+
+
+DESCRIPTION
+
+
+         Restores a previously saved copy  of  the  screen  from  dpb_spos,
+    dpb_scus and dpt_save.  See DP$SAVE.
+
+
+ERRORS:                None.
+
+BUGS
+
+    If DP$REST is  called  without  previously  calling  DP$SAVE  then  the
+    results will be unpredictable.
+
+
+
+       _______
+<a id="p8.3.7">8.3.7</a>  DP$WRDY
+
+    VECTOR NUMBER:         022
+    INPUT PARAMETERS:      None.
+    OUTPUT VALUES:         None.
+
+
+
+    DESCRIPTION
+
+
+         Waits until the value in dpw_redy has been decremented to 0.
+
+         Each keyboard interrupt causes dpw_redy to be decremented by 1 and
+    as  such  provides a handy 50 millisecond timer.  However if interrupts
+    are switched off this routine will still work  as  it  recognises  that
+    interrupts are off and decrements dpw_redy once every 50 milliseconds.
+
+         Note that this routine behaves as a wait on a timed semaphore.  It
+    is  used  extensively  by  the LCD driver software to provide scrolling
+    delays.
+
+EXAMPLE
+
+    The following routine waits for 3 seconds
+
+        LDD     #60
+        STD     DPW_REDY
+        OS      DP$WRDY
+        RTS
+
+
+ERRORS:                None.
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech07.htm">Ch. 7</a></li>
+<li class=navactive>Ch. 8</li>
+<li><a href="tech09.htm">Ch. 9</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

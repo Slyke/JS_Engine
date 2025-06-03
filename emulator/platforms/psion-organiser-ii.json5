@@ -1,0 +1,157 @@
+{
+  name: "Psion Organiser II XP",
+  storage: { platform: "psion-organiser-ii-xp", rom: "psion-organiser-ii-xp-3.1" },
+  runOnStart: true,
+  cpu: {
+    module: "./cpu/hd6303.js",
+    initialPc: 32768,
+    initialSp: 24575,
+    resetVectorAddress: 65534,
+    maxInstructionsPerFrame: 5000
+  },
+  controls: {
+    inputs: [
+      { id: "onClear", label: "ON/CLEAR", pulse: true },
+      { id: "mode", label: "MODE", pulse: true },
+      { id: "exe", label: "EXE", pulse: true }
+    ],
+    pulseInputs: ["onClear", "mode", "exe"],
+    pulseDurations: { onClear: 260, mode: 180, exe: 180 },
+    inputHotkeys: { onClear: "Backspace", mode: "Escape", exe: "Enter" },
+    textInputMap: {
+      "\n": "exe",
+      "+": "+",
+      "-": "-",
+      "*": "*",
+      "/": "/",
+      ".": ".",
+      ",": ",",
+      "=": "=",
+      "(": "(",
+      ")": ")",
+      ":": ":",
+      ";": ";",
+      "'": "'",
+      "\"": "\""
+    },
+    keyboardGroups: ["letters", "numbers", "arrows", "special"]
+  },
+  memory: {
+    mmu: "./memory/mmu/z80.js",
+    initialBytes: [
+      { address: "0x0040", data: ["0x7E"], label: "UTB_7E JMP opcode for RAM vector UTW_S0" }
+    ],
+    devices: [
+      {
+        type: "io",
+        index: 0,
+        label: "Keyboard Port 5",
+        module: "./memory/io/psion-keyboard.js",
+        role: "port5",
+        start: 21,
+        size: 1,
+        writable: true
+      },
+      {
+        type: "ram",
+        index: 0,
+        label: "Display Ready Countdown",
+        module: "./memory/io/psion-countdown-word.js",
+        start: 109,
+        size: 2,
+        writable: true
+      },
+      {
+        type: "io",
+        index: 0,
+        label: "LCD Controller",
+        module: "./memory/io/psion-lcd.js",
+        start: 384,
+        size: 64,
+        writable: true
+      },
+      {
+        type: "io",
+        index: 0,
+        label: "Keyboard Counter Reset",
+        module: "./memory/io/psion-keyboard.js",
+        role: "counterReset",
+        start: 768,
+        size: 1,
+        writable: true
+      },
+      {
+        type: "io",
+        index: 0,
+        label: "Keyboard Counter Clock",
+        module: "./memory/io/psion-keyboard.js",
+        role: "counterClock",
+        start: 832,
+        size: 1,
+        writable: true
+      },
+      {
+        type: "flat",
+        index: 0,
+        label: "64K Address Space",
+        module: "./memory/flat.js",
+        start: 0,
+        size: 65536,
+        writable: true
+      }
+    ],
+    segments: [
+      { type: "io", label: "HD6303 Registers", start: 0, size: 32, writable: true },
+      { type: "ram", label: "Zero Page System RAM", start: 64, size: 160, writable: true },
+      { type: "ram", label: "Transient Application Area", start: 224, size: 32, writable: true },
+      { type: "io", label: "Hardware Addresses", start: 256, size: 768, writable: true },
+      { type: "ram", label: "XP RAM", start: 8192, size: 16384, writable: true },
+      { type: "rom", label: "System ROM", start: 32768, size: 32768, writable: false }
+    ],
+    map: {
+      start: 0,
+      size: 65536,
+      columns: 256,
+      rows: 256,
+      bytesPerCell: 1,
+      valueMode: "max",
+      samplesPerCell: 16,
+      colors: {
+        rom: { zero: [24, 24, 20], active: [255, 210, 80] },
+        ram: { zero: [0, 20, 38], active: [45, 140, 255] },
+        io: { zero: [32, 16, 0], active: [255, 150, 40] },
+        unmapped: { zero: [0, 0, 0], active: [255, 40, 40] },
+        pc: [80, 255, 120],
+        sp: [90, 170, 255]
+      }
+    }
+  },
+  roms: [
+    { path: "/roms/psion-organiser-ii/31-xp.rom", offset: 32768, label: "Psion Organiser II XP OS 3.1" }
+  ],
+  video: { module: "./video/psion-lcd.js", driver: "psion-lcd", width: 160, height: 32, columns: 16, rows: 2, fps: 20 },
+  websocket: {
+    enabled: true,
+    autoConnect: false,
+    endpoints: [
+      {
+        id: "debug",
+        label: "Debug API",
+        url: "ws://127.0.0.1:8765/debug",
+        autoConnect: false,
+        channels: ["commands", "events", "rules"]
+      },
+      {
+        id: "events",
+        label: "Event Sink",
+        url: "ws://127.0.0.1:8765/events",
+        autoConnect: false,
+        channels: ["events", "rules"]
+      }
+    ]
+  },
+  debugger: {
+    disassembly: { beforeLines: 10, afterLines: 12 }
+  },
+  romLoading: { defaultOffset: "0x8000" }
+}

@@ -1,0 +1,1145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 6 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech06.htm", "name": "Chapter 6" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 6</li>
+</ol>
+
+
+<PRE>                                 CHAPTER 6
+
+                               ____________
+                               MEMORY USAGE
+
+
+
+     ____________
+<a id="p6.1">6.1</a>  INTRODUCTION
+
+
+
+This chapter covers all aspects of memory usage, RAM,  ROM,  registers  and
+I/0.  To use an Organiser effectively it is essential to understand the way
+memory is used.
+
+There are five operating systems described, each  one  corresponding  to  a
+machine type:
+
+     1.  CM/OS which has 8K of RAM.  It does not  support  128K  datapacks,
+         RAM packs, the bar code reader or the magnetic card swipe.
+
+     2.  XP/OS which has 16K of RAM.
+
+     3.  XP2/OS which has 16K of RAM, POS200.
+
+     4.  LA/OS which has 32K of RAM (see Chapter 5).
+
+     5.  LA2/OS which has 32K of RAM, POS200 (see Chapter 5).
+
+
+The variables given in this chapter are guaranteed not to  move  in  future
+versions of the operating system.  They are the only variables which can be
+used safely unless reference is made to the operating system version.
+
+The six scratch registers UTW_S0 to UTW_S5 may be used  for  local  values.
+They  are  used  by  the  operating  system  and  are  not guaranteed to be
+preserved by operating system calls.  The seven scratch register UTW_R0  to
+UTW_R6  are  maintained values.  If they are used, the existing values must
+be pushed and restored before returning from that routine.
+
+
+
+     __________
+<a id="p6.2">6.2</a>  MEMORY MAP
+
+
+
+                $FFFF   I-------------------------------I
+                        I          System ROM           I
+                $8000   I-------------------------------I
+                        I    Not Used (except LA/OS)    I
+  $8000  $6000  $4000   I-------------------------------I
+  LA/OS  XP/OS  CM/OS   I       Processor Stack         I
+  $7F00  $5F00  $3F00   I-------------------------------I
+                        I        Language Stack         I
+                        I         (grows down)          I
+                        I                               I
+                        I          (grows up)           I
+                        I       Allocated Cells         I
+                        I...............................I
+                        I       System Variables        I
+                $2000   I-------------------------------I
+                        I     Not Used (except LA/OS)   I
+                $0400   I-------------------------------I
+                        I       Hardware Addresses      I
+                $0100   I-------------------------------I
+                        I  Transient Application Area   I
+                $00E0   I-------------------------------I
+                        I        System Variables       I
+                $0040   I-------------------------------I
+                        I           Not used            I
+                $0020   I-------------------------------I
+                        I       Internal Registers      I
+                $0000   I-------------------------------I
+
+
+
+     __________
+<a id="p6.3">6.3</a>  RAM MEMORY
+
+
+
+       _________
+<a id="p6.3.1">6.3.1</a>  ZERO PAGE
+
+
+
+Zero page RAM runs from $40 to $FF.   From  $40  to  $DF  is  used  by  the
+operating system; from $E0 to $FF is the transient application area.  It is
+safe to assume that these variables get trashed by all device drivers.   In
+particular it should be noted that a WARM BOOT uses $F8 to $FF.
+
+For example the RS232 uses $E0 to $FF for the set-up parameters so that the
+code  is  faster  and  more  compact.   Every time COMM is re-invoked these
+parameters are copied down from the dedicated application space (at DV_SPAR
+- $214F).
+
+
+
+       _____________
+<a id="p6.3.2">6.3.2</a>  NON-ZERO PAGE
+
+
+
+On the different models RAM is at the following addresses:
+
+     1.  CM/OS                  $2000 - $3FFF
+
+     2.  XP/OS or XP2/OS        $2000 - $5FFF
+
+     3.  LA/OS or LA2/OS        $0400 - $7FFF
+
+The top $100 bytes of RAM is reserved for the processor stack.  Just  below
+is the language stack which grows down in memory.
+
+At $2000 the non-zero page  variables  start.   Immediately  thereafter  is
+allocated  space.   This  consists of 16 pre-allocated cells for use by the
+operating system and 16  cells  which  can  be  used  by  applications  for
+permanent use.
+
+The pre-allocated areas are (in order):
+
+         Permanent cell         Code/data from booted devices
+         Top level menu cell
+         Diary cell
+         Language text cell     Editing/translating OPL/CALC
+         Symbol table cell      Translating OPL/CALC
+         Global record cell     Translating OPL/CALC
+         QCODE output cell      Translating/running OPL/CALC
+         4 field name tables    Field names for files opened in OPL
+         4 file buffers         Buffers for files opened in OPL
+         Database cell          All data held in device A:
+
+
+
+     Device A:  has the same format as a datapack  and  contains  both  OPL
+procedures  and databases.  There are just three differences between device
+A:  and devices B:  &amp; C:
+
+     1.  The pack header of device A:  is undefined.
+
+     2.  When an item is deleted the space is recovered (as in a Rampack).
+
+     3.  Uses PKW_CMAD instead of PKW_CPAK.
+
+     4.  The pack size is variable.
+
+     5.  Accessing is faster.
+
+     6.  The data is less secure, erased by resetting the machine.
+
+     The allocated area grows up towards the language  stack.   Before  any
+operation involving memory both the allocator and the language ensure there
+is at least $100 bytes between RTA_SP and ALA_FREE.  If there isn't 'OUT OF
+MEMORY'  or  'PACK  FULL' is reported.  These messages are functionally the
+same in the case of device A:, it depends  on  which  routine  the  out  of
+memory condition is detected.
+
+
+
+     __________________
+<a id="p6.4">6.4</a>  NON-RAM MEMORY MAP
+
+
+
+In the memory map certain areas contain system  registers  and  I/O  rather
+than RAM.
+
+
+
+       __________________
+<a id="p6.4.1">6.4.1</a>  INTERNAL REGISTERS
+
+
+The addresses in the range $01 to $1F are used as internal registers by the
+6303 processor.  Their use is as follows:
+
+Address Organiser Name  Register                            Read/Write
+
+$01     POB_DDR2        Port 2 data direction register           W
+$02     Not used        Port 1                                  R/W
+$03     POB_PORT2       Port 2                                  R/W
+$04     Not used        Port 3 data direction register           W
+$05     Not used        Not used                                 -
+$06     Not used        Port 3                                  R/W
+$07     Not used        Port 4                                  R/W
+$08     POB_TCSR1       Timer Control/Status                    R/W
+$09     POW_FRC         Free running counter - high             R/W
+$0A     Not used        Free running counter - low              R/W
+$0B     POW_OCR1        Output compare register - high          R/W
+$0C     Not used        Output compare register - low           R/W
+$0D     Not used        Input capture register - high            R
+$0E     Not used        Input capture register - low             R
+$0F     POB_TCSR2       Timer control/Status register 2         R/W
+$10     POB_RMCR        Rate, mode control register             R/W
+$11     POB_TRCSR       Tx/Rx control status register           R/W
+$12     POB_RDR         Receive data register                    R
+$13     POB_TDR         Transmit data register                   W
+$14     POB_RCR         RAM/Port 5 control register             R/W
+$15     POB_PORT5       Port 5                                   R
+$16     POB_DDR6        Port 6 data direction register           W
+$17     POB_PORT6       Port 6                                  R/W
+$18     Not used        Port 7                                  R/W
+$19     Not used        Output compare register - high          R/W
+$1A     Not used        Output compare register - low           R/W
+$1B     POB_TCSR3       Timer control/Status register 2         R/W
+$1C     POB_TCONR       Timer constant register                  W
+$1D     Not used        Timer 2 Up counter                      R/W
+$1E     Not used        Not used                                 -
+$1F     Not used        Test register (do not use)               -
+
+See Chapter 2 for a full description of the Organiser use of the timers and
+ports  and  the  Hitachi  6303X  User  Guide  for  a  more detailed general
+description of the ports.
+
+
+
+       _________________
+<a id="p6.4.2">6.4.2</a>  MEMORY MAPPED I/O
+
+
+
+     In the memory map between $180  and  $3FF  lie  the  semi-custom  chip
+addresses:
+
+Address Organiser Name          Description
+
+$0180   SCA_LCDCONTROL          Liquid Crystal Display (LCD) registers
+$0181   SCA_LCDDATA
+$01C0   SCA_SWITCHOFF           Switch off
+$0200   SCA_PULSEENABLE         Pulse enable
+$0240   SCA_PULSEDISABLE        Pulse disable
+$0280   SCA_ALARMHIGH           Buzzer
+$02C0   SCA_ALARMLOW
+$0300   SCA_COUNTERRESET        Counter for kybd + clock
+$0340   SCA_COUNTERCLOCK
+$0380   SCA_NMIMPU              Enable NMI to processor
+$03C0   SCA_NMICOUNTER          Enable NMI to counter
+
+
+The semi-custom chip does not decode all the address lines.   For  the  LCD
+driver  $180,$182,$184  up  to  $1BE are identical, as are $181,$183, up to
+$1BF.  For the other addresses the bottom 6 bits are ignored.
+
+
+These addresses should be accessed with  great  care.   To  prevent  casual
+accessing,  PEEKing and POKEing from OPL to the range $0182 to $03FF and in
+the range $00 to $3F are disallowed.
+
+See Chapter 2 for a full description of how these address are used.
+
+
+
+     ____________
+<a id="p6.5">6.5</a>  MEMORY USAGE
+
+
+       ________________
+<a id="p6.5.1">6.5.1</a>  OPERATING SYSTEM
+
+
+
+The following variables and addresses are guaranteed on all versions of the
+operating   system   after  2.4.   Any  extra  variables  added  in  future
+refinements of the operating system will lie between the  end  of  BTA_VECT
+and RAMFREE.  The variables are followed by allocated space, so the address
+at ALT_BASE gives the end of variables.
+
+
+
+         _________________
+<a id="p6.5.1.1">6.5.1.1</a>  NAMING CONVENTION -
+
+
+All variable names have the following format:
+
+        XXY_ABCD
+
+where xx is the abbreviated name of the module which uses the variable,
+      y  is either b for byte variables,
+                or w for word variables,
+                or t for tables,
+                or a for address,
+  and abcd is the name of the variable of which only the first 3 letters
+                are significant.
+
+
+The abbreviated module names are:
+         ac     language table actions
+         al     allocator
+         am     alarm
+         bt     boot routines
+         bz     buzzer
+         di     diary
+         dp     display
+         dv     devices
+         ed     edit
+         er     error handler
+         fl     files
+         fn     maths functions
+         im     maths table actions
+         it     table routines
+         kb     keyboard
+         lg     language translator
+         lx     language lexer
+         mn     menu
+         mt     maths BCD routines
+         pk     datapacks
+         rt     run time
+         tl     top level
+         tm     time
+         ut     utilities
+
+
+
+
+         _________
+<a id="p6.5.1.2">6.5.1.2</a>  ZERO PAGE -
+$40     UTB_7E  JMP instruction for vector in UTW_S0
+
+$41     UTW_S0  General word variables S0 - S5
+$43     UTW_S1
+$45     UTW_S2
+$47     UTW_S3
+$49     UTW_S4
+$4B     UTW_S5
+
+$4D     UTW_R0  General word/byte variables R0 - R6
+  $4D     UTB_H0
+  $4E     UTB_L0
+$4F     UTW_R1
+  $4F     UTB_H1
+  $50     UTB_L1
+$51     UTW_R2
+  $51     UTB_H2
+  $52     UTB_L2
+$53     UTW_R3
+  $53     UTB_H3
+  $54     UTB_L3
+$55     UTW_R4
+  $55     UTB_H4
+  $56     UTB_L4
+$57     UTW_R5
+  $57     UTB_H5
+  $58     UTB_L5
+$59     UTW_R6
+  $59     UTB_H6
+  $5A     UTB_L6
+
+$5B     BTB_NMFL        NMI flag, cleared when NMI executes
+$5C     BTW_CCNT        Time (in seconds) before auto switch off
+$5E     BTA_RTOP        Address of RAMTOP
+$60     RTB_LBAT        Run time low battery flag
+$61     XXB_XXXX        Reserved
+$62     DPB_CPOS        Cursor position (0-31)
+$63     DPB_CUST        Cursor status byte
+$64     DPB_VLIN        Scrolling line position
+$65     DPB_VSIZ        Number of characters to scroll
+$66     DPB_VDIR        Scroll direction
+$67     DPB_SPOS        Save cursor position, used in DP_SAVE
+$68     DPB_SCUS        Save cursor status, used in DP_SAVE
+$69     DPW_SPED        Delay when scrolling in ticks (default 4)
+$6B     DPW_DELY        Delay before scrolling in ticks (default 10)
+$6D     DPW_REDY        'Ready to display' timer in ticks
+$6F     DPA_VADD        Address of scrolling string
+$71     KBW_TDEL        Keyboard polling time in milliseconds
+$73     KBB_BACK        Offset in KBT_BUFF to oldest key in buffer
+$74     KBB_NKYS        Number of keys in buffer
+$75     KBB_PREV        Previous key pressed
+$76     KBB_WAIT        Unget key, zero if no key else the key
+$77     KBB_DLAY        Delay before auto-repeating in ticks (default 14)
+$78     KBB_REPT        Delay on auto-repeat in ticks (default 14)
+$79     KBB_CNTR        Keyboard counter
+$7A     KBB_KNUM        Offset into keyboard table
+$7B     KBB_STAT        CAPS, NUM and SHIFT lock status
+
+$7C     TMB_SWOF        Auto-switch off flag, set for auto-switch off
+$7D     TMW_TOUT        Time left in seconds before auto-switch off
+
+$7F     EDB_MLEN        Maximum input length
+$80     EDB_PLEN        Prompt length
+$81     EDB_FLIN        First editable line
+$82     EDB_POFF        First editable character in first line
+$83     EDB_CLIN        Current line edit
+$84     EDB_STAT        Editor cursor status
+$85     EDW_CPOS        Current position within line
+$87     EDW_CB          Offset to current line
+$89     EDW_BL          Total buffer length
+
+$8B     PKB_CURP        Pack being looked at
+$8C     PKB_CPAK        Actual current pack
+$8D     PKW_RASI        Length of RAM file
+$8F     PKW_CMAD        Offset into RAM file
+$91     PKB_HPAD        High order byte of pack address
+$92     PKW_CPAD        Pack address
+$94     PKA_PKID        Pointer to current pack identifier
+
+$96     FLB_RECT        Current record type
+$97     FLB_CPAK        Current pack
+$98     FLB_CONT        Device being DIR-ed
+$99     FLW_DREC        Next directory record number
+$9B     FLW_CREC        Current record number
+$9D     FLW_FNAD        Address of file name
+$9F     FLW_NREC        Number of records
+
+$A1     TLB_RECT        Current record type
+$A2     TLB_CPAK        Current default pack (0-2)
+$A3     TLB_MODE        Which option: FIND, SAVE or ERASE
+
+$A4     BZB_MUTE        Non-zero to mute buzzer
+
+$A5     RTA_SP          Run time stack pointer
+$A7     RTA_FP          Run time frame pointer
+$A9     RTA_PC          Run time program counter
+
+$AB     LGW_CLIN        Current line being edited
+
+$AD     LXA_CURR        Current character pointer
+$AF     LXB_PTOK        Previous token
+$B0     ACW_1X          Array index
+$B2     ACW_2X          Maximum string size
+$B4     ACW_PREC        Pointer to variable
+$B6     ACW_CONS        Temporary constants
+$B8     ACW_GLCD        Global O code size
+$BA     ACW_LEFT        Current free O code bytes
+$BC     ACW_OCSZ        Total O code size
+$BE     ACB_NEST        Structure next level
+$BF     ACW_LABL        Next new label number
+$C1     ACW_R0          General language word
+$C3     ACW_R1          General language word
+
+$C5     MTT_AMAN        Accumulator : mantissa
+$CC     MTB_AEXP        Accumulator : exponent
+$CD     MTB_ASGN        Accumulator : sign
+$CE     MTT_OMAN        Operand : mantissa
+$D5     MTB_OEXP        Operand : exponent
+$D6     MTB_OSGN        Operand : sign
+
+$D7     ITA_PCNT        Table program counter
+$D9     ITA_BASE        Table base
+$DB     ITA_SPTR        Table stack pointer
+$DD     ITB_TEST        Table flag
+
+$DE     IMA_GPTR        General pointer
+
+$E0 - $F7               Transient application area
+$F8 - $FF               Transient application area, trashed on WARM BOOT
+
+Diary variables, overlayed against the maths variables:
+
+$C5     DIB_YEAR        Year
+$C6     DIB_MONS        Month
+$C7     DIB_DAYS        Day
+$C8     DIB_HOUR        Hour
+$C9     DIB_MINS        Mins
+
+Alarm variables, overlayed against the maths variables:
+
+$C5-$CB AMT_TEMP        Alarm temporary area
+
+Run time variables, overlayed against the language translator variables:
+
+$B0     RTB_ESCF        Escape flag
+$B1     RTB_LOGN        Current logical name
+$B2     RTB_TRAP        Trap flag
+$B3     RTB_EROR        Current error condition
+$B4     RTB_CRFL        Carriage return flag
+$B5     RTB_CDRV        Device of top procedure
+$B6     RTW_S0          General word variables
+$B8     RTW_S1
+$BA     RTW_S2
+$BC     RTW_S3
+$BE     RTW_S4
+$C0     RTW_S5
+$C2     RTW_S6
+
+The area $00 - $3F is described in Section <a href="#p6.3.1">6.3.1</a>.
+
+
+
+         _____________
+<a id="p6.5.1.3">6.5.1.3</a>  NON-ZERO PAGE -
+
+
+$2000   ALT_BASE        Base of allocator cells
+ $2000  PERMCELL        Permanent cell
+ $2002  MENUCELL        Top level menu cell
+ $2004  DIRYCELL        Diary cell
+ $2006  TEXTCELL        Language text cell
+ $2008  SYMBCELL        Symbol table cell
+ $200A  GLOBCELL        Global record cell
+ $200C  OCODCELL        QCODE output cell
+ $200E  FSY1CELL        Field name symbol table 1
+ $2010  FSY2CELL        Field name symbol table 2
+ $2012  FSY3CELL        Field name symbol table 3
+ $2014  FSY4CELL        Field name symbol table 4
+ $2016  FBF1CELL        File buffer 1
+ $2018  FBF2CELL        File buffer 2
+ $201A  FBF3CELL        File buffer 3
+ $201C  FBF4CELL        File buffer 4
+ $201E  DATACELL        Database cell
+ $2020 - $203E          16 free cells for use by applications
+$2040   ALA_FREE        Top of allocator area
+
+$2042   BTA_2IQ         IRQ2 re-vector address
+$2044   BTA_CMI         CMI re-vector address
+$2046   BTA_TRP         TRAP re-vector address
+$2048   BTA_SIO         SIO re-vector address
+$204A   BTA_TOI         TOI re-vector address
+$204C   BTA_OCI         OCI re-vector address
+$204E   BTA_ICI         ICI re-vector address
+$2050   BTA_1IQ         IRQ1 re-vector address
+$2052   BTA_SWI         SWI re-vector address
+$2054   BTA_NMI         NMI re-vector address
+$2056   BTA_WRM         WRM re-vector address
+$2058   BTA_SOF         SWOF re-vector address
+$205A   BTA_POLL        Keyboard poll routine
+$205C   BTA_TRAN        Keyboard translate routine
+$205E   BTA_TABL        Address of keyboard lookup table
+
+$2060   UTW_FP          Frame pointer for ENTER/LEAVE
+
+$2062   BTB_IGNM        Flag to ignore an NMI
+$2063   BTB_IMSK        Save interrupt mask while off
+$2064   BTB_TCSR        Save TCSR1 while off
+$2065   BTA_SBAS        Language stack base
+$2067   BTA_SAVSTACK    Save stack pointer while off
+$2069   BTW_1DONTUSE    Used in SWI's only
+$206B   BTW_2DONTUSE     "   "   "     "
+$206D   BTW_3DONTUSE     "   "   "     "
+$206F   BTB_4DONTUSE     "   "   "     "
+
+$2070   DPT_TLIN        Top line screen buffer
+$2080   DPT_BLIN        Bottom line screen buffer
+$2090   DPT_SAVE        Temporary area to save screen
+
+$20B0   KBT_BUFF        Type ahead buffer
+$20C0   KBB_CLIK        Length of keyboard click
+$20C1   KBB_PKOF        Set for pack switch off in KB_TEST
+$20C2   KBB_CAPK        Caps key
+$20C3   KBB_NUMK        Nums key
+$20C4   KBB_SHFK        Shift key, clear to enable shift key
+
+$20C5   TMB_YEAR        Current year 0-99
+$20C6   TMB_MONS        Current month 0-11
+$20C7   TMB_DAYS        Current day 0-31
+$20C8   TMB_HOUR        Current hour 0-23
+$20C9   TMB_MINS        Current minute 0-59
+$20CA   TMB_SECS        Current seconds 0-59
+$20CB   TMW_FRAM        Frame counter
+$20CD   TMW_TCNT        The auto-switch off time out in seconds
+
+$20CF   UTT_TBUF        Temporary buffer, used in UT_DISP
+
+$20D6   PKB_IMSK        Save interrupt mask while blowing
+$20D7   PKT_ID          4 pack ID headers, 10 bytes each
+$20FF   RTT_NUMB        10 memory slots for calculator (each 8 long)
+$214F   DVT_SPAR        $38 byte reserved for I/O drivers
+
+$2187   RTB_BL          Run time buffer length
+$2188   RTT_BF          Run time buffer ($100 long)
+$2288   MTT_WBUF        General purpose buffer for maths + overflow
+$22C8   RTB_FL          Find buffer length
+$22C9   RTT_FF          Find buffer
+$22E9   RTT_FILE        4 file control blocks (each $04 long)
+
+$22F9   AMT_TAB         Alarm table, 6 bytes per alarm
+$2329   DVA_BOT LA/OS only : lowest addr used in low RAM $0400-$1FFF
+$232B   DVA_TOP LA/OS only : highest addr       ...     ...
+$232D - $2324           reserved to PSION
+$2335   AMB_EI          If set then alarm checking is enabled
+$2336   AMT_T0          Temporary variable used checking for alarms
+$233C   AMT_T1              "        "       "     "      "     "
+$2342   AMT_T2              "        "       "     "      "     "
+$2348   AMW_R1              "        "       "     "      "     "
+$234A   AMB_DOIT        If set then does alarm check on next interrupt
+
+$234B   ITA_UVC         Table user vector
+$234D   ITT_REGS        Table registers
+$236D   ITT_STAK        Table stack
+$23AD   IMB_SSGN        Saved sign
+$23AE   FNT_SEED        Random number seed
+$23B5   ACW_STOP        Q code offset to stop at
+$23B7   ACW_XTCD        External O code size
+$23B9   ACT_DDAT        Global &amp; local data sizes
+$23BD   ACT_NVAR        Declared variables count
+$23C1   ACT_BRAN        Current branch label number
+$23C9   ACT_PSYM        Symbol table data pointer
+
+$23CD   LXA_CEND        End of text pointer
+$23CF   LXA_STRT        Start of current token
+$23D1   LXB_STOK        Saved token for un-lex
+$23D2   LXB_SCLA        Saved class for un-lex
+$23D3   LXB_FTYP        Function type
+
+$23D4   LGB_FIXP        Decimal places in calculator display
+$23D5   LGB_NL          Last procedure name length
+$23D6   LGT_NF          Last procedure name
+$23E0   LGB_LANT        Language type
+$23E1   LGB_MENU        Set to ignore TRAN option after editing
+
+$23E2   RTA_1VCT        Extension O code operator code
+
+$23E4   UTW_RETA        Return address used in UT_DDSP
+$23E6   PKB_OVBL        Overblow factor
+$23E7   BTA_VECT        Vector to vector table
+
+Overlayed against MTT_WBUF:
+
+$2288   AMT_NOW         Copy of current time when checking alarms
+$228E   AMT_WEEK        Time one week from now
+
+The addresses between $23F2 and RAMFREE are used by  the  operating  system
+but are unpublished and should not be used.
+
+
+
+         _______
+<a id="p6.5.1.4">6.5.1.4</a>  BUFFERS -
+
+
+
+           ________
+<a id="p6.5.1.4.1">6.5.1.4.1</a>  RTT_FILE -
+
+RTT_FILE contains 4 file control blocks with the following structure:
+
+Byte 0    Type, the type of that file, between $90 and $FE
+Byte 1    Device on which file exists (0 for A:, 1 for B: and so on)
+Word 2    Current record number
+
+
+
+           ______
+<a id="p6.5.1.4.2">6.5.1.4.2</a>  PKT_ID -
+
+Contains 4 pack IDs, these are the 10  bytes  header  of  each  pack.   See
+Chapter 9 for details.
+
+
+
+           ________
+<a id="p6.5.1.4.3">6.5.1.4.3</a>  RTT_NUMB -
+
+Each memory, M0 to M9 has 8 bytes allocated to it.  The format of  each  is
+the same format as a floating point number.
+
+
+
+           _______
+<a id="p6.5.1.4.4">6.5.1.4.4</a>  AMT_TAB -
+
+Six bytes for each entry in the format:
+
+Byte 0    Year
+Byte 1    Month
+Byte 2    Day
+Byte 3    Hour
+Byte 4    Minutes
+Byte 5    Zero if cancelled
+          1 no repeat
+          2 weekly, 3 daily, 4 hourly repeat
+
+
+
+         ______
+<a id="p6.5.1.5">6.5.1.5</a>  TIMING -
+
+
+There are a number of variables which are measured in  ticks.   A  tick  is
+(KBW_TDEL  +  35)  / 921600.  The default value of KBW_TDEL is $B3DD, which
+gives a tick of 50 milliseconds delay.
+
+
+
+         ________________
+<a id="p6.5.1.6">6.5.1.6</a>  I/O DRIVER SPACE -
+
+
+At DVT_SPAR $38  bytes  are  reserved  for  I/O  drivers.   This  space  is
+allocated  by  PSION to officially supported devices.  This area may not be
+used for any other purpose.
+
+
+
+         _________
+<a id="p6.5.1.7">6.5.1.7</a>  COLD BOOT -
+
+
+On a cold boot the following steps involving memory are executed:
+     1.  RAM test - the RAM is tested first with $AA, and then with $55.
+     2.  The top of memory is determined.
+     3.  ALA_FREE is set to the end of variables.
+     4.  RTA_SP is set to $100 below the top of memory.
+     5.  The top level menu is initialised in the MENUCELL
+     6.  Devices are booted into PERMCELL.
+     7.  Initialise DATACELL.
+     8.  Initialise DIRYCELL.
+
+For a complete description of booting see Chapter 5.
+
+
+
+       ___________
+<a id="p6.5.2">6.5.2</a>  FREE MEMORY
+
+
+
+Memory between the two addresses ALA_FREE and RTA_SP is free.   Every  time
+an  OPL operand or operator is executed, it checks that at least $100 bytes
+is free - no operand or operator can increase the size of the stack by more
+than  $100  bytes.   Before  increasing  the  size of an allocated cell the
+allocator checks there will be, at the end of the operation, at least  $100
+bytes free.
+
+
+
+         _________
+<a id="p6.5.2.1">6.5.2.1</a>  ALLOCATOR -
+
+
+There are 32 allocator cells available; the first 16 are  pre-allocated  to
+the operating system, the others are available for applications.
+
+The allocator scheme is very simple.  Each cell  has  one  word  associated
+with  it (pointed to by a tag).  If the cell is assigned it gives the start
+address of the cell,  otherwise  it  is  zero.   The  first  non-zero  word
+following  gives  the  length  of  the cell by subtraction.  When a cell is
+grown all the allocated cells above it are moved up in memory, when a  cell
+is shrunk all the cells above are moved down.
+
+You may deduce from this that frequent growing and contracting of cells can
+slow an application down considerably.
+
+If any cell is altered in size, for example by calling one of the allocator
+functions  or  by  adding  or  deleting a record from device A:, any of the
+other cells may move.  It is therefore essential to re-calculate  the  base
+address of a cell every time something could have moved it.
+
+Tag     Name            Description of cell
+---     ----            -------------------
+$2000   PERMCELL        Permanent cell - for device driver code &amp; data
+$2002   MENUCELL        Top level menu cell
+$2004   DIRYCELL        Diary cell
+$2006   TEXTCELL        Language text cell - used when translating
+$2008   SYMBCELL        Symbol table cell - used when translating
+$200A   GLOBCELL        Global record cell - used when translating
+$200C   OCODCELL        QCODE output cell - used when translating
+$200E   FSY1CELL        Field name symbol table 1 - only used in OPL
+$2010   FSY2CELL        Field name symbol table 2 - only used in OPL
+$2012   FSY3CELL        Field name symbol table 3 - only used in OPL
+$2014   FSY4CELL        Field name symbol table 4 - only used in OPL
+$2016   FBF1CELL        File buffer 1 - only used in OPL
+$2018   FBF2CELL        File buffer 2 - only used in OPL
+$201A   FBF3CELL        File buffer 3 - only used in OPL
+$201C   FBF4CELL        File buffer 4 - only used in OPL
+$201E   DATACELL        Database cell - device A:
+$2020 - $203E           Free for use by applications
+
+When device drivers are loaded  in,  the  code  is  fixed  up  and  becomes
+non-relocatable.   So  once  a device is loaded it cannot be moved which is
+why it is placed in the lowest cell.
+
+When the Organiser is re-booted (by pressing the ON/CLEAR key  at  the  top
+level)  it first removes all devices currently loaded and then boots in all
+the device drivers from the devices B:, C:  and D:.
+
+
+
+         ________
+<a id="p6.5.2.2">6.5.2.2</a>  LANGUAGE -
+
+
+OPL is a stack based language.   Almost  every  operand/operator  has  some
+effect  on the stack size.  The one exception is file buffers.  When a file
+is opened the file buffer cell is grown to $100 and the field  names'  cell
+grown  to take the field names.  When a file is closed both these cells are
+reduced back to zero length.
+
+For details of the buffer structure see section <a href="tech17.htm#p17.2.10">17.2.10</a>.
+
+When OPL starts running, the stack is initialised to BTA_SBAS.  If this  is
+changed,  the next time OPL is run it will start from the new address.  The
+only thing which resets BTA_SBAS is resetting the machine.
+
+
+
+         ________________
+<a id="p6.5.2.3">6.5.2.3</a>  PERMANENT MEMORY -
+
+
+For many applications it  is  sufficient  to  have  permanent  data  in  an
+allocated cell and to access it indirectly from the address of the cell.
+
+For other applications it is desirable to be able to use a permanent  fixed
+area  of  memory  either  for machine code or for data.  An application can
+grab permanent memory in two different ways.  It must be noted  that  if  a
+number  of  applications  use  these techniques there is no reliable way to
+free the space selectively .
+
+     1.  Lower BTA_SBAS by the amount of memory you want (this can be  done
+         in an OPL procedure).
+
+     2.  Grow PERMCELL by the amount of memory you want, then  poke  a  new
+         higher  address  to  ALA_FREE.   Note  that  all devices should be
+         re-booted after this as their internal addresses will no longer be
+         valid.
+
+
+The only way to automatically reset these two allocations are a  TOP  LEVEL
+RESET or, of course, a COLD BOOT.
+
+
+
+     _______________
+<a id="p6.6">6.6</a>  SYSTEM SERVICES
+
+
+
+       _______
+<a id="p6.6.1">6.6.1</a>  AL$FREE
+
+VECTOR NUMBER:          000
+INPUT PARAMETERS:       X register - Tag of the cell to be freed.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    Frees the cell whose tag is in the X register.   A  cell  is  freed  by
+    making its entry zero in the allocator table.
+
+    This is the reverse of AL$GRAB.
+
+EXAMPLE
+
+    To free a cell whose tag is held in CELL:
+
+        LDX     CELL    ; Get the tag
+        OS      AL$FREE
+
+ERRORS:                 None.
+
+BUGS
+
+    If the value of X is not in the  correct  range  ($2000-$203E)  results
+    will be unpredictable and potentially catastrophic.
+
+    The user may write his own shell to protect against this bug.
+
+    If the cell is already free no harm is done.
+
+
+
+       _______
+<a id="p6.6.2">6.6.2</a>  AL$GRAB
+
+VECTOR NUMBER:          001
+INPUT PARAMETERS:       D register - Initial size of cell in bytes.
+OUTPUT VALUES:          X register - The tag of the cell.
+
+DESCRIPTION
+
+    Allocates a new memory cell.
+
+    Returns the tag (or address) of the  2  byte  location  containing  the
+    address of the base of the allocated cell.
+
+    As the allocator may move the base of a cell any time a request is made
+    to the allocator, the base addresses of all cells are held in the table
+    of addresses starting at ALA_BASE.  Thus if the tag returned from  this
+    call  is stored in a memory address called CELL then the following code
+    should always be used to get the base of the memory cell into a  memory
+    address called BASE.
+
+        LDX     CELL    ; Load the tag
+        LDX     0,X     ; Get the de-referenced address
+        STX     BASE    ; Save the real address
+
+    This procedure should be called any time  a  routine  is  called  which
+    could cause the allocator to move the memory cells around.
+
+EXAMPLE
+
+    To allocate a new cell of size 100 bytes:
+
+        LDD     #100    ; The initial size of the cell
+        OS      AL$GRAB
+        BCS     ERROR   ; Report error
+        STX     CELL    ; Save the tag
+
+REGISTERS CORRUPTED:    A,B and X
+LOCATIONS CORRUPTED:    UTW_S0
+ERRORS:                 ER_AL_NC - No more cells can be allocated.
+                        ER_AL_NR - Not enough memory for the cell to
+                                        be allocated.
+
+
+       _______
+<a id="p6.6.3">6.6.3</a>  AL$GROW
+
+VECTOR NUMBER:          002
+INPUT PARAMETERS:       D register - Number of bytes to grow cell by.
+                        X register - Tag of the cell to be grown.
+                        UTW_S0     - Offset in cell to make space.
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+    Increase the cell whose base address is held in the  two  byte  address
+    pointed at by the X register by the number of bytes in the D register.
+
+    The gap is opened UTW_S0 bytes from the start of the cell.
+
+    The base of the cell will not move as the extra space  is  added  after
+    the  start  of  the cell.  However all cells which come after this cell
+    will be moved to make room for the extra space.
+
+EXAMPLE
+
+    For example, to grow the cell whose tag is held in CELL by 6 bytes at
+    the
+    end of the cell:
+
+        LDX     CELL    ; Get the tag
+        OS      AL$SIZE
+        STD     UTW_S0: ; Offset for grow
+        LDX     CELL    ; Get the tag
+        LDD     #6      ; Amount to grow cell
+        OS      AL$GROW
+        BCS     ERROR   ; Report error
+
+ERRORS:                 ER_AL_NR - Not enough memory for the cell to
+                                        be allocated.
+
+BUGS
+
+    If the value of X is not in the  correct  range  ($2000-$203E)  results
+    will be unpredictable and potentially catastrophic.
+
+    If the offset in UTW_S0 is bigger than the cell, the grow will still be
+    performed with unpredictable and potentially catastrophic results.
+
+    The user may write his own shell to protect against these bugs.
+
+
+       _______
+<a id="p6.6.4">6.6.4</a>  AL$REPL
+
+VECTOR NUMBER:          003
+INPUT PARAMETERS:       D register - Size of current item.
+                        X register - Tag of the cell to be shrunk
+                                        or expanded.
+                        UTW_S0     - Offset in cell to start shrink
+                                        or expand.
+                        UTW_S1     - Size of new item.
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+    Increase or decrease the cell whose base address is  held  in  the  two
+    byte address pointed at by the X register according to the two sizes in
+    the D register and location UTW_S1.
+
+    The cell is grown or shrunk accordingly by calls to AL$GROW or AL$SHNK.
+
+    The base of the cell will not move as  the  extra  space  is  added  or
+    deleted  after  the  start  of  the cell.  However all cells which come
+    after this cell may be moved.
+
+EXAMPLE
+
+    For example, to replace 8 bytes of a cell by 6 bytes at 10  bytes  from
+    the start of the cell:
+
+        LDX     #10
+        STX     UTW_S0: ; Offset to replace
+        LDX     #6      ; Number of bytes in new item
+        STX     UTW_S1:
+        LDX     CELL    ; get the tag
+        LDD     #8      ; Number of bytes in current item
+        OS      AL$REPL
+        BCS     ERROR   ; Report errors
+
+ERRORS:                 ER_AL_NR - Not enough memory for the cell to
+                                        be allocated.
+
+BUGS
+
+    If the value of X is not in the  correct  range  ($2000-$203E)  results
+    will be unpredictable.
+
+    If the offset in UTW_S0 is bigger than the cell, the  shrink/grow  will
+    still be performed with unpredictable results.
+
+    The user may write his own shell to protect against these bugs.
+
+
+       _______
+<a id="p6.6.5">6.6.5</a>  AL$SHNK
+
+VECTOR NUMBER:          004
+INPUT PARAMETERS:       D register - Number of bytes to shrink the
+                                        cell by.
+                        X register - Tag of the cell to be shrunk.
+                        UTW_S0     - Offset in cell to start shrink.
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+    Decrease the cell whose base address is held in the  two  byte  address
+    pointed at by the X register by the number of bytes in the D register.
+
+    The gap is closed at UTW_S0 bytes from the start of the cell.
+
+    The base of the cell will not move as the extra space is deleted  after
+    the  start  of  the cell.  However all cells which come after this cell
+    will be moved to take up the extra space.
+
+EXAMPLE:
+
+    For example, to shrink a cell whose tag is held in CELL by 6 bytes from
+    the beginning:
+
+        LDX     #0
+        STX     UTW_S0: ; Offset for shrink
+        LDX     CELL    ; get the tag
+        LDD     #6      ; amount to shrink cell
+        OS      AL$SHNK
+
+ERRORS:                 None
+
+BUGS
+
+    If the value of X is not in the correct range ($2000-$203E) results
+    will be unpredictable and potentially catastrophic.
+
+    If the offset in UTW_S0 is bigger than the cell, the shrink will still
+    be performed with unpredictable and potentially catastrophic results.
+
+    The user may write his own shell to protect against these bugs.
+
+
+       _______
+<a id="p6.6.6">6.6.6</a>  AL$SIZE
+
+VECTOR NUMBER:          005
+INPUT PARAMETERS:       X register - Tag of the cell to be sized.
+OUTPUT VALUES:          D register - Size of cell in bytes.
+
+DESCRIPTION
+
+    Return the size of the cell whose base address is held in the two  byte
+    address pointed at by the X register.
+
+EXAMPLE
+
+    For example, to find the size of a cell:
+
+        LDX     CELL    ; get the tag
+        OS      AL$SIZE
+        STD     CELLSIZ ; Save the cell size
+
+ERRORS:                 None
+
+BUGS
+
+    If the value of X is not in the  correct  range  ($2000-$203E)  results
+    will be unpredictable.
+
+
+       _______
+<a id="p6.6.7">6.6.7</a>  AL$ZERO
+
+VECTOR NUMBER:          006
+INPUT PARAMETERS:       X register - Tag of the cell to be zeroed.
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+    Decreases the size of a cell to zero but does not de-allocate the cell.
+
+EXAMPLE
+
+    For example, to zero the permanent (device) cell whose tag is $2000:
+
+        LDX      $2000          ; set X to the device tag
+        OS      AL$ZERO
+
+ERRORS:                 None
+
+BUGS
+
+    If the value of X is not in the correct range ($2000-$203E) result will
+    be unpredictable.
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech05.htm">Ch. 5</a></li>
+<li class=navactive>Ch. 6</li>
+<li><a href="tech07.htm">Ch. 7</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

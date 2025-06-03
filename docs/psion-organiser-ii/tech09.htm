@@ -1,0 +1,1819 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 9 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech09.htm", "name": "Chapter 9" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 9</li>
+</ol>
+
+
+<PRE>                                 CHAPTER 9
+
+                                 _________
+                                 DATAPACKS
+
+
+
+     Datapacks are the removable storage medium used in the Organiser.   On
+a  datapack  the  data  is stored in an EPROM (an ultraviolet <u>E</u>raseable and
+electrically <u>P</u>rogrammable <u>R</u>ead-<u>O</u>nly <u>M</u>emory).  This has  certain  advantages
+and  disadvantages  when  compared  to  conventional storage such as floppy
+disks.
+
+     Datapacks are much more robust than disks - e.g. you  cannot  scratch  a
+datapack  and  they  are  not  susceptible  to  magnetic fields.  Datapacks
+require no special drives - they can be driven  from  a  simple  I/O  port.
+This  results  in  higher  reliability  (no moving parts), much lower power
+consumption (no motors) and a much smaller package than floppy disk drives.
+
+     Datapacks can be read faster  than  disks  but  their  write  time  is
+comparatively  slow.   Also  once  written  to,  datapacks cannot be erased
+within the Organiser - they must be placed under an Ultraviolet lamp  which
+erases  the  whole pack.  This procedure is known as formatting.  Selective
+erasure of one part of  a  datapack  is  not  possible.   It  is,  however,
+possible to modify data in a datapack according to specific rules.  In this
+way software can be written to ignore certain parts of a datapack.
+
+
+NOTE:  Although a deep understanding of the hardware of datapacks and their
+interface  to  the  Organiser is useful it is not necessary.  The operating
+system software (see section <a href="#p9.5">9.5</a>) provides all the routines  necessary  for
+accessing   datapacks   while   hiding  all  their  complexities  from  the
+programmer.
+
+
+
+     __________________
+<a id="p9.1">9.1</a>  NAMING CONVENTIONS
+
+The following conventions are used when referring to lines on the EPROM  in
+the datapack and the external datapack connector.
+
+     1.  Lines on the EPROM are preceded by 'E'.
+
+     2.  Lines on the datapack and Organiser  connectors  are  preceded  by
+         'S'.
+
+     3.  Lines which are active low (inverted logic) are followed by '_B'.
+
+
+     Hence the chip select line on the EPROM is abbreviated ECS_B  and  the
+slot select line on the Organiser connector is abbreviated SS_B.
+
+
+
+     ________
+<a id="p9.2">9.2</a>  HARDWARE
+
+The following is a selection of the datapacks available for use on the MKII
+Organiser:-
+
+     1.  8k bytes with linear addressing
+
+     2.  16k bytes with linear addressing
+
+     3.  32k bytes with linear addressing
+
+     4.  64k bytes with 256 byte paged addressing
+
+     5.  128k bytes with 256 byte paged and 16k byte segment addressing
+
+NOTE.  128k packs  are  not  supported  in  the  CM  version  of  the  MKII
+Organiser.
+
+The addressing modes are explained more fully in section <a href="#p9.2.2">9.2.2</a>.
+Although the same physical connector is used to connect the different types
+of datapack, the way the individual lines are used varies.
+
+A datapack consists of 2 major components, an EPROM  and  a  counter.   The
+EPROM  is  the  device  where the data is stored and the counter is used to
+select where in the EPROM data is stored and retrieved.
+
+
+
+       _______________________________________________
+<a id="p9.2.1">9.2.1</a>  EPROM (Eraseable Programmable Read Only Memory)
+
+EPROMs are read only memory devices but they can be written to (programmed)
+and erased under special circumstances.
+It is worth noting the following important facts about EPROMs.
+
+     1.  In a blank (erased) EPROM all the bytes are equal to $ff (all bits
+         set).
+
+     2.  EPROMs are erased by subjecting them to ultraviolet light  through
+         the quartz window on top of the chip.
+
+     3.  Bytes are written by  applying  a  special  set  of  voltages  and
+         signals to the EPROM.
+
+     4.  When writing to an EPROM, bits can only be modified from a 1 to  a
+         0.
+
+The EPROMs used in datapacks have an 8-bit data bus.   The  size  of  their
+address bus varies from 13 bits for an 8K EPROM to 16 bits for a 64K EPROM.
+Other lines that can be present on an EPROM are as follows :-
+
+     1.  Chip Select (abbreviated ECS_B)- when this line is low  the  EPROM
+         is active.  When this line is high the EPROM will ignore any other
+         signals present on any other lines.
+
+     2.  Output Enable (abbreviated EOE_B)- when this line  and  ECS_B  are
+         low  the EPROMs outputs are active and it is possible to read from
+         the EPROM.
+
+     3.  Programming  Supply  Voltage  (abbreviated  EVPP)-  this  line  is
+         normally  at 5V but is raised to between 12V and 21V (depending on
+         size and type of EPROM) when writing to the  EPROM.   On  32k  and
+         larger EPROMs, EVPP is combined with EOE_B.
+
+     4.  Program (abbreviated EPGM_B)- only on some EPROMs (8k,16k).  It is
+         used  when  writing to the EPROM.  On 32k and larger EPROMs EPGM_B
+         is combined with EOE_B.
+
+
+     <u>NB</u>.  Although the names of these lines are similar to those present on
+the  datapack  connector  there  is  not  necessarily any direct connection
+between similarly named lines (see section  <a href="#p9.2.3">9.2.3</a>  for  datapack  connector
+line definitions).
+
+
+
+         __________________
+<a id="p9.2.1.1">9.2.1.1</a>  Reading from EPROM
+
+In general to read from an EPROM the following procedure must be followed.
+
+     1.  Set up the required address on the EPROM
+
+     2.  Set EOE_B low
+
+     3.  Set ECS_B low
+
+     4.  Read data on the data bus
+
+     5.  Set ECS_B high
+
+     6.  Set EOE_B high
+
+
+     The configuration of EVPP and EPGM_B is dependent on the type of EPROM
+but does not change during the read cycle.
+
+
+
+         ________________
+<a id="p9.2.1.2">9.2.1.2</a>  Writing to EPROM
+
+In an erased or blank EPROM all the bytes are $ff, i.e. all bits are  1.   To
+write to an EPROM the relevant bits are "blown" from ones to zeroes.
+
+     So to write a $3 to the EPROM a $3 is latched on the data bus and  the
+relevant programming pulses applied to the EPROM.  This causes the EPROM to
+AND the current contents with $3 and store the result back into the EPROM.
+
+     If the EPROM was blank then the byte blown will be ($3 AND $ff) =  $3.
+If,  however, the EPROM was not blank and, say, the byte $81 was previously
+stored in the EPROM then the byte blown will be ($3 AND $81) = $1.
+
+     This can be used to advantage for writing  headers  on  packs.   If  a
+valid record header is $81 then at a later date this can be "blown" down to
+$1 to indicate an erased record.
+
+     The algorithm for writing to EPROMs varies depending on  the  type  of
+the  EPROM.  The following is an example of one algorithm to write to an 8k
+or 16k EPROM.  The algorithm used by the operating system is not  described
+here  because  of  its  complexity  in handling the many different types of
+EPROM.
+
+     1.  Set up the required address on the EPROM
+
+     2.  Set EOE_B high
+
+     3.  Raise EVPP to the required voltage (21V for 8k or 16k EPROM type)
+
+     4.  Latch data onto the data bus
+
+     5.  Set ECS_B low
+
+     6.  Set EPGM_B low
+
+     7.  Wait for 50 ms
+
+     8.  Set EPGM_B high
+
+     9.  Set the data bus to input
+
+    10.  Set EOE_B low
+
+    11.  Read back data  and  verify.   If  it  is  not  the  same  as  the
+         programmed  data  then programming has failed (possibly due to non
+         erased or faulty EPROM).
+
+    12.  Set EOE_B high
+
+    13.  Set ECS_B high
+
+    14.  Lower EVPP to 5v
+
+
+
+       _______
+<a id="p9.2.2">9.2.2</a>  COUNTER
+
+To address an 8k byte EPROM 13 address lines are required, while a 16k byte
+EPROM requires 14 a 32k byte EPROM needs 15 address lines.
+
+     Hence to connect an 8k byte EPROM to be directly addressable a  27-way
+connector would be required consisting of the following:-
+
+     1.  13 address lines
+
+     2.  8 data lines
+
+     3.  4 control lines (CS,OE,VPP,PGM)
+
+     4.  2 power supply lines (5V and 0V)
+
+
+     To connect a 32k byte  EPROM  to  be  directly  addressable  a  28-way
+connector would be required consisting of the following:-
+
+     1.  15 address lines
+
+     2.  8 data lines
+
+     3.  3 control lines (CS,OE,VPP)
+
+     4.  2 power supply lines (5V and 0V)
+
+
+
+
+         ____________________________
+<a id="p9.2.2.1">9.2.2.1</a>  Linearly Addressed Datapacks
+
+To cut down the  size  of  connector  and  to  provide  a  more  consistent
+interface a counter has been connected to the address lines (A1 upwards) of
+the EPROM.  The counter is then interfaced to via only 2 or 3 control lines
+(depending on the EPROM type).
+On an 8k datapack there are 2 control lines connected to the counter:-
+
+     1.  Master Reset (abbreviated  SMR).   When  this  line  is  high  the
+         counters  are  reset.   Also  if the clock line is low (see below)
+         this results in an address of zero on the EPROM.
+
+     2.  Clock (abbreviated SCLK).  This line has a dual function:-
+
+         i.  It acts as the least significant address bit (A0).  If SCLK is
+             low  then  the address on the EPROM will be even.  If clock is
+             high then address on the EPROM will be odd.
+
+        ii.  When SCLK goes from high to low  the  counter  is  incremented
+             resulting  in the address on the EPROM being incremented by 2,
+             but since A0 will also go low and decrement the address.   The
+             result is the address on the EPROM is incremented by 1.
+
+Thus to set the address on the EPROM to zero SCLK should be set low and  MR
+should be pulsed high.  To then set address $1 SCLK should be set high.  To
+then set the address to $2 SCLK should be set low again, and so on.
+To set the address $100 on the EPROM SMR should be  pulsed  high  and  then
+SCLK toggled 256 times.
+The counter is set up to "wrap around" the size of the pack- i.e. counting to
+address 8192 on an 8k pack will leave it set at address 0.
+This sort of pack is addressed linearly and is referred to  as  a  linearly
+address datapack.
+
+
+
+         ______________________
+<a id="p9.2.2.2">9.2.2.2</a>  Page Counted Datapacks
+
+Obviously accessing higher addresses in the EPROM this  way  increases  the
+access time.  To access the last byte of a 8k datapack SCLK must be toggled
+8191 times.  To decrease the access time on larger  packs  (32k  bytes  and
+larger)  a  256 byte page counter has been introduced.  This line is called
+SPGM_B.
+SPGM_B is used when writing to (programming) 8k and 16k datapacks.
+
+On these page counted packs there are 2 counters:-
+
+     1.  This counter is connected to address lines A1 to A7 on  the  EPROM
+         and is incremented by SCLK as described above.
+
+     2.  This counter is connected to address lines A8 to A15 (depending on
+         the  EPROM size) and is incremented by bringing SPGM_B from a high
+         state to a low state.  (Going from low to high has no effect).
+
+Both counters are reset to zero by pulsing SMR high.
+
+To set an address on the EPROM to $100 on a page counted pack SCLK  is  set
+low, SMR is pulsed high and then SPGM_B is pulsed high.
+
+To access the last byte of a 32k byte datapack SPGM_B must  be  pulsed  127
+times and then SCLK must be toggled 255 times.
+
+Both counters on a paged pack "wrap around".  The  counter  incremented  by
+SCLK wraps around $100 bytes, i.e.  toggling SCLK $100 times will not change
+the address on the EPROM.  The page counter wraps around the  size  of  the
+pack,  i.e.  pulsing  SPGM_B  128  times will not change the address on a 32k
+EPROM.
+
+This sort of pack is referred to as a "page counted" or "paged" pack.
+Both linear and paged 32k datapacks have been produced.
+
+
+
+         ___________________
+<a id="p9.2.2.3">9.2.2.3</a>  Segmented Datapacks
+
+A 128k byte EPROM would normally require 17 address lines which would  make
+it  physically  too large to fit inside a datapack.  However a version of a
+128k byte EPROM is made which consists of 8 x 16k byte segments.  The EPROM
+is  addressed as a normal 16k byte EPROM with 14 address lines.  Inside the
+EPROM there is a segment register which you can write to via the  data  bus
+by setting up a special condition on the control lines.
+
+To write to the segment register the EPROM must be selected and its outputs
+disabled.   To  do  this,  the  lines  SOE_B (output enable) and SS_B (slot
+select) must be used (see sections <a href="#p9.2.4">9.2.4</a> and <a href="#p9.3">9.3</a>).
+
+The following procedure must be followed to write to the segment register-
+
+     1.  Set SMR high
+
+     2.  Set SOE_B high
+
+     3.  Set SPGM_B Low
+
+     4.  Make sure SVPP is set to 5V
+
+     5.  Output segment number on data bus
+
+     6.  Set SS_B low
+
+     7.  Set SS_B high
+
+     8.  Set SMR low
+
+To access the last byte of a 128k byte datapack 7 must be  written  to  the
+segment  register,  SPGM_B  must  be  pulsed 63 times and then SCLK must be
+toggled 255 times.
+On a 128k pack only the bottom 3 bits of the segment address are used;  the
+top  5  bits  are  ignored.  Writing an 8 to the segment register of a 128k
+EPROM datapack is the same as writing a 0.
+
+128k datapacks also have page counters so they are "page counted, segmented
+packs".
+
+
+
+       ________
+<a id="p9.2.3">9.2.3</a>  RAMPACKS
+
+Rampacks are packs that have RAM rather than EPROM as their storage medium.
+This has advantages and disadvantages:
+
+     1.  RAM can be written to much faster than EPROM (the  same  speed  as
+         reading in fact).
+
+     2.  The RAM used in rampacks is CMOS RAM  and  uses  less  power  than
+         EPROM.
+
+     3.  RAM does not require 21V when writing to it and  hence  has  lower
+         power consumption.
+
+     4.  RAM  can  be  altered  and  does  not  require   formatting   with
+         ultraviolet light.
+
+     5.  RAM is volatile and requires a  back  up  battery  to  retain  its
+         contents.
+
+     6.  Data in RAM is not as secure  as  in  EPROM  and  is  more  easily
+         corrupted  (e.g.,  by  pulling  rampack out of Organiser while it is
+         being accessed).
+
+     7.  RAM is much more expensive byte for byte than EPROM.
+
+
+     Rampacks contain a lithium battery that has an estimated lifetime of 5
+years.
+
+     The 32k rampack is a paged datapack and has a hardware ID  byte  of  1
+(see section <a href="#p9.3.2.5">9.3.2.5</a>).
+
+     All datapack handling routines in the XP operating system will  handle
+32k  and  64k  paged  rampacks  and 128k segmented paged rampacks .  The CM
+operating system does not handle rampacks.
+
+
+
+       _________
+<a id="p9.2.4">9.2.4</a>  CONNECTOR
+
+There are sixteen lines on the datapack connector, as follows:
+     1.  SD1 data line
+     2.  SD0 data line
+     3.  SD3 data line
+     4.  SD2 data line
+     5.  SD5 data line
+     6.  SD4 data line
+     7.  SD7 data line
+     8.  SD6 data line
+     9.  SMR Master Reset
+    10.  SCLK Clock
+    11.  SOE_B Output Enable
+    12.  SS_B Slot Select
+    13.  Gnd (0v)
+    14.  SPGM_B Program
+    15.  SVCC (5v)
+    16.  SVPP Program Voltage
+
+     Below is the pinout of the datapack connector.
+
+
+                     ---------
+                    /        /|
+                   /        / |
+        Window  ----&gt;( )   /  ;
+                 /        /  /
+                ----------  /
+                |.......1| /
+                |........|/
+                ----------
+
+
+                    ^
+                    |
+                    |
+                    |
+
+    15     13     11     9      7      5      3      1
+    SVCC   Gnd    SOE_B  SMR    SD7    SD5    SD3    SD1
+    .      .      .      .      .      .      .      .
+
+    .      .      .      .      .      .      .      .
+
+    SVPP   SPGM_B SS_B   SCLK   SD6    SD4    SD2    SD0
+    16     14     12     10     8      6      4      2
+
+    =================================================== &lt;-  Circuit board
+
+
+
+
+       ____________________
+<a id="p9.2.5">9.2.5</a>  8K AND 16K DATAPACKS
+
+All 8K and 16k datapacks are linearly addressed datapacks.
+The following conditions are required to read from 8k and 16k datapacks
+         SCLK Don't care (either high or low)
+         SMR low
+         SVPP 5v
+         SOE_B low
+         SPGM_B high
+         SS_B low
+
+
+     The following conditions are required to write to 8k and 16k datapacks
+         SCLK Don't care (either high or low)
+         SMR low
+         SVPP 21v
+         SOE_B high
+         SPGM_B low
+         SS_B low
+
+
+
+       _____________
+<a id="p9.2.6">9.2.6</a>  32K DATAPACKS
+
+Both linearly addressable and paged 32k datapacks are produced.
+
+     The following conditions  are  required  to  read  from  32k  linearly
+addressed datapacks:-
+         SCLK Don't care (either high or low)
+         SMR low
+         SVPP 5v
+         SOE_B low
+         SS_B low
+
+
+     The following  conditions  are  required  to  write  to  32k  linearly
+addressed datapacks:-
+         SCLK Don't care (either high or low)
+         SMR low
+         SVPP 21v
+         SOE_B high
+         SS_B low
+
+
+     The  following  conditions  are  required  to  read  from  32k   paged
+datapacks:-
+         SCLK Don't care (either high or low).
+         SMR low
+         SVPP 5v
+         SOE_B low
+         SS_B low
+
+
+     The  following  conditions  are  required  to  write  to   32k   paged
+datapacks:-
+         SCLK Don't care
+         SMR low
+         SVPP 21v
+         SOE_B high
+         SS_B low
+
+
+
+
+       _____________
+<a id="p9.2.7">9.2.7</a>  64K DATAPACKS
+
+The majority of 64k datapacks produced have  been  paged  however  a  small
+number of linearly addressed 64k packs were produced.
+Current production is of paged 64k datapacks only.
+
+The following conditions are required to read from 64k paged datapacks:-
+         SCLK Don't care
+         SPGM_B high
+         SMR low
+         SVPP 5v
+         SOE_B low
+         SS_B low
+
+
+     The  following  conditions  are  required  to  write  to   64k   paged
+datapacks:-
+         SCLK Don't care
+         SPGM_B low
+         SMR low
+         SVPP 21v
+         SOE_B high
+         SS_B low
+
+
+
+
+       ______________
+<a id="p9.2.8">9.2.8</a>  128K DATAPACKS
+
+All 128k datapacks are segmented and paged.
+
+The following conditions are required to read from 128k datapacks
+         SCLK Don't care
+         SPGM_B Don't care
+         SMR low
+         SVPP 5v
+         SOE_B low
+         SS_B low
+
+
+     The following conditions are required to write to 128k datapacks
+         SCLK Don't care
+         SPGM_B Don't care
+         SMR low
+         SVPP 21v
+         SOE_B high
+         SS_B low
+
+
+
+
+       __________________________
+<a id="p9.2.9">9.2.9</a>  32k, 64k AND 128k RAMPACKS
+
+All 32k and 64k rampacks are paged.
+
+All 128k rampacks are segmented and paged.
+
+The following conditions are required to read from rampacks
+         SCLK Don't care
+         SPGM_B Don't care
+         SVPP Don't care (5v recommended)
+         SMR low
+         SOE_B low
+         SS_B low
+
+
+     The following conditions are required to write to rampacks
+         SCLK Don't care.  (either high or low)
+         SPGM_B Don't care
+         SVPP Don't care (5V recommended)
+         SMR low
+         SOE_B high
+         SS_B low
+
+
+
+
+     ___________________
+<a id="p9.3">9.3</a>  ORGANISER INTERFACE
+
+     The Organiser has three interface slots; one top slot and two datapack
+slots.  This section describes the two datapack slots.
+
+     The top slot is very similar to the two datapack slots  but  has  some
+unique features.  It is described separately in chapter 11.
+
+
+
+       _____________________________
+<a id="p9.3.1">9.3.1</a>  ORGANISER SIDE SLOT CONNECTOR
+
+     There are sixteen lines on  the  Organiser  side  slot  connector,  as
+follows:
+
+     1.  SD1 Data line
+     2.  SD0 Data line
+     3.  SD3 Data line
+     4.  SD2 Data line
+     5.  SD5 Data line
+     6.  SD4 Data line
+     7.  SD7 Data line
+     8.  SD6 Data line
+     9.  SMR Master Reset
+    10.  SCLK Clock
+    11.  SOE_B Output Enable
+    12.  SS_B Slot Select
+    13.  Gnd (0v)
+    14.  SPGM_B Program
+    15.  SVCC (5v)
+    16.  SVPP Program Voltage
+
+
+Note.  These are the same as the datapack connector described previously.
+
+Below is the pinout of the Organiser side slot connectors  viewed  side  on
+with the keyboard on top.
+
+
+    1      3      5      7      9      11     13     15
+    SD1    SD3    SD5    SD7    SMR    SOE_B  Gnd    SVCC
+    .      .      .      .      .      .      .      .
+
+    .      .      .      .      .      .      .      .
+
+    2      4      6      8      10     12     14     16
+    SD0    SD2    SD4    SD6    SCLK   SS_B   SPGM_B SVPP
+
+    ==================================================== &lt;-  Circuit board
+
+
+
+       ___________________
+<a id="p9.3.2">9.3.2</a>  PROCESSOR INTERFACE
+
+The ports on the 6303 and the I/O addresses that are  associated  with  the
+datapack interface are as follows:-
+
+     1.  PORT 2 (POB_PORT2, address $3, data direction register $1).   This
+         8-bit  bi-directional  port  is  used  as  the  data bus to all the
+         datapack slots (including the Top slot).  When no pack is  plugged
+         in this data bus will read zero.
+
+     2.  PORT 6 (POB_PORT6, address  $17,  data  direction  register  $16).
+         This  8-bit bi-directional port is used for the control lines.  All
+         lines are defined as outputs when in use and inputs  when  not  in
+         use.   When  this  port is set to all inputs the slots are powered
+         down and deselected.
+
+         0.  SCLK-Clock line to the datapack slots
+         1.  SMR-Master reset line
+         2.  SPGM_B-Program line
+         3.  SOE_B-Output Enable line.  When this line and SS_B are low the
+             EPROMs  outputs are active and it is possible to read from the
+             EPROM.  SOE_B set high enables SVPP to be switched to 21V (see
+             also SCA_ALARMHIGH and section <a href="#p9.3.2.5">9.3.2.5</a>).
+         4.  SS1_B-Chip select line for slot 1.  Selects slot 1 when low.
+         5.  SS2_B-Chip select line for slot 2.  Selects slot 2 when low.
+         6.  SS3_B-Chip select line for the top  slot.   Selects  top  slot
+             when low.
+         7.  PACON_B-When this line is low the  slots  are  powered  up  by
+             setting  VCC  to 5V.  When this line is high all the slots are
+             powered down.
+
+
+     3.  Location $200 SCA_PULSEENABLE-Enables generation of 21V
+
+     4.  Location $240 SCA_PULSEDISABLE-Disables generation of 21V
+
+     5.  Location $280 SCA_ALARMHIGH-Enables SVPP to be  switched  to  21V.
+         Also used for sound generation (keyclick, beep etc).
+
+     6.  Location $2C0 SCA_ALARMLOW-Disables SVPP being  switched  to  21V.
+         Also used for sound generation with SCA_ALARMLOW.
+
+     7.  PORT 5 (POB_PORT5, address $15).  Only one bit  of  this  port  is
+         associated with the datapack interface.
+         1.  ACOUT- When this bit (bit 1) is high this indicates the 21V  is
+             ready to be switched on to the packs.
+
+
+
+     <u>NB</u>.  Port 2 can also be used for serial communications.  Bit 2 of this
+port is used for external clock input.  To enable this bit to be used as an
+output $4 must be stored in the Rate/Mode Control Register  (RMCR,  address
+$10).   If  this  is  not  done  Bit  2  of  port  2  will  remain an input
+irrespective of what is  in  the  data  direction  register.   For  further
+details  see  page 50 of Hitachi's HD6301X-HD6303X Family Users Manual.  On
+reset zero is stored in the RMCR.
+
+     The following equalities are assumed in the machine code examples:
+
+         SCLK           =0
+         SMR            =1
+         SPGM           =2
+         SOE_B          =3
+         SS1_B          =4
+         SS2_B          =5
+         SS3_B          =6
+         PACON_B        =7
+
+
+
+         ________________________________________
+<a id="p9.3.2.1">9.3.2.1</a>  Block Diagram of the Processor Interface
+
+
+
+
+        Port 2                          TOP SLOT
+        ======                          ========
+          SD0-SD7&lt;&gt;---------+---------&lt;&gt;SD0-SD7
+                            |
+                            |  +-------&gt;SCLK,SMR,SOE_B
+                            |  |
+                         +--|--|-------&gt;SS3_B
+                         |  |  |
+                         |  |  |
+                         |  |  |        SLOT 1
+                         |  |  |        ======
+        Port 6           |  +--|------&lt;&gt;SD0-SD7
+        ======           |  |  |
+                 +-------|--|--+-------&gt;SCLK,SMR,SOE_B
+        SCLK-&gt;---+       |  |  |
+                 |       |  |  |  +----&gt;SPGM_B
+        SMR-&gt;----+       |  |  |  |
+                 |       |  |  |  |  +-&gt;SS1_B
+        SPGM_B-&gt;-|-------|--|--|--+  |
+                 |       |  |  |  |  |
+        SOE_B-&gt;--+    +--|--|--|--|--+
+                      |  |  |  |  |     SLOT 2
+        SS1_B-&gt;-------+  |  |  |  |     ======
+                         |  +--|--|---&lt;&gt;SD0-SD7
+        SS2_B-&gt;------+   |     |  |
+                     |   |     +--|----&gt;SCLK,SMR,SOE_B
+        SS3_B-&gt;------|---+        |
+                     |            +----&gt;SPGM
+                     |
+                     +-----------------&gt;SS2_B
+
+
+NOTE  --+-- indicates a connection
+        |
+
+      SS2_B-&gt;--   indicates SS2_B is an output
+
+      SD0-SD7&lt;&gt;-- indicates that data lines SD0 to SD7 are bi-directional
+
+
+
+
+         _____________________
+<a id="p9.3.2.2">9.3.2.2</a>  Powering up the Slots
+
+The 5v supply (SVCC) and program voltage supply (SVPP)  to  the  slots  are
+switchable by software.  These supplies are common to all the slots.
+
+The slots are powered up by setting PACON_B low.  This sets SVCC  and  SVPP
+to 5V.
+
+After powering up the slots there should be a delay of  at  least  50ms  to
+allow  the  power to settle.  During this delay all lines of port 6, except
+PACON_B, should be set to inputs.
+The slots  should  be  powered  down  whenever  possible  to  reduce  power
+consumption.
+Setting SVPP to 21V is described in section <a href="#p9.3.2.6">9.3.2.6</a>.
+
+
+     The following example powers up the slots.
+
+; Make port 6 an input. This powers down the slots and deselects them.
+; This should have been done immediately after the slots were last used.
+        CLR     POB_DDR6
+;
+; Make port 2 inputs. Port 2 (pack data bus) should always be left inputs.
+        CLR     POB_DDR2
+; Initialise port 6 so it has the correct data when it is made an output.
+; Make SS1_B=SS2_B=SS3_B=1,SMR=SCLK=PACON_B=SOE_B=0,SPGM_B=1
+        LDA     A,#$74
+        STA     A,POB_PORT6:
+; Make PACON_B of port 6 an output, powers up slots
+        LDA     A,#$80
+        STA     A,POB_DDR6:
+; Wait for power to settle
+        LDX     #11520                  ; 50 ms delay
+1$:
+        DEX
+        BNE     1$
+; Make rest of port 6 outputs now the slots are on
+        LDA     A,#$FF
+        STA     A,POB_DDR6:
+; The slots are now powered up, but none are yet selected.
+
+
+
+
+         _________________________
+<a id="p9.3.2.3">9.3.2.3</a>  Selecting a Datapack Slot
+
+     As can been seen from the above diagram the datapack data bus (SD0-SD7
+on  port 2), SMR, SOE_B and SCLK (on port 6) are common to all three slots.
+SPGM_B is common to the two side slots.  To select which slot is in use the
+three chip select lines (SS1_B,SS2_B,SS3_B) are used.
+
+The chip select lines use inverse logic so when the lines are high the slot
+is deselected and when a line is low the slot is selected.
+
+_______
+WARNING.  Only one slot must be selected at a time.  Selecting two or  more
+slots simultaneously can result in permanent damage to the hardware!
+
+The following rules must be adhered to when accessing the datapack slots:
+
+     1.  When not in use all slots should be left  deselected  and  powered
+         off where possible.
+
+     2.  When not in use the data bus (port 2) should be left defined as an
+         input.
+
+     3.  In general, with the exception of  toggling  the  SCLK  line,  all
+         control   line   manipulation   should  be  done  with  all  slots
+         deselected.
+
+An example of selecting a slot is in the next section.
+
+
+
+         ____________________________
+<a id="p9.3.2.4">9.3.2.4</a>  Reading from a Datapack Slot
+
+If the slots have been powered up then the following program  will  read  a
+byte from the datapack in slot 1 at it's current address.
+
+; Make port2 inputs.
+        CLR     POB_DDR2
+; set SPGM_B high and SOE_B low
+        BSET    SPGM_B,POB_PORT6:
+        BCLR    SOE_B,POB_PORT6:
+; select slot 1 (this is always done last)
+        BCLR    SS1_B,POB_PORT6:
+        LDA     B,POB_PORT2:            ; read data into B register
+; deselect slot 1
+        BSET    SS1_B,POB_PORT6:
+
+NOTE:  If there is no pack plugged into the  current  slot  then  there  is
+always  a  zero  on the data bus (all lines on the pack data bus are pulled
+low).  This fact is used to detect if a pack is present.  If the first byte
+of  a  pack  is  read  as a zero then it is assumed there is no pack in the
+slot.  Hence it is important to make sure the first byte of a pack  is  not
+zero.
+
+
+
+         ________________
+<a id="p9.3.2.5">9.3.2.5</a>  Hardware ID Byte
+
+On certain packs and devices there is an ID byte hardwired into  the  pack.
+This byte is read in the normal way except that SMR is held high during the
+read cycle.  This byte does not exist on standard datapacks and  attempting
+to  read  it  will  return the first byte on the pack.  At present the only
+pack which has a hardware ID byte is the external rampack, which has an  ID
+byte  of 1.  However no attempt should be made to read the hardware ID from
+the top slot.
+
+     If the slots have been powered up then the following program will read
+the hardwired ID byte from the datapack in slot 1.
+; Make port2 inputs.
+        CLR     POB_DDR2
+; set SMR high
+        BSET    SMR,POB_PORT6:
+; set SPGM_B high and SOE_B low
+        BSET    SPGM_B,POB_PORT6:
+        BCLR    SOE_B,POB_PORT6:
+; select slot 1
+        BCLR    SS1_B,POB_PORT6:
+; read hardwired ID byte into B register
+        LDA     B,POB_PORT2:
+; deselect slot 1
+        BSET    SS1_B,POB_PORT6:
+
+
+
+
+         __________________________________
+<a id="p9.3.2.6">9.3.2.6</a>  Setting the Program Voltage (SVPP)
+
+It is not recommended that users attempt to write their own code  to  write
+to  datapacks.   The  following information is only given for completeness.
+The 21V required for programming  EPROMs  is  generated  using  a  hardware
+"pump"  similar to those found in electronic flash guns.  After the pump is
+turned on you must wait for the voltage to reach the required  level  (like
+waiting for the ready light to appear on a flash gun).
+The following lines are used to control SVPP:
+
+     1.  PORT 6 (POB_PORT6, address $17)-When Bit 3 of this port (SOE_B) is
+         set  high  together  with  SCA_ALARMHIGH,  21V  (if  generated) is
+         switched to SVPP.
+
+     2.  Location $200 SCA_PULSEENABLE-Enables generation  of  21V  (starts
+         hardware pump)
+
+     3.  Location $240 SCA_PULSEDISABLE-Disables generation of  21V  (stops
+         hardware pump)
+
+     4.  Location $280 SCA_ALARMHIGH-Enables SVPP to  be  switched  to  21V
+         with SOE_B
+
+     5.  Location $2C0 SCA_ALARMLOW-Disables SVPP being switched to 21V
+
+     6.  PORT 5 (POB_PORT5, address $15).  Only one bit  of  this  port  is
+         associated with the datapack interface.
+         1.  ACOUT- When this bit (bit 1) is high this indicates the 21V  is
+             ready to be switched on to the packs.
+
+
+SCA_PULSEENABLE, SCA_PULSEDISABLE  etc,  are  activated  by  accessing  the
+relevant  memory  location  with either a read or write.  It is recommended
+the TST instruction is used, i.e.
+
+     TST        SCA_PULSEENABLE         ; starts hardware pump
+
+     TST        SCA_PULSEDISABLE        ; stops hardware pump
+
+<u>NOTE</u>.  The packs must be turned on (PACON_B  low)  when  switching  21V  to
+SVPP.  Damage may result to the packs or Organiser if this is not done.
+The following sequence will switch SVPP to 21V:
+
+     1.  Set SOE_B low, TST SCA_ALARMLOW-make sure initially switched off.
+
+     2.  TST SCA_PULSEENABLE-start pump.
+
+     3.  Wait for ACOUT to come high-wait until voltage is high enough.
+
+     4.  TST SCA_PULSEDISABLE-stop pump.
+
+     5.  TST SCA_ALARMHIGH and set SOE_B high-21V is now switched to SVPP.
+
+     6.  Wait 5ms to allow the voltage to settle.
+
+
+TST SCA_ALARMLOW or setting SOE_B low will switch SVPP back to 5V.
+
+_______
+WARNING The 21V should not be switched to SVPP while the pump is on as this
+can result in damage to the hardware.
+
+After pumping, the voltage is stored in a capacitor.  This means  there  is
+only  a  limited  amount  of  energy  available  for  blowing EPROMs before
+repumping is required.  The operating system allows  for  24ms  of  blowing
+time  for  each  pump  cycle.  This will only be available after ACOUT goes
+high as the capacitor will discharge itself through leakage.
+
+The pump charges a standard tolerance 100uF 40V electrolytic  capacitor  to
+35V which is then regulated to 21V before being switched to SVPP.
+
+___
+NB.
+
+     1.  If the 21V is switched to  SVPP  before  the  ready  condition  is
+         detected,  or  it  is  left  switched  on and not repumped, then a
+         voltage somewhere between 5V and 21V will  be  switched  to  SVPP.
+         This can result in a variety of disastrous effects (e.g. destruction
+         of data) depending on the conditions under which it occurs.
+
+     2.  The  operating  system  keyboard   interrupt   routine   can   TST
+         SCA_ALARMHIGH under certain circumstances, so it is important that
+         in any  routine  where  SOE_B  may  be  high  interrupts  must  be
+         disabled.
+
+
+
+
+         _____________________
+<a id="p9.3.2.7">9.3.2.7</a>  Writing to a Datapack
+
+The EPROMs are written to using  a  variation  of  the  INTEL  quick  pulse
+programming algorithm.
+Users are advised not to attempt to write their own EPROM programming code,
+but to use the supplied operating system calls.
+
+
+
+       _______
+<a id="p9.3.3">9.3.3</a>  EXAMPLE
+
+The following code powers up the slots and then reads the first 20 bytes of
+a  pack in slot 1.  It contains no checking to see if a pack is in the slot
+or if it is, what sort of pack it might be.
+
+It is recommended that the operating system be used to power  up  and  down
+the slots and the second example shows how this is done.  An explanation of
+the operating system calls is given in the next section.
+
+An example of how to do this using just operating system calls is given  in
+section <a href="#p9.5.11">9.5.11</a>.
+
+
+; Save interrupt mask and disable interrupts
+        TPA
+        PSH     A
+        SEI
+; Initialise ports
+; 4 must be stored in RMCR to allow bit 2 port 2 to be an output.
+        LDA     A,#$4
+        STA     A,POB_RMCR:
+; Make port 6 an input. This powers down the slots and deselects them.
+        CLR     POB_DDR6
+; Make port 2 inputs. Port 2 (pack data bus) should always be left inputs.
+        CLR     POB_DDR2
+; Initialise port 6 so it has the correct data when it is made an output.
+; Make SS1_B=SS2_B=SS3_B=1,SMR=SCLK=PACON_B=SOE_B=0,SPGM_B=1
+        LDA     A,#$74
+        STA     A,POB_PORT6:
+; Make PACON_B of port 6 an output, powers up slots
+        LDA     A,#$80
+        STA     A,POB_DDR6:
+; Wait for power to settle
+        LDX     #11520                  ; 50 ms delay
+1$:
+        DEX
+        BNE     1$
+; Make rest of port 6 outputs now the slots are on
+        LDA     A,#$FF
+        STA     A,POB_DDR6:
+; Reset pack counters with master reset
+        BSET    SMR,POB_PORT6:          ; Master reset high
+; Store 0 in segment register in case we have 128k pack
+        BSET    SOE_B,POB_PORT6:
+        LDA     A,#$FF
+        STA     A,POB_DDR2:             ; make port 2 output
+        CLR     A
+        STA     A,POB_PORT2:            ; 0 on data bus
+        BCLR    SPGM_B,POB_PORT6:
+        BCLR    SS1_B,POB_PORT6:         ; select slot 1 and latch data
+        BSET    SS1_B,POB_PORT6:         ; deselect slot
+        BCLR    SOE_B,POB_PORT6:
+        BCLR    SMR,POB_PORT6:          ; Master reset low
+        BSET    SPGM_B,POB_PORT6:
+        CLR     POB_DDR2                ; make port 2 inputs again
+        BCLR    SS1_B,POB_PORT6:        ; select slot 1
+        LDX     #DATA                   ; where to save data
+LOOP:
+        LDA     B,POB_PORT2:            ; read data
+        STA     B,0,X                   ; store data
+        BTGL    SCLK,POB_PORT6:         ; increment counter on EPROM
+        INX
+        CPX     #DATA+20                ; Have we reached the end yet ?
+        BNE     LOOP                    ; If not loop
+        BSET    SS1_B,POB_PORT6:         ; deselect slot
+        CLR     POB_DDR6                ; Turn off all slots
+        PUL     A
+        TAP                             ; restore interrupt mask
+
+
+The following example does the same as previous one but uses operating
+system calls for powering up and down the slots. If the user has to write
+their own pack reading routine then this is the preferred method.
+
+; Save interrupt mask and disable interrupts
+        TPA
+        PSH     A
+        SEI
+; Initialise ports, power up, select required slot and reset pack counters
+        CLR     A
+        LDA     B,#PAKB
+        OS      PK$SETP
+        BCS     ERROR                   ; optional error checking
+        LDX     #DATA                   ; where to save data
+LOOP:
+        LDA     B,POB_PORT2:            ; read data
+        STA     B,0,X                   ; store data
+        BTGL    SCLK,POB_PORT6:         ; increment counter on EPROM
+        INX
+        CPX     #DATA+20                ; Have we reached the end yet
+        BNE     LOOP                    ; If not loop
+; turn off slots
+        OS      PK$PKOF
+        PUL     A
+        TAP                             ; restore interrupt mask
+
+
+
+     ________
+<a id="p9.4">9.4</a>  SOFTWARE
+
+This section summarises the  operating  system  services  which  are  fully
+described in the next section.
+
+As well as the 3 slots through which  the  Organiser  can  access  datapack
+devices  (or in the case of the top slot datapack like devices) it can also
+access the internal RAM as a datapack type device.  From the top level menu
+and from OPL the following naming convention is used:
+
+     DEVICE A:  Internal RAM of the Machine.
+
+     DEVICE B:  Upper side slot (closest to the top slot).
+
+     DEVICE C:  Lower side slot.
+
+     DEVICE D:  Top slot.
+
+
+
+       ____________________________________
+<a id="p9.4.1">9.4.1</a>  SUMMARY OF OPERATING SYSTEM SERVICES
+
+     The first operating system routine that has to be  called  before  any
+pack  accessing  can be done is PK$SETP.  PK$SETP is called with the number
+of slot to be accessed.  It powers up the slots (if they are powered  down)
+and  selects  the required slot.  It then detects if a pack is plugged into
+that slot and if so "logs on" that pack.  A full description of PK$SETP  is
+given in section <a href="#p9.5.1">9.5.1</a>.
+
+If a call to PK$SETP has been successful then the pack can be  accessed  by
+any one of the following routines:
+
+     1.  PK$SAVE Saves D bytes from X to current position in current pack.
+
+     2.  PK$READ Reads D bytes into ram at  X,  from  current  position  in
+         current pack.  Increments pack address by D.
+
+     3.  PK$RBYT Reads a byte into B from current position in current pack.
+         Increments pack address by 1.
+
+     4.  PK$RWRD Reads a word into D from current position in current pack.
+         Increments pack address by 2.
+
+     5.  PK$SKIP Increments current pack address by D bytes.
+
+     6.  PK$QADD Returns current pack address in B and X.
+
+     7.  PK$SADD Sets current pack address to B (most significant byte) and
+         X.  If the slots have been previously turned off with PK$PKOF this
+         routine will power up the slots and reselect the current pack (the
+         pack previously selected with PK$SETP).
+
+     8.  PK$PKOF Powers down all the slots.
+
+
+
+
+       ______________
+<a id="p9.4.2">9.4.2</a>  VARIABLE USAGE
+
+Described below  are  the  variables  used  by  the  pack  handling  system
+services.
+
+  PKB_CURP $8B-Set by PK$SETP this is the current device being looked at by
+           the operating system.  It contains the contents of B register on
+           the last call to PK$SETP.  If  this  is  zero  (i.e.   device  A:
+           internal RAM pack selected) then the ports may be left selecting
+           device B,C or D.  See also PKB_CPAK.
+
+  PKB_CPAK $8C-Set by PK$SETP and PK$PKOF.  Actual current slot.  Only  set
+           if the current slot is powered up and selected.  Set to $FF when
+           packs are turned off by PK$PKOF.  If  this  byte  is  zero  then
+           device A:  has been selected but the slots will be still powered
+           up.
+
+  PKW_RASI $8D-Length of internal RAM pack (device A:).
+
+  PKW_CMAD $8F-Set by all pack routines when accessing  ram  file.   Offset
+           into RAM file.
+
+  PKB_HPAD $91-Set by all pack routines when accessing devices B,C,D.  High
+           order byte of pack address.
+
+  PKW_CPAD $92-Set by all pack routines when accessing devices B,C,D.  Pack
+           address.
+
+  PKA_PKID $94-Set by PK$SETP.  Pointer to current pack identifier in array
+           PKT_ID.
+
+  PKT_ID  $20D7-Set by PK$SETP.  An array of 4 elements each 10 bytes  long
+           that  contain  the  id  string of each of the 4 devices A:,B:,C:
+           and D:  respectively.  See description of login below.
+
+
+
+       ______________
+<a id="p9.4.3">9.4.3</a>  PACK ID STRING
+
+Every  pack  logged  on  the  Organiser  has  a   ten   byte   string   for
+identification.   This  string  is blown onto a blank pack by the Organiser
+during "sizing".  It consists of an ID byte, a size byte,  a  6  byte  time
+string and a 2 byte checksum.
+
+    0    1    2    3    4    5    6    7    8    9
+    ID   SZ   YR   MTH  DAY  HR   FRH  FRL  CHKH CHKL
+
+
+         ID -Id byte.  This byte describes the pack type and function.  The
+         bits of this byte signify the following:
+
+         0.  This is clear for a valid MKII Organiser pack.
+
+         1.  This is set if the pack is an eprom pack (cleared if it  is  a
+             ram pack).
+
+         2.  This is set if the pack is paged.
+
+         3.  This is cleared if the pack is write protected.
+
+         4.  This is cleared if the pack is bootable.
+
+         5.  This is set if the pack is copyable.
+
+         6.  This is normally set (reserved for future expansion).
+
+         7.  This is set if the pack is a MK1 Organiser datapack.  If  this
+             is the case then the id string on the datapack is different to
+             that stored in the id table.  The  operating  system  converts
+             the MK1 id string on the datapack to a valid MKII id string in
+             the id table.
+
+
+         SZ- This contains the size of the pack in 8k (8096) units.  (e.g. =1
+         for an 8k pack, 2 for a 16k pack etc).
+
+         YR- The year the pack was sized.
+
+         MNTH- The month the pack was sized.
+
+         DAY- The day of the month the pack was sized.
+
+         HR- The hour the pack was sized.
+
+         FRH and FRL- A unique two byte number, generated  by  reading  the
+         contents of the free running counter at the time of sizing.
+
+         CHKH and CHKL- A word checksum of the first  4  words  of  the  ID
+         string.
+
+
+PK$SETP sets PKA_PKID to point to the relevant ID string in PKT_ID for  the
+requested slot.
+When PK$SETP is called and a valid pack is in the requested slot  then  the
+first  10  bytes of the pack are compared to the 10 bytes stored in RAM for
+that particular slot.  If they are not the same, then the 10 bytes from the
+pack  are  copied  into  RAM  and,  if requested, a "PACK CHANGED" error is
+reported.
+
+The word checksum is used in  rampacks  to  determine  if  they  have  been
+corrupted.  If this checksum is not correct in a rampack it is assumed that
+they have been corrupted and they are filled with $FF and then resized (all
+data  in  them is lost).  This does not apply to the CM operating system as
+it does not handle rampacks.
+
+The first 2 bytes of the ID string are useful in determining the pack  type
+and size.
+
+The following is a list of the 1st 2 bytes of the ID string for a number of
+standard datapacks:
+
+         8k datapack-$7A $01
+
+         16k datapack-$7A $02
+
+         32k datapack-$7E $04
+
+         64k datapack-$7E $08
+
+         128k datapack-$7E $10
+
+
+
+
+       ___________________________
+<a id="p9.4.4">9.4.4</a>  DEVICE A: INTERNAL RAM PACK
+
+Device A:  (also known as PACK A:) is the internal  RAM  of  the  Organiser
+which  is accessed as if it were a datapack.  It is accessible via the same
+operating system services that handle datapacks.
+Device A:  is held in the sixteenth permanent allocator cell  (see  section
+<a href="tech06.htm#p6.5.2.1">6.5.2.1</a>).   The cell is grown as data is saved and shrunk as data is erased
+from the pack.
+The base of this cell is held in address  DATACELL  ($201E).   The  current
+position  in  this  pack is held by the operating system as a 2 byte offset
+from the base address in location PKW_CMAD ($8f).
+Obviously the amount of memory available to Device A:  varies depending  on
+the  machine  type (CM, XP or other) and on other demands on memory (e.g. the
+Diary and OPL programs).
+
+
+
+     _______________
+<a id="p9.5">9.5</a>  SYSTEM SERVICES
+
+This section describes the operating system calls for pack handling.
+
+
+     These routines  provide  all  that  the  programmer  should  need  for
+datapack accessing.  They automatically take care of reading and writing to
+the different types and sizes of packs giving the programmer  a  consistent
+interface irrespective of the pack which is plugged in.
+
+These routines will access the internal RAM of the Organiser  (referred  to
+as PACK A) as if it were an external datapack.
+
+In the following descriptions the words slot and pack  are  often  used  to
+mean  the  same thing, i.e.  powering up the slots is the same as turning on
+the packs.
+The reason for this is that under most conditions a pack  will  be  plugged
+into the slot in question.  (If not an error is usually generated!)
+
+The following naming convention for the slots is used:
+
+NAME                VALUE     DESCRIPTION
+====                =====     ===========
+PAKA                0         Internal RAM of Organiser
+PAKB                1         Upper side slot
+PAKC                2         Lower side slot
+PAKD                3         Top slot
+
+
+
+       _______
+<a id="p9.5.1">9.5.1</a>  PK$SETP
+
+VECTOR NUMBER:          098
+INPUT PARAMETERS:       A register - Non-zero if a pack change is to be
+                                     reported as an error.
+                        B register - Controls which pack to select.
+OUTPUT VALUES:          A register - Pack type.
+                        X register - Pack size in 8k units or garbage
+                                     for PAKA (the internal RAM).
+
+DESCRIPTION
+
+    Sets current pack as the contents of B register.
+    Sets up the operating system to access the current pack.
+
+    ___
+    <u>NB.  This routine must be run before calling any further pack  routines
+    if the packs have been turned off or the slots modified in any way (i.e.
+    by a user machine code program).</u>
+
+    This routine operates in two distinct ways:
+
+    1.  If B register is PAKA then
+
+        1.  Set PKA_PKID to point to ID string in PKT_ID for current  slot.
+            (see section <a href="#p9.4.3">9.4.3</a>)
+
+        2.  Set current pack to RAM by setting PKB_CURP=0.  If packs are on
+            (PKB_CPAK&lt;&gt;$FF)  then  set  PKB_CPAK=0 and leave slots in there
+            current state, if not then leave PKB_CPAK=$FF.
+
+        3.  Set the current RAM file address to 0, i.e.  PKW_CMAD=0.
+
+        4.  Always returns success.
+
+
+    2.  If B register = PAKB or PAKC or PAKD then
+
+        1.  Set PKA_PKID to point to ID string in PKT_ID for current  slot.
+            (see section <a href="#p9.4.3">9.4.3</a>)
+
+        2.  If PKB_CPAK=$FF then power up all the slots.  If  PKB_CPAK&lt;&gt;$FF
+            then   it   is   assumed   the  slots  are  powered  up.   Sets
+            PKB_CURP=PKB_CPAK=current pack ( 1,2 or 3).
+
+        3.  Check the battery voltage.  If  it  is  low  then  return  with
+            ER_GN_BL (battery low).
+
+        4.  Log on the current slot.  The logon procedure is as follows:
+
+                Read first byte of pack.  (Known as  the  ID  byte  of  the
+                pack)
+
+                If zero then return with ER_PK_NP (no pack in slot) and set
+                first byte of ID string to 0.
+
+                If $FF then blow to $7f, work out size  and  type  of  pack
+                then save ID string to pack.
+
+                If blowing first byte fails or saving ID string fails  then
+                attempt to blow first byte to zero and return with ER_PK_DE
+                (write pack error).
+
+                If, when checking pack size, the  pack  is  not  completely
+                blank then return with ER_PK_NB (pack not blank).
+
+                If the ID byte is valid then compare first 10 bytes on pack
+                with  the  ID string in RAM.  If this has changed update ID
+                string in RAM.  Report ER_PK_CH  only  if  A  register  was
+                non-zero.  Descriptions of the ID string and ID byte are in
+                section <a href="#p9.4.3">9.4.3</a>.
+
+                If the ID byte is invalid return with ER_PK_IV (unknown pack
+                type)  and  set  the  first byte in the ID string in RAM to
+                $FF.
+
+
+        5.  Sets the current pack address to  0  and  sets  PKB_HPAD=0  and
+            PKW_CPAD=0.
+
+        6.  Leaves the slots in the following condition even if an error is
+            reported.
+
+            1.  Slots are powered up.
+
+            2.  Current slot is selected (Current SS_B is low).
+
+            3.  SOE_B is low.
+
+            4.  SPGM_B is high.
+
+            5.  SCLK is low.
+
+            6.  SMR is low.
+
+            The only exception to this is the battery low error.  When this
+            is returned the slots are left in an indeterminate state.
+
+
+    3.  If any error occurs (except no pack) then the  first  byte  of  the
+        current  ID  string  in  RAM is set to $FF. In the case of a no pack
+        error this byte is set to zero.  In either case all other bytes  of
+        the ID string are invalid.
+
+
+
+EXAMPLE
+
+    To access slot 1
+
+        CLR     A               ; Pack changed error not required
+        LDA     B,#PAKB         ; Access slot 1 (upper side slot)
+        OS      PK$SETP
+        BCS     ERROR           ; Report error
+
+
+ERRORS:                 ER_PK_NP - no pack in slot
+                        ER_PK_DE - write pack error
+                        ER_PK_CH - pack has changed
+                        ER_PK_DV - selected an invalid pack
+                        ER_GN_BL - battery too low
+                        ER_PK_IV - unknown pack type
+                        ER_PK_RO - attempt to write to read only pack
+                        ER_PK_NB - pack not blank
+
+
+
+       _______
+<a id="p9.5.2">9.5.2</a>  PK$SAVE
+
+VECTOR NUMBER:          097
+INPUT PARAMETERS:       D register - Number of bytes to save.
+                        X register - Source address.
+OUTPUT VALUES:          None
+
+
+DESCRIPTION
+
+    Save D bytes from X at the current position in the current pack.
+    Leaves counter after last byte saved if successful, if not, leaves  the
+    counter on the byte that failed.
+
+
+EXAMPLE
+
+    Saves LENDATA bytes from address DATA
+
+        LDD     #LENDATA        ; Length of data
+        LDX     #DATA           ; Pointer to data
+        OS      PK$SAVE
+        BCS     ERROR           ; Report error
+
+ERRORS:                ER_PK_DE - write pack error
+                       ER_PK_RO - write to read only pack
+                       ER_AL_NR - ram pack full
+                       ER_GN_BL - battery too low
+
+
+
+       _______
+<a id="p9.5.3">9.5.3</a>  PK$READ
+
+VECTOR NUMBER:         094
+INPUT PARAMETERS       D register - Number of bytes to read
+                       X register - Address of target buffer
+OUTPUT VALUES:         None
+
+
+DESCRIPTION
+
+    Reads (D register) bytes from the current position in the current  pack
+    into buffer pointed to by the X register.
+    If the slot has not been  previously  selected  by  PK$SETP  will  read
+    rubbish!
+
+EXAMPLE
+
+    Reads LENDATA bytes into address DATA
+
+        LDD     #LENDATA        ; length of data
+        LDX     #DATA           ; pointer to data
+        OS      PK$READ
+
+ERRORS:                None
+
+
+
+       _______
+<a id="p9.5.4">9.5.4</a>  PK$RBYT
+
+VECTOR NUMBER:         093
+INPUT PARAMETERS:      None
+OUTPUT VALUES:         B register - byte read
+
+
+DESCRIPTION
+
+    Reads a byte from  the  current  position  in  the  current  pack  into
+    register B and increments pack counter by 1.
+
+    If an attempt is made to read past  the  end  of  the  pack,  the  pack
+    address  in  RAM  will not reflect the counter address on the pack.  No
+    error will be generated.  This should not be attempted.
+
+EXAMPLE
+
+    Reads COUNT bytes, or until a 0 is read, into address DATA
+
+        LDA     A,#COUNT
+        LDX     #DATA
+LOOP:
+        OS      PK$RBYT
+        TST     B
+        BEQ     ENDLOOP
+        STA     B,0,X
+        INX
+        DEC     A
+        BNE     LOOP
+ENDLOOP:
+
+REGISTERS PRESERVED:   A and X
+ERRORS:                None
+
+
+
+       _______
+<a id="p9.5.5">9.5.5</a>  PK$RWRD
+
+VECTOR NUMBER:         095
+INPUT PARAMETERS:      None
+OUTPUT VALUES          D register - word read
+
+
+DESCRIPTION
+
+    Reads a word from  the  current  position  in  the  current  pack  into
+    register D and increments pack counter by 2.
+
+    If an attempt is made to read past  the  end  of  the  pack,  the  pack
+    address  in  RAM  will not reflect the counter address on the pack.  No
+    error will be generated.  This should not be attempted.
+
+EXAMPLE
+
+    Reads next word of the pack and stores into address DATA
+
+        OS      PK$RWRD
+        STD     DATA
+
+REGISTERS PRESERVED:   X
+ERRORS:                None
+
+
+
+       _______
+<a id="p9.5.6">9.5.6</a>  PK$SKIP
+
+VECTOR NUMBER:         099
+INPUT PARAMETERS:      D register - Relative amount to skip
+OUTPUT VALUES:         None
+
+
+DESCRIPTION
+
+    Skips the pack's address up by D register bytes.
+    D is taken as a signed positive integer value, i.e. 0 to 32767.
+
+
+ERRORS:                 ER_PK_NP - no pack in slot
+                        ER_PK_DE - write pack error
+                        ER_PK_CH - pack has changed
+                        ER_PK_DV - selected an invalid pack
+                        ER_GN_BL - battery too low
+                        ER_PK_IV - unknown pack type
+                        ER_PK_RO - attempt to write to read only pack
+                        ER_PK_NB - pack not blank
+                        ER_PK_BR - bad read error
+
+
+BUGS
+
+    If D is greater than 32767 or if the result of the skip is greater than
+    the pack size the result will be unpredictable.
+
+
+
+       _______
+<a id="p9.5.7">9.5.7</a>  PK$QADD
+
+VECTOR NUMBER:         092
+INPUT PARAMETERS:      None
+OUTPUT VALUES:         B register - high 8 bits of pack address.
+                       X register - low 16 bits of pack address.
+
+
+DESCRIPTION
+
+    Returns the current pack address in the B and X registers.
+    In the CM operating system B will always be zero.
+
+
+ERRORS:                None
+
+
+
+       _______
+<a id="p9.5.8">9.5.8</a>  PK$SADD
+
+VECTOR NUMBER:         096
+INPUT PARAMETERS:      B register - high 8 bits of pack address.
+                       X register - low 16 bits of pack address.
+OUTPUT VALUES:         None
+
+
+DESCRIPTION
+
+    Sets up address B:X on current pack.
+    On the CM machine the B register is ignored,  otherwise  the  B  and  X
+    registers form a 24 bit pack address.
+
+    If the slots have been powered down by using PK$OFF, PK$SADD will power
+    up  the  slots  and  select  the most recently selected slot by calling
+    PK$SETP.
+
+EXAMPLE
+
+    Set address on pack to 0
+
+        CLR     B
+        LDX     #0
+        OS      PK$SADD
+        BCS     ERROR           ; Report error
+
+ Set address on pack to $12345 (128k pack)
+
+        LDA     B,#$1
+        LDX     #$2345
+        OS      PK$SADD
+        BCS     ERROR           ; Report error
+
+ERRORS:                 ER_PK_NP - no pack in slot
+                        ER_PK_DE - write pack error
+                        ER_PK_CH - pack has changed
+                        ER_PK_DV - selected an invalid pack
+                        ER_GN_BL - battery too low
+                        ER_PK_IV - unknown pack type
+                        ER_PK_RO - attempt to write to read only pack
+                        ER_PK_NB - pack not blank
+                        ER_PK_BR - bad read error
+
+
+BUGS
+
+    If the address passed is greater than the size of the pack  a  ER_PK_BR
+    error  will  be  returned  but  the  address  set  on  the pack will be
+    indeterminate.
+
+
+
+       _______
+<a id="p9.5.9">9.5.9</a>  PK$PKOF
+
+VECTOR NUMBER:         091
+INPUT PARAMETERS:      None
+OUTPUT VALUES:         None
+
+
+DESCRIPTION
+
+    Turns off all slots.
+
+    PK$SETP or PK$SADD must be called before  the  packs  can  be  accessed
+    again.
+
+ERRORS:                None
+
+
+
+
+        ___________
+<a id="p9.5.10">9.5.10</a>  PACK ERRORS
+
+The following errors can occur when accessing the datapack slots.
+
+NAME    VALUE   DESCRIPTION
+====    =====   ===========
+ER_PK_BR        200     READ PACK ERROR
+
+ER_PK_NP        246     NO PACK IN SLOT
+ER_PK_DE        245     WRITE PACK ERROR
+ER_PK_RO        244     ATTEMPTED WRITE TO READ ONLY PACK
+ER_PK_DV        243     BAD DEVICE NAME
+ER_PK_CH        242     PACK CHANGED
+ER_PK_NB        241     PACK NOT BLANK
+ER_PK_IV        240     UNKNOWN PACK TYPE
+
+ER_AL_NR        254     RAM PACK FULL (NO MORE ROOM IN RAM)
+
+ER_GN_BL        194     BATTERY TOO LOW
+
+
+
+        _______
+<a id="p9.5.11">9.5.11</a>  EXAMPLE
+
+The following code powers up the slots and then reads 20 bytes from address
+$100  of a pack in slot 1 with error checking.  If an error is detected the
+carry flag is set and the error number is returned in B.  If  there  is  no
+error  then  the  carry  flag is clear and the value of B is undefined. This
+routine performs a similar function to the machine code example in  section
+<a href="#p9.3.3">9.3.3</a>.
+
+
+        CLR     A               ; Do not want pack changed error
+        LDA     B,#PAKB
+        OS      PK$SETP         ; prepare to access slot 1
+        BCS     ERROR
+        CLR     B
+        LDX     #$100
+        OS      PK$SADD         ; set pack address to $100
+        BCS     ERROR
+        LDD     #20
+        LDX     #DATA
+        OS      PK$READ         ; read 20 bytes off pack
+        BCS     ERROR
+        OS      PK$PKOF
+        CLC                     ; no error
+ERROR:
+        RTS
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech08.htm">Ch. 8</a></li>
+<li class=navactive>Ch. 9</li>
+<li><a href="tech10.htm">Ch. 10</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

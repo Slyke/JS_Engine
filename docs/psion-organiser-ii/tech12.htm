@@ -1,0 +1,1910 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 12 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech12.htm", "name": "Chapter 12" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 12</li>
+</ol>
+
+
+<PRE>                                CHAPTER 12
+
+                               _____________
+                               FILING SYSTEM
+
+
+
+           _________________
+<a id="p12.1">12.1</a>  FILES AND RECORDS
+
+
+This section describes the format of file-structured  datapacks,  then  the
+system  services available for file and record management.  System services
+which access datapacks directly are discussed in chapter 9.  See  also  the
+Organiser  II operating manual for details of file handling in OPL.  In the
+following sections "datapack"  means  EPROMs,  ROMs  on  external  devices,
+external RAM packs, and internal RAM (the device A:).  The operating system
+handles the different device types  in  the  same  way  apart  from  delete
+operations.   All  device  types  use  the  same  record structure.  Device
+dependencies will be pointed out as necessary.
+
+
+
+        _______
+<a id="p12.1.1">12.1.1</a>  RECORDS
+
+
+Datapacks contain two types of records, preceded by either a byte  or  word
+length.   This  is to al low long records while minimising the overhead for
+text files which typically contain short  records.   The  first  record  is
+always  at byte $0A in the datapack.  The record structure is terminated by
+a byte $FF.
+
+
+
+          _____________
+<a id="p12.1.1.1">12.1.1.1</a>  SHORT RECORDS
+
+
+Short records are of the format :
+
+
+        Byte :  0               1               2
+                -----------------------------------------------------
+                |    length     |  record type  | 1 to $FE data bytes ...
+                -----------------------------------------------------
+        Range :     1 to $FE        $81 to $FE
+
+        Example :
+
+        "HELLO" saved using SAVE. Record type is $90.
+
+        $05 $90  $48 $45 $4C $4C $4F
+
+
+Note that the length byte does not include itself or the record type.   The
+record  length can not be zero.  The maximum length is $FE, because a first
+byte $FF is used to terminate the record structure.  The record type is  in
+the  range  $81  to $FE inclusive.  When writing to more than one file, the
+record type is used to identify which file each record  belongs  to,  since
+the records may be written in any order.
+
+
+
+          ____________
+<a id="p12.1.1.2">12.1.1.2</a>  LONG RECORDS
+
+
+     Long records are used primarily for saving blocks of data  which  will
+not  be regularly altered, which are intended to be loaded and saved in one
+piece.  Long records are also used to contain information which  is  to  be
+hidden from the file system (see section <a href="tech11.htm#p11.1.1">11.1.1</a> - bootable packs).
+
+Long records have the following format :
+        Byte :  0       1       2       3       4       ...
+                --------------------------------------------------------
+                |  $02  |  $80  |  length word  |  ... data ...         |
+                ---------------------------------------------------------
+
+                 byte 0         always $02
+                 byte 1         always $80
+
+                 byte 2         high byte of length of data
+                 byte 3         low byte        ..      ..
+                [byte 4         0 to $FFFF bytes of data]
+                [               ...  ]
+
+        Example :
+
+        long record "HELLO"
+
+        $02 $80 $00 $05         $48 $45 $4C $4C $4F
+
+        null long record
+
+        $02 $80 $00 $00
+
+
+Long records do not have a length byte as such, the $02 is purely for error
+handling  (see  section  <a href="#p12.1.5">12.1.5</a>).   The  $80 is a special record type which
+identifies a long record.
+
+
+
+          _______________
+<a id="p12.1.1.3">12.1.1.3</a>  DELETED RECORDS
+
+
+On EPROM datapacks, short records are marked as deleted by clearing the top
+bit  of  the  record type.  On EPROMs long records are never deleted - this
+will be discussed later.  On a RAM device, the space occupied by  a  record
+is  recovered  when  the  record  is deleted, so there will not be any long
+records with a record type &lt; $80 on either RAM or EPROM devices.
+
+        Example :
+
+            short record "AAA" of record type $91 on an EPROM
+
+                        $03 $91 $41 $41 $41     when deleted becomes :
+                        $03 $11 $41 $41 $41
+
+
+
+
+        _____
+<a id="p12.1.2">12.1.2</a>  FILES
+
+
+There are two kinds of files ; files accessible to OPL (of which  the  file
+"MAIN"  is  an example), and block files such as OPL procedures.  In future
+we will refer to the first kind simply as 'files'.
+
+Each files has a name, which is a short record of type $81, and a number of
+data  records  which  are  short records all of the same record type in the
+range $90 to $FE.  Each file has data records of a unique record  type,  so
+there  can be up to 111 files on a device.  An attempt to create more files
+will produce the error "DIRECTORY FULL".  A file may contain  up  to  $FFFE
+data records, given a sufficiently large pack.
+
+Filenames have the following format :
+
+        Byte :  0   1   2   3   4   5   6   7   8   9   10
+                -----------------------------------------------------
+                |$09|$81| file name, space filled       |record type|
+                -----------------------------------------------------
+
+        Example : the file MAIN
+                09 81   4D 41 49 4E 20 20 20 20 90
+
+                all records of type $90 will be in MAIN.
+
+
+Filenames are always padded with spaces to  make  them  eight  bytes  long.
+Byte  10 in the above diagram is the record type which will be used for all
+data records in the file.  It can take values  in  the  range  $90  to  $FE
+inclusive.
+
+When a file is created, the operating system first searches through all the
+filenames  on  the datapack to find the lowest free record type and this is
+then allocated to the new file.  The new record type is then stored in  the
+new file name record.  Since several files can be open at once, the records
+of a file can be mixed with any other type of records.  No  facilities  are
+provided  to  allow  reordering  of  records  in  a  file,  or to allow the
+insertion of records in the middle of a file.  When a file is deleted,  all
+records  of  the appropriate type are deleted one by one, then the filename
+is deleted.  On EPROMs the filename is deleted by  overwriting  the  record
+byte (i.e.  $81 in the above example) in the filename with 01.
+
+The total overhead for each file is 11 bytes  for  the  filename  plus  two
+bytes per record.
+
+
+
+          _____________________
+<a id="p12.1.2.1">12.1.2.1</a>  FIND, SAVE AND "MAIN"
+
+
+The top level commands FIND and SAVE work with short records  of  type  $90
+directly,  not  by  opening  the  file  MAIN.   This  means that if MAIN is
+deleted, problems can occur.  SAVE will still save records of type $90, but
+these records can not be re-read by OPL.  The record type $90 is 'reserved'
+for MAIN, so that no other file can have  this  record  type.   When  blank
+packs are sized, the filename MAIN is created.
+
+Note :  <u>User programs should never  delete  MAIN,  since  this  will  cause
+problems  with  certain  OS versions.</u>  To create a new MAIN, delete all the
+records in a loop.
+
+
+
+        ___________
+<a id="p12.1.3">12.1.3</a>  BLOCK FILES
+
+
+Block files are a special class of files with a name  immediately  followed
+by  a  single  long  data record.  No records are allowed between the block
+filename and the long record.  They are intended  for  storing  data  which
+will  be  re-saved  as a whole each time the data is changed.  Long records
+may be used alone without a preceding  block  filename  -  for  example  to
+enclose  a  machine  code  program  on  a  datapack.   Long records with no
+preceding block filename are ignored by the file system.
+
+Format of a block file :
+
+        byte :  0   1    2   3   4   5   6   7   8   9  10
+                ----------------------------------------------
+    FILENAME    |$09|TYPE|file name, space filled       | 00 |
+                ----------------------------------------------
+
+        byte :  11  12  13  14  15
+                ----------------------------------------------
+ LONG RECORD    |$02|$80|length | data .....
+                ----------------------------------------------
+
+Example :  block file ABCD of block type  $83,  containing  four  bytes  of
+data.
+
+                09 83           41 42 43 44 20 20 20 20 00
+                02 80 00 04     xx xx xx xx
+
+
+The record type, byte 1 in the above  diagram,  is  in  the  range  $82-$8F
+inclusive.   This  byte  is  used to distinguish different classes of block
+files containing different kinds of information, and will be referred to as
+the block file type.  Because block files have their data immediately after
+the filename they do not need a data record type, so  byte  10,  which  was
+used  as  the  data  record type in ordinary filenames is not used in block
+files.  This byte is reserved by Psion.  Note also that the number of block
+files  on a device is limited only by the space available, and there can be
+up to fourteen different kinds of block files with types $82 to $8F.
+
+On EPROMS, a block file is deleted by clearing the top bit  in  the  record
+type  byte  of  the name (byte 1, the $83 in the above example).  The total
+overhead for each block file is 15 bytes.
+
+
+
+          ___ _________________________
+<a id="p12.1.3.1">12.1.3.1</a>  OPL PROCEDURES, SAVED DIARIES
+
+
+OPL procedures are saved as block files  of  type  $83,  in  the  following
+format:
+
+     +-------------------------------+
+
+     | length of Q-code (word)  |
+
+     +-------------------------------+
+
+     |                          |
+
+     |   Q-code (if any)        |
+
+     |                          |
+
+     +-------------------------------+
+
+     | length of source (word)  |
+
+     +-------------------------------+
+
+     | 1st source line   |00|
+
+     +-------------------------------+
+
+     | 2nd source line   |00|
+
+     +-------------------------------+
+
+     | ...       |00|
+
+     +-------------------------------+
+
+The length of the Q-code may be zero, if the procedure was saved  with  the
+SAVE  option  in the TRAN SAVE QUIT sub-menu.  The length of the source may
+be zero if the procedure has been copied object-only.   Each  line  of  the
+source is terminated by a zero.
+
+The DIR option in the PROG sub-menu works by finding all type $83  records.
+Saved  diaries  are  block files of type $82.  The other block file type in
+use at the time of writing is $84, which is used by  the  RS232  for  saved
+setups.
+
+<u>Users wishing to use any of the remaining  block  file  types  $85  to  $8F
+should  first  contact  Psion,  to  avoid  incompatibility  with any future
+products.</u>  Block file types are important in  keeping  different  types  of
+data  distinct  :   disaster would result if OPL procedures could be loaded
+into the diary, for example.  Applications tend to assume that block  files
+of their own type are in the correct format, and usually perform no further
+checking.
+
+
+
+        ___________________________
+<a id="p12.1.4">12.1.4</a>  SUMMARY OF RECORD STRUCTURE
+
+
+This is the algorithm for  scanning  through  the  record  structure  of  a
+datapack :
+
+        SET_PACK_ADDRESS ($0A)
+        do
+            LENGTH_BYTE = NEXT_BYTE
+            RECORD_TYPE = NEXT_BYTE
+            if LENGTH_BYTE = 0
+                ERROR (246) -- "no pack"
+                stop
+            endif
+            if RECORD_TYPE = $80        -- if long record
+                BLOCK_LENGTH = NEXT_WORD
+                SKIP_BYTES (BLOCK_LENGTH)
+            else
+                if RECORD_TYPE &lt;&gt; $FF   -- if valid short record
+                    SKIP_BYTES (LENGTH_BYTE)
+                endif
+            endif
+        until LENGTH_BYTE = $FF
+
+        -- found end of pack
+
+
+
+
+        ______________
+<a id="p12.1.5">12.1.5</a>  ERROR HANDLING
+
+
+If a length byte of zero is seen the pack is assumed to  have  been  pulled
+out,  and  a NO PACK error is reported.  Errors can occur in various places
+when writing to EPROM devices, which can disrupt the record structure.  The
+file system error handling attempts to mark the data as deleted, or creates
+special 'invalid' records so that the remainder of the datapack  can  still
+be used.  In certain exceptional cases this mechanism can fail, and a "READ
+PACK" error will result when invalid record structure  is  detected.   This
+error  is  reported  whenever the last record extends beyond the end of the
+pack.  An "END OF FILE" error will also be reported when accessing a  block
+file if the block file name is not followed immediately by a long record.
+
+When writing a block file, any error will cause  the  operating  system  to
+first delete the long record, then the block file name.  This is the reason
+for the $02 before the $80 in a long record - if writing  the  length  word
+fails,  the $80 is re-written as a zero, which forms a deleted short record
+enclosing the bad length word.  When a block file is  opened,  if  a  valid
+long  record  beginning  with $02 $80 is not found, the error "END OF FILE"
+(238) is reported.
+
+When writing a short record the following errors may occur :
+
+     1.  When writing the length byte fails, no further bytes  are  written
+         to  the  record.  The record is left with a second byte $ff, which
+         is taken as a special invalid record type.  If this type of record
+         is  seen  the  bad  length byte is ignored, and the next record is
+         assumed to begin immediately  after  the  $FF.   This  prevents  a
+         record  with a bad length byte from going off the end of the pack.
+         However, the method is fallible because the length byte  could  be
+         $FF,  denoting  the  end  of  the  datapack, or could even be zero
+         (although zero is very unlikely).
+
+     2.  When writing the record type or a data byte fails,  the  operating
+         system  attempts  to delete the record.  If this fails, a spurious
+         record will remain, which may become part of the wrong file  since
+         the record type is wrong.
+
+
+Some of the errors  mentioned  with  the  system  service  descriptions  in
+section  <a href="#p12.2">12.2</a>,  such  as  "PACK NOT BLANK", and "WRITE PACK ERROR" may only
+occur when sizing a blank EPROM device.  Apart from the  obvious,  "END  OF
+FILE"  can  mean  :   an  illegal  block file (as discussed above), or more
+generally "not found".
+
+
+
+        _______________________
+<a id="p12.1.6">12.1.6</a>  SUMMARY OF RECORD TYPES
+
+
+          Record type
+
+   deleted   00         invalid long record - ignored by file system
+   short     01 - 7E
+   records   7F         deleted $FF (should not occur)
+
+             80         long record - length word follows
+             81         file name
+             82         block file  - saved DIARY
+             83         block file  - OPL procedure
+             84         block file  - saved RS232 setup
+             85 - 8F    block files - reserved to PSION
+             90         record from MAIN, top level FIND/SAVE record
+             91 - FE    data records from files
+             FF         invalid record - length byte will be ignored
+
+    Example of record structure :
+
+      09 81 4D 41 49 4E 20 20 20 20 90  filename "MAIN"
+
+      04 90 41 41 41 41                 record "AAAA" in MAIN
+
+      09 81 41 42 43 20 20 20 20 20 91  filename "ABC",
+                                        data records are type $91
+
+      02 91 42 42 42                    record "BBB" in ABC
+
+      01 10 41                          deleted record "A" in MAIN
+
+      09 85 42 4C 4F 43 4B 20 20 20 00  block file "BLOCK", type $85
+      02 80 00 05 01 02 03 04 05        contains 5 bytes of data
+
+      09 02 4F 4C 44 20 20 20 20 20 00  deleted block file "OLD",
+      02 80 00 01 FF                    of type $82 (diary),
+                                        contained 1 byte of data
+
+      F7 FF                             invalid short record
+
+      09 03 42 41 44 20 20 20 20 20 00  invalid block file "BAD"
+      02 00 00 FF                       of type $83 (OPL proc),
+                                        deleted when length word
+                                        failed
+        FF                              end of datapack
+
+
+
+        _____________________
+<a id="p12.1.7">12.1.7</a>  FILE SYSTEM VARIABLES
+
+
+Some of the file system's variables can be usefully read by the  user,  but
+these variables should be treated as <u>read only</u>.  Writing to these variables
+may produce unpredictable results,  and  will  cause  incompatibility  with
+future OS versions.
+
+$96     FLB_RECT        Current record type in use - set by FL$RECT, and
+                        implicitly set by FL$OPEN, FL$CRET etc. Returned
+                        by FL$OPEN, FL$CRET and others.
+
+$97     FLB_CPAK        Current device used by file system, set by FL$SETP,
+                        and implicitly set by FL$OPEN, FL$CRET etc.
+
+$9B     FLW_CREC        Current record number - 1 is the first record. Counts
+                        the records of type FLB_RECT. Set by many routines
+                        including FL$RSET, FL$NEXT.
+
+
+
+        _________________________
+<a id="p12.1.8">12.1.8</a>  ORGANISER I COMPATIBILITY
+
+
+Organiser I datapacks are structured differently to Organiser II  datapacks
+- the details will not be discussed here.  The main differences are :
+
+     1.  Organiser I datapacks have a first byte $FC - a value not used  by
+         the  Organiser  II.   These  packs are treated as read-only by the
+         Organiser II.
+
+     2.  Organiser I program packs have a first byte of  $03;  these  packs
+         are not supported by the organiser II.
+
+     3.  Records saved on Organiser I datapacks with SAVE are stored  in  a
+         packed  six-bit  format,  which  can  be read by the Organiser II.
+         These records are treated as part of  an  imaginary  file  "MAIN".
+         All  read-only  file  system  operations on "MAIN" will work on an
+         Organiser I datapack, including COPY.   Other  types  of  records,
+         such as POPL programs are not supported.
+
+
+The Organiser I datapacks themselves are all compatible with the  Organiser
+II, and can be used on the Organiser II after UV-erasure.  Also there is no
+reason why a special user program could not read an Organiser  I  datapack,
+by  accessing the datapack directly.  If some special data other than SAVEd
+records is to be transferred, the easiest method is to use two RS232 leads.
+
+
+
+      _______________
+<a id="p12.2">12.2</a>  SYSTEM SERVICES
+
+
+This section describes the system services used by  OPL  to  handle  files,
+records and block files.  The names of these services are prefixed by FL$.
+
+Services which handle files and block files :
+
+                                _____           ___________
+                                FILES           BLOCK FILES
+
+        Opening old files       FL$OPEN         FL$BOPN (then PK$READ)
+
+        Creating new files      FL$CRET         FL$BSAV (then PK$SAVE)
+
+        Closing files              -
+
+        Deleting files          FL$DELN         FL$BDEL
+
+        Copying files           FL$COPY            -
+        Renaming files          FL$RENM            -
+
+        Directory of files      FL$CATL         FL$BCAT
+
+        File statistics         FL$SIZE         (use FL$BOPN)
+
+
+Services which handle records :
+
+        Reading records                 FL$READ
+
+        Writing (appending) records     FL$WRIT
+
+        Erasing records                 FL$ERAS
+
+        Positioning to a                FL$BACK
+        record                          FL$NEXT
+                                        FL$RSET
+
+        Finding a record by             FL$FIND
+        its content                     FL$FFND
+
+        Getting record info             FL$FREC
+
+        Setting default
+        device                          FL$SETP
+        record type                     FL$RECT
+
+
+
+See section <a href="tech09.htm#p9.5.3">9.5.3</a> for PK$READ and section <a href="tech09.htm#p9.5.2">9.5.2</a> for PK$SAVE.
+
+It is more efficient to use record types directly to access  several  files
+at  once,  rather  than  opening  one  file,  then  the other.  This is the
+equivalent of the OPL command  USE.   The  services  FL$OPEN,  and  FL$CRET
+return the record type in use by a file.  FL$FREC will provide details of a
+record including its address in the pack for any user  wishing  to  perform
+direct  pack  accessing,  however  such programs may not be compatible with
+future OS versions.
+
+Programmers should note that calls to the FL$ services may be  interspersed
+with  PK$  calls - which may change currently selected device or change the
+current pack address - provided that PK$SETP is  called  to  re-select  the
+correct device for the file system before calling any further FL$ services.
+As always, any programs directly accessing  the  datapack  hardware  should
+notify the OS by calling PK$SETP.
+
+
+
+        _______
+<a id="p12.2.1">12.2.1</a>  FL$BACK
+
+
+VECTOR NUMBER :         033
+
+INPUT PARAMETERS :      NONE
+OUTPUT VALUES :         X = updated record number (FLW_CREC)
+
+REGISTERS PRESERVED :   D
+
+DESCRIPTION
+
+Used in the OPL command BACK.  Sets the current file position back  to  the
+previous record.
+
+Should not be called with FLW_CREC = 0 or 1.  The first record is  numbered
+1.
+
+EXAMPLE
+
+        LDA     B,#10           ; go back ten records
+
+1$:     LDX     FLW_CREC        ; don't go back past start
+        CPX     #1
+        BCC     2$
+
+        OS      FL$BACK
+        DEC     B
+        BNE     1$
+
+2$:
+
+
+ERRORS          NONE
+
+
+
+        _______
+<a id="p12.2.2">12.2.2</a>  FL$BCAT
+
+
+VECTOR NUMBER :         034
+
+INPUT PARAMETERS :      A = 1 for 1st call, 0 subsequently
+                        B = device (0 to 3)
+                        X = where to put filename (leading count byte)
+                        UTW_S0+1
+                          = block file type ($81 to $8F inc.)
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+When called repeatedly, returns each filename of a given record type  on  a
+device as a leading count byte string at the address given in X in the form
+D:NAME .  A is set to  1  before  the  first  call  to  FL$BCAT  and  0  on
+subsequent  calls.  When there are no more files in the directory the carry
+is set and B = ER_FL_EF.  B contains the device number - 0 for A:, 1 for B:
+etc.   A  record type of $81 in (UTW_S0+1) will do a directory of files, as
+in the OPL function DIR$.  Any other value up to $8F inclusive  will  do  a
+directory of block files of the given type.
+
+Calling FL$BCAT with UTW_S0+1 = $81 is equivalent to calling  FL$CATL.   No
+error  is  reported  if  the  block file type is outside the range $81-$8F,
+unless the block file type is less than $80.
+
+See also section <a href="#p12.2.6">12.2.6</a> FL$CATL, section  <a href="tech13.htm#p13.4.3">13.4.3</a>  UT$XCAT,  section  <a href="#p12.1.3">12.1.3</a>
+block files.
+
+EXAMPLE
+
+;       Do a directory of saved diaries
+
+        LDA     A,#1            ; A=1 first time FL$BCAT called
+        BRA     FIRST
+;       For each file in directory :-
+
+LOOP:   LDX     #TEMP           ; print leading count byte string in TEMP
+        PSHX                    ; pass address to UT$DISP
+        OS      UT$DISP
+        .ASCII  "%s"            ; leading count byte string
+        .BYTE   13,10           ; CR LF
+        .BYTE   0               ; terminator for format string
+
+        CLR     A               ; A=0 on subsequent calls to FL$BCAT
+FIRST:  LDA     B,#$82          ; UTW_S0+1 = block file type for diaries
+        STA     B,UTW_S0+1:
+        LDX     #TEMP           ; filenames be placed in TEMP by FL$BCAT
+        LDA     B,#MY_DEVICE    ; which device : 0 - 3 for A: to D:
+        OS      FL$BCAT
+        BCC     LOOP            ; repeat until error returned
+        CMP     B,#ER_FL_EF     ; end-of-file error means normal completion
+        BEQ     DONE
+
+ERROR:  ...                     ; otherwise report error
+
+DONE:   ...
+
+ERRORS
+
+    ER_FL_EF    238     FILE NOT FOUND (normal completion)
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_BR    237     BAD RECORD TYPE (if record type &lt;$80 only)
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+        _______
+<a id="p12.2.3">12.2.3</a>  FL$BDEL
+
+
+VECTOR NUMBER :         035
+
+INPUT PARAMETERS :      X = block file name (leading count byte).
+                        B = block file type ($82 to $8F incl.)
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Delete a named block file of the block type B.  The file name is a  leading
+count  byte  string at X in the form D:NAME.  On RAM devices the block file
+name and the following long record is deleted and the space is  freed.   On
+EPROMs the long record is not affected.
+
+No error is reported if the block file type is outside the  range  $81-$8F,
+unless the block file type is less than $80.
+
+EXAMPLE
+
+        LDA     B,#$83          ; block file type for OPL procs
+        LDX     #NAME           ; address of filename
+        OS      FL$BDEL         ; delete it
+        BCS     ERROR
+
+
+NAME:   .ASCIC  "C:MYPROG"
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_NX    234     FILE NOT FOUND
+    ER_FL_BN    236     BAD FILE NAME
+    ER_FL_BR    237     BAD RECORD TYPE (if record type &lt;$80 only)
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_RO    244     READ ONLY PACK
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+        _______
+<a id="p12.2.4">12.2.4</a>  FL$BOPN
+
+
+VECTOR NUMBER :         036
+
+INPUT PARAMETERS :      X  = block file name (leading count byte).
+                        B  = block file type
+
+OUTPUT VALUES           D  = length of data in block file
+
+DESCRIPTION
+
+Finds a named block file of the given block file type data.  On return D is
+the  length  of  the  data, and the pack address is set to the start of the
+data, ready for PK$READ to load the data into RAM.   The  file  name  is  a
+leading count byte string at X in the form "D:NNNNN".
+
+Error "FILE NOT FOUND" will be reported if the file does not exist.
+
+See section <a href="tech09.htm#p9.5.3">9.5.3</a> for PK$READ.
+
+EXAMPLE
+
+        LDA     B,#$84          ; block file type for RS232 saved setup
+        LDX     #NAME           ; address of filename
+        OS      FL$BOPN         ; open the file
+        BCS     ERROR
+
+        LDX     #LOAD_ADDRESS
+        OS      PK$READ
+        ...
+
+NAME:   .ASCIC  "C:IBMPC"
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_NX    234     FILE NOT FOUND
+    ER_FL_BN    236     BAD FILE NAME
+    ER_FL_EF    238     END OF FILE -  see section <a href="#p12.1.5">12.1.5</a>
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+        _______
+<a id="p12.2.5">12.2.5</a>  FL$BSAV
+
+
+VECTOR NUMBER :         037
+
+INPUT PARAMETERS :      B = block file type
+                        X = block file name (leading count byte).
+                        UTW_S0 = length of code to be saved by PK$SAVE
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Called in preparation for saving  a  block  file,  FL$BSAV  saves  a  block
+filename followed by the first four bytes of a long record :  $0280 and the
+length word given in UTW_S0.  Then a call to PK$SAVE must be made  to  save
+the  data.   FL$BSAV  checks  that there is sufficient room on the pack for
+both the filename and the long record before writing to the  datapack.   If
+PK$SAVE  fails,  the  user is responsible for any error recovery.  The file
+name is a leading count byte string at X in the form D:NAME.
+
+See also sections section <a href="tech09.htm#p9.5.2">9.5.2</a> PK$SAVE,  section  <a href="#p12.1.1.2">12.1.1.2</a>  long  records,
+section <a href="#p12.1.3">12.1.3</a> block files and section <a href="#p12.1.5">12.1.5</a> errors.
+
+EXAMPLE
+;       To save an OPL procedure :
+        LDX     PROCSIZE        ; UTW_S0 = length of data to be saved
+        STX     UTW_S0:
+        LDX     #PROCNAME       ; address of procedure name
+        LDA     B,#$83          ; block file type for OPL procedures
+        OS      FL$BSAV
+        BCS     ERROR
+
+        LDD     PROCSIZE        ; length of data to be saved
+        LDX     #PROCSTART      ; start of data in OPL procedure
+        OS      PK$SAVE         ; save the block data
+        BCC     DONE            ; branch if all ok
+
+;       if error in PK$SAVE
+        CMP     B,#ER_PK_DE     ; B = error code from PK$SAVE
+        BNE     1$
+
+;       if WRITE PACK ERROR :
+        PSH     B               ; preserve error code
+        LDX     #PROCNAME       ; address of procedure name
+        LDA     B,#$83          ; block file type for OPL procedures
+        OS      FL$BDEL         ; try to delete the block file
+        PUL     B
+1$:     SEC                     ; set carry again
+ERROR:
+        ...                     ; report error
+
+DONE:
+        ...
+
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_EX    235     FILE EXISTS
+    ER_FL_BN    236     BAD FILE NAME
+    ER_FL_PF    239     PACK FULL
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_RO    244     READ ONLY PACK
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+        _______
+<a id="p12.2.6">12.2.6</a>  FL$CATL
+
+
+VECTOR NUMBER :         038
+
+INPUT PARAMETERS :      A = 1 for 1st call, 0 subsequently
+                        B = device (0 to 3)
+                        X = where to put filename (leading count byte)
+
+OUTPUT VALUES :         NONE
+DESCRIPTION
+
+When called repeatedly, returns each the name of each file on a device as a
+leading count byte string at the address given in X in the form D:NAME .  A
+is set to 1 before the first call to FL$CATL and  0  on  subsequent  calls.
+When  there  are  no  more  files in the directory the carry is set and B =
+ER_FL_EF.  B contains the device number - 0 for A:, 1 for B:  etc.  Used in
+the OPL function DIR$.
+
+Calling FL$CATL is equivalent to calling FL$BCAT with UTW_S0+1 = $81.
+
+See also section <a href="#p12.2.2">12.2.2</a> FL$BCAT, section  <a href="tech13.htm#p13.4.3">13.4.3</a>  UT$XCAT,  section
+<a href="#p12.1.3">12.1.3</a> block files.
+
+EXAMPLE
+
+        LDA     A,#1            ; A=1 first time FL$CATL called
+        BRA     FIRST
+;       For each file in directory :-
+
+LOOP:   LDX     #TEMP           ; print leading string in temp
+        PSHX                    ; pass address to UT$DISP
+        OS      UT$DISP
+        .ASCII  "%s"            ; leading count byte string
+        .BYTE   13,10           ; CR LF
+        .BYTE   0               ; terminator for format string
+
+        CLR     A               ; A=0 on subsequent calls to FL$CATL
+FIRST:  LDX     #TEMP           ; filenames be placed in TEMP by FL$CATL
+        LDA     B,#MY_DEVICE    ; which device : 0 - 3 for A: to D:
+        OS      FL$CATL
+        BCC     LOOP            ; repeat until error returned
+
+        CMP     B,#ER_FL_EF     ; end-of-file error means normal completion
+        BEQ     DONE
+
+ERROR:  ...                     ; otherwise report error
+
+DONE:   ...
+
+ERRORS
+
+    ER_FL_EF    238     FILE NOT FOUND (normal completion)
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+        _______
+<a id="p12.2.7">12.2.7</a>  FL$COPY
+
+
+VECTOR NUMBER :         039
+
+INPUT PARAMETERS :      D = addr of 'copy-to' string.
+                        X = addr of 'copy-from' string.
+                        UTW_S0 = type of copy to perform.
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Copies files or block files from one device to another, as in the top level
+COPY or PROG COPY menu options.
+
+
+     ____________                       ______
+     TYPE OF COPY                       UTW_S0
+
+        files                           $0000
+        OPL procedures                  $8300
+        OPL procedures, object only     $8301
+        other block files of type XX    $XX00
+
+
+The high byte of UTW_S0 must be either zero for files or a legal block file
+type  in  the  range $82 to $8F inclusive.  FL$COPY must not be called with
+any other values of UTW_S0.
+
+X points to the 'copy from' string, D points to the 'copy to' string.  Both
+are leading byte count and the following forms are allowed :
+
+    _________   _______
+    Copy-from   Copy-to
+
+        C:NNNNNNNN      B:NNNNNNNN      copy one file
+        C:NNNNNNNN      B:              .. target filename same as source
+        C:              B:              copy all files
+
+The copy-from device must not be the same as the copy-to  device.   A  file
+may  be  copied to a different name on the target device.  If a device only
+is specified in the copy-to string, the file is copied with the same name.
+
+If the file already exists on the  TO  device  then  the  records  will  be
+appended  to  the file otherwise a new file of the appropriate name will be
+created.
+
+Note :  When used to copy an OPL procedure to  a  different  name,  FL$COPY
+does not actually change the name on the first line of the procedure.  This
+means that if an OPL procedure is copied  to  a  different  name  and  then
+listed on a printer, it will be shown with the original name.
+
+See also section <a href="#p12.2.4">12.2.4</a>, TL$CPYX.
+
+EXAMPLE
+
+        To copy all files from A: to B: :
+
+COPY_FROM:
+        .ASCIC  "A:"
+COPY_TO:
+        .ASCIC  "B:"
+
+        CLR     A
+        CLR     B
+        STD     UTW_S0:         ; copy files
+        LDX     #COPY_FROM
+        LDD     #COPY_TO
+        OS      FL$COPY
+        BCS     ERROR
+
+        ...
+
+        To copy A:MYPROC to B:HISPROC, object only
+
+COPY_FROM:
+        .ASCIC  "A:MYPROC"
+COPY_TO:
+        .ASCIC  "B:HISPROC"
+
+        LDD     #$8201
+        STD     UTW_S0:         ; copy OPL, object only
+        LDX     #COPY_FROM
+        LDD     #COPY_TO
+        OS      FL$COPY
+        BCS     ERROR
+
+        ...
+
+        To copy all data from A: to B:. B: must be empty.
+COPY_ALL:
+        CLR     A               ; first call to FL$COPY
+        BSR     COPY_TYPE_A     ; to copy files
+        BCS     ERROR
+
+        LDA     A,#$82          ; copy all block types from $82 to $8F
+1$:     PSH     A
+        BSR     COPY_TYPE_A
+        PUL     A
+        BCS     ERROR
+
+        INC     A
+        CMP     A,#$8F
+        BLS     1$
+
+COPY_TYPE_A:
+        CLR     B
+        STD     UTW_S0:         ; set type of copy
+        LDX     #COPY_FROM
+        LDD     #COPY_TO
+        OS      FL$COPY
+        RTS
+
+COPY_FROM:
+        .ASCIC  "A:"
+COPY_TO:
+        .ASCIC  "B:"
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_CY    232     PAK NOT COPYABLE
+    ER_FL_DF    233     DIRECTORY FULL
+    ER_FL_NX    234     FILE NOT FOUND
+    ER_FL_BN    236     BAD FILE NAME
+    ER_FL_EF    238     END OF FILE -  see section <a href="#p12.1.5">12.1.5</a>
+    ER_FL_PF    239     PACK FULL
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_CH    242     PAK CHANGED
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_RO    244     READ ONLY PACK
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+        _______
+<a id="p12.2.8">12.2.8</a>  FL$CRET
+
+
+VECTOR NUMBER :         040
+
+INPUT PARAMETERS :      X = address of filename (leading count byte)
+
+OUTPUT VALUES :         If no error -
+                        A = data record type used by file
+
+DESCRIPTION
+
+Creates a file.  The file name at X is a leading count byte string  of  the
+form  D:NNNNNNNN where D is 'A', 'B', 'C' or 'D' and the name is 1..8 chars
+long.  If the file already exists then FL$CRET returns error "FILE EXISTS",
+otherwise  the file is created and A contains the record type to be used by
+the data records in the file.
+
+EXAMPLE
+
+        To create the file "WIDGET" on device A:
+
+        LDX     #FILENAME
+        OS      FL$CRET
+        BCS     ERROR
+
+FILENAME:
+        .ASCIC  "A:WIDGET"
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_DF    233     DIRECTORY FULL
+    ER_FL_EX    235     FILE EXISTS
+    ER_FL_BN    236     BAD FILE NAME
+    ER_FL_PF    239     PACK FULL
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_CH    242     PAK CHANGED
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_RO    244     READ ONLY PACK
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+        _______
+<a id="p12.2.9">12.2.9</a>  FL$DELN
+
+
+VECTOR NUMBER :         041
+
+INPUT PARAMETERS :      X = address of filename (leading count byte)
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Delete a named file.  The file name at X is a leading count byte string  of
+the  form  D:NNNNNNNN  where D is 'A', 'B', 'C' or 'D' and the name is 1..8
+chars long.
+
+EXAMPLE
+
+        To delete the file "DATA" on device C:
+
+        LDX     #FILENAME
+        OS      FL$DELN
+        BCS     ERROR
+        ; FILE C:DATA NOW DELETED
+FILENAME:
+        .ASCIC  "C:DATA"
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_NX    234     FILE NOT FOUND
+    ER_FL_BN    236     BAD FILE NAME
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_RO    244     READ ONLY PACK
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+         _______
+<a id="p12.2.10">12.2.10</a>  FL$ERAS
+
+
+VECTOR NUMBER :         042
+
+INPUT PARAMETERS :      NONE
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Erase the current record in the current file.  On EPROMs this  is  done  by
+clearing the top bit of the record type.  On RAM devices the space occupied
+by the record is recovered.  The current file position is unaltered - but a
+new record is now at the current position.  Error "END OF FILE" is reported
+if you attempt to erase after the last record in the file.
+
+EXAMPLE
+
+        To erase the first record in the current file
+
+        LDD     #1              ; position to the first record
+        OS      FL$RSET
+        BCS     ERROR
+
+        OS      FL$ERAS
+        BCS     ERROR
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_BR    237     BAD RECORD TYPE
+    ER_FL_EF    238     END OF FILE
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_RO    244     READ ONLY PACK
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+         _______
+<a id="p12.2.11">12.2.11</a>  FL$FFND
+
+
+VECTOR NUMBER :         043
+
+INPUT PARAMETERS :      X = address of search string
+                        A = length of search string
+                        B = record type to be searched
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Searches through all the records of a particular type on  current  datapack
+for a record beginning with a given search string.  The search string is at
+X of length A.  B is the record type.
+
+To find a file name or a block file name, use a search string padded out to
+eight  characters  with  spaces,  otherwise searching for ABC, for example,
+will also find ABCD etc.  The search string should  not  include  a  device
+name  A:   B:   etc.   The  most  common  use  of FL$FFND is in finding OPL
+procedure names, in which case B = $83.  To find a filename, use B  =  $81.
+To  find a block file name use the appropriate block file type, between $82
+and $8F inclusive.  A should be set to 8 in each case.
+
+FL$FFND will fail unless the records are known to be at least  as  long  as
+the search string.
+
+If found, the file name which matches the  search  string  is  returned  at
+RTBBL as a leading count byte string, else error "END OF FILE" is reported.
+
+See also  sections  FILENAMESECTION  Files,  section  <a href="#p12.1.3">12.1.3</a>  block  files,
+section <a href="#p12.1.3.1">12.1.3.1</a> OPL procs.
+
+EXAMPLE
+
+        To find the OPL procedure "POKEY" on device C:
+
+        LDA     B,#2            ; set current device in use by file system
+        OS      FL$SETP         ; to C:  -- 0 for A:, 1 for B: etc.
+        BCS     ERROR
+
+        LDX     #SEARCH         ; address of search string
+        LDA     A,#8            ; length of search string
+        LDA     B,#$83          ; block file type for OPL procedures
+        OS      FL$FFND         ; FIND IT
+        BCC     FOUND
+
+        CMP     B,#ER_FL_EF
+        BNE     ERROR
+
+NOT_FOUND:
+        ...
+FOUND:
+        ...
+
+SEARCH:
+        .ASCIC  "POKEY   "      ; 3 spaces
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_EF    238     END OF FILE (no match occurred)
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+         _______
+<a id="p12.2.12">12.2.12</a>  FL$FIND
+
+
+VECTOR NUMBER :         044
+
+INPUT PARAMETERS :      D = address of search string (leading count byte)
+                        X = where to put the record found (leading count byte)
+
+OUTPUT VALUES :         A = the record type of the record found
+
+DESCRIPTION
+
+          next
+Finds the next record of the current record type on  the  current  datapack
+which contains the given search string at D.  If a match occurs, the record
+found is placed at X.  Both the search string  and  the  found  string  are
+leading byte count.
+
+FL$FIND leaves the current file position on the found record, if  there  is
+no  match,  reports  error "END OF FILE" and leaves the current position at
+the end of file.
+
+Used in the OPL function FIND.
+
+EXAMPLE
+
+        To find the first occurrence of the string "SETTLE" in the current
+        file :
+
+        LDX     #1
+        OS      FL$RSET         ; set to the first record
+        BCS     ERROR
+
+        LDD     #SEARCH_STRING
+        LDX     #FOUND_STRING   ; where string found will be returned
+        OS      FL$FIND
+        BCC     FOUND
+
+        CMP     B,#ER_FL_EF
+        BNE     ERROR
+
+NOT_FOUND:
+        ...
+FOUND:
+        ...
+
+SEARCH_STRING:
+        .ASCIC  "SETTLE"
+
+FOUND_STRING:
+        .BLKB   256
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_EF    238     END OF FILE (no match occurred)
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+         _______
+<a id="p12.2.13">12.2.13</a>  FL$FREC
+
+
+VECTOR NUMBER :         045
+
+INPUT PARAMETERS :      D = record number to be found
+
+OUTPUT VALUES :         A = length of record found
+                        B = record type found
+                        UTW_S0 (high byte) : X
+                          = address in pack of the record found
+
+DESCRIPTION
+
+Returns information about the D'th record of the current record type on the
+current datapack.  If the record exists, the three byte pack address of the
+start of the record is returned - the first byte of UTW_S0 being  the  most
+significant  byte of the address, and X being the least significant word of
+the address.  If there are less than D records on the datapack, error  "END
+OF FILE" is returned.
+
+EXAMPLE
+
+        To find the tenth record of type $90
+
+        LDA     B,#$90
+        OS      FL$RECT
+        BCS     ERROR
+
+        LDD     #10
+        OS      FL$FREC
+        BCC     FOUND
+
+        CMP     B,#ER_FL_EF
+        BNE     ERROR
+
+NOT_FOUND:
+        ...
+FOUND:
+        STA     A,LENGTH
+        LDA     A,UTW_S0
+        STA     A,PAK_ADDRESS
+        STX     PAK_ADDRESS+1
+        ...
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_EF    238     END OF FILE (no match occurred)
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+         _______
+<a id="p12.2.14">12.2.14</a>  FL$NEXT
+
+
+VECTOR NUMBER :         046
+
+INPUT PARAMETERS :      NONE
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Adds one to the current record number.  The next file  operation,  such  as
+FL$READ  will now read the next record of the current type.  If called when
+at or beyond the end of file, any subsequent calls to file system  services
+such  as FL$READ will return an "END OF FILE" error.  However, FL$NEXT does
+no checking for end of file in itself.
+
+Used in the OPL command NEXT.
+
+EXAMPLE
+
+        OS      FL$NEXT
+
+ERRORS
+
+    NONE
+
+
+
+         _______
+<a id="p12.2.15">12.2.15</a>  FL$OPEN
+
+
+VECTOR NUMBER :         047
+
+INPUT PARAMETERS :      X = address of file name (leading count byte)
+
+OUTPUT VALUES :         A = if file found : record type of data records
+
+DESCRIPTION
+
+Opens a previously existing file whose name is at X.  The filename at X  is
+a leading count byte string of the form D:Name where D is the device 'A' to
+'D' (optional).  The filename may be between one and  eight  characters  in
+length,  excluding  the  D:,  but  including  any final '$' or '%'.  If the
+device name is not specified, the current device in  FLB_CPAK  is  assumed.
+Filenames  may  contain  any of the characters 'a'..'z', 'A'..'Z', '0'..'9'
+and the last character may also be a '$' or '%'.  The first character  must
+be  'A'  ..   'Z'  or  'a'  ..   'z'.   Upper and lower case are treated as
+equivalent.
+
+If the file does not exist the error "FILE NOT FOUND" is returned
+
+EXAMPLE
+
+        To open the file "A:ALSTON"
+
+        LDX     #FILE_NAME
+        OS      FL$OPEN
+        BCS     ERROR
+
+        STA     A,RECORD_TYPE
+        ...
+
+FILE_NAME:
+        .ASCIC  "A:ALSTON"
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_NX    234     FILE NOT FOUND
+    ER_FL_BN    236     BAD FILE NAME
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+         _______
+<a id="p12.2.16">12.2.16</a>  FL$PARS
+
+
+VECTOR NUMBER :         048
+
+INPUT PARAMETERS :      D = Where to put parsed output
+                        X = File name to be parsed (leading count byte)
+                        UTW_S0 = default device
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Checks that the file name at X is legal, and converts it to a standard form
+at  D.   The input filename at X is a leading count byte string of the form
+D:Name where D is the device  'A'..'D'  (optional),  and  the  filename  is
+between one and eight characters long.
+
+Filenames may contain any of the characters  'a'..'z',  'A'..'Z',  '0'..'9'
+and  the last character may also be a '$' or '%'.  The first character must
+be 'A' .  'Z' or 'a' ..  'z'.  They may be between one and eight characters
+in length, excluding the D:, but including any final '$' or '%'.
+
+A device code - 0 for device A:  to 3 for D:  - is placed before  the  name
+in  the  output.  If no device was given in the input filename, the byte at
+UTW_S0 which can be 0..3 is taken to be the device code.  The output string
+is in upper case and padded with spaces to be eight characters long.
+
+The error "BAD FILE NAME", or "BAD DEVICE NAME" will  be  returned  if  the
+file name at X or the high byte of UTW_S0 is illegal.
+
+EXAMPLE
+
+                Input filename                  Output string
+
+        1)      &lt;05&gt;"C:ABC"               &lt;03&gt;"ABC     " taken as C:ABC
+        2)      &lt;03&gt;"ABC"       UTW_S0=0  &lt;00&gt;"ABC     " taken as A:ABC
+        3)      &lt;03&gt;"ABC"       UTW_S0=1  &lt;01&gt;"ABC     " taken as B:ABC
+
+        Note spaces at the end of each output string.
+
+        Code for example (3) could be :
+
+INPUT_FILENAME:
+        .ASCIC  "ABC"
+PARSED_OUTPUT:
+        .BLKB   9
+
+        LDX     #INPUT_FILENAME
+        LDD     #PARSED_OUTPUT
+        OS      FL$PARS
+        BCS     BAD_NAME
+
+ERRORS
+
+    ER_FL_BN    236     BAD FILE NAME
+    ER_PK_DV    243     BAD DEVICE NAME
+
+
+
+         _______
+<a id="p12.2.17">12.2.17</a>  FL$READ
+
+
+VECTOR NUMBER :         049
+
+INPUT PARAMETERS :      X = where to put data read (leading count byte)
+
+OUTPUT VALUES :         B = record type of record
+
+DESCRIPTION
+
+Read the record from the current position of the current record  type  into
+memory  at  X  as a leading count byte string.  Does <u>not</u> change the current
+record number.
+
+See also section <a href="#p12.2.20">12.2.20</a> - FL$RSET, and section <a href="#p12.2.14">12.2.14</a> - FL$NEXT.
+
+EXAMPLE
+
+BUFFER:
+        .BLKB   255
+
+        LDX     #BUFFER
+        OS      FL$READ
+        BCS     ERROR
+
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_EF    238     END OF FILE
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+         _______
+<a id="p12.2.18">12.2.18</a>  FL$RECT
+
+
+VECTOR NUMBER :         050
+
+INPUT PARAMETERS :      B = record type
+
+OUTPUT VALUES :         NONE
+DESCRIPTION
+
+Sets the 'current record type' to the value in B.  This  will  be  used  by
+other file system services.
+
+B should be between $80 and $FE inclusive.
+
+EXAMPLE
+
+        To select records of type $90 - that is the file MAIN :
+
+        LDA     B,#$90
+        OS      FL$RECT
+        BCS     ERROR
+
+        ...
+
+ERRORS
+
+        May be returned in future OS versions
+
+
+
+         _______
+<a id="p12.2.19">12.2.19</a>  FL$RENM
+
+
+VECTOR NUMBER :         051
+
+INPUT PARAMETERS :      X = Old file name (leading count byte )
+                        D = New file name (leading count byte )
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Changes the name of a file.  Files  can  only  be  renamed  onto  the  same
+device.   The  old  name  is deleted and then the new name is saved.  On an
+EPROM device, this means that only  eleven  more  bytes  used  by  the  new
+filename are saved.
+
+Both filenames are leading count byte  strings.   If  the  device  name  is
+missing  from  the  old  file  name (at X), the device is assumed to be the
+currently selected device (see section <a href="#p12.2.21">12.2.21</a> FL$SETP).  The  device  name
+may be omitted from the new file name (at D).
+
+Note that the new file name may not be a device name only, as  in  FL$COPY.
+If  the  two device names differ, or either file name is illegal error "BAD
+FILE NAME" is returned.
+
+EXAMPLES
+
+        To rename the file A:HAWES to GAYLE  :
+
+COPY_FROM:
+        .ASCIC  "A:HAWES"
+COPY_TO:
+        .ASCIC  "A:GAYLE"       ; or .ASCIC     "GAYLE"
+
+        LDX     #COPY_FROM
+        LDD     #COPY_TO
+        OS      FL$RENM
+        BCS     ERROR
+
+        ...
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_NX    234     FILE NOT FOUND
+    ER_FL_EX    235     FILE EXISTS
+    ER_FL_BN    236     BAD FILE NAME
+    ER_FL_PF    239     PACK FULL
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_RO    244     READ ONLY PACK
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+         _______
+<a id="p12.2.20">12.2.20</a>  FL$RSET
+
+
+VECTOR NUMBER :         052
+
+INPUT PARAMETERS :      D = record number
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Sets the 'current record number' to the value in D.  This will be  used  by
+other file system services.
+
+The first record is number 1.  D should not be set to zero.  If  there  are
+less  than  D  records on the datapack, any subsequent calls to file system
+services such as FL$READ will return an  "END  OF  FILE"  error.   However,
+FL$RSET itself does no checking for end of file.
+
+EXAMPLE
+
+        LDD     #RECORD_NUMBER
+        OS      FL$RSET
+        BCS     ERROR
+        ...
+ERRORS
+
+        May be returned in future OS versions
+
+
+
+         _______
+<a id="p12.2.21">12.2.21</a>  FL$SETP
+
+
+VECTOR NUMBER :         053
+
+INPUT PARAMETERS :      B = number of datapack to select (MUST BE 0 to 3)
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Selects the datapack given in B.  This datapack will then be used by  other
+file system services.  B should be set to zero for A:, 1 for B:  etc.  This
+value is not checked by FL$SETP.
+
+NOTE :  Users calling FL$SETP <u>must always</u> ensure that B is in the  range  0
+to 3 to ensure compatibility with all operating system versions.
+
+EXAMPLE
+
+        LDA     B,PACK_TO_SELECT
+        CMP     B,#3
+        BHI     ERROR                   ; Error if B &gt; 3
+
+        OS      FL$SETP
+        BCS     ERROR
+        ...
+
+ERRORS
+
+        May be returned in future OS versions
+
+
+
+         _______
+<a id="p12.2.22">12.2.22</a>  FL$SIZE
+
+
+VECTOR NUMBER :         054
+
+INPUT PARAMETERS :      NONE
+
+OUTPUT VALUES :         UTW_S1 (byte) : D
+                          = number of bytes free on datapack (3 byte value)
+                        X = number of records of current record type
+                        UTW_S1+1 (byte) : UTW_S0 (word)
+                          = address of first free byte (3-byte address)
+DESCRIPTION
+
+Returns statistics about the current datapack, and current file or  current
+record  type.   Counts the number of records of the current type, finds the
+end of the current datapack and returns the amount of free space.
+
+Used in various OPL commands including SPACE, LAST, COUNT.
+
+See also section <a href="#p12.2.21">12.2.21</a> FL$RSET, section <a href="#p12.2.15">12.2.15</a> FL$OPEN,  section
+<a href="#p12.2.21">12.2.21</a> FL$SETP, section <a href="#p12.2.18">12.2.18</a> FL$RECT.
+
+EXAMPLE
+        Get statistics of device B: :
+
+        LDA     B,#1            ; A=0, B=1 etc.
+        OS      FL$SETP         ; select device to be used by file system
+        BCS     ERROR
+
+        OS      FL$SIZE         ; get device info
+        BCS     ERROR
+                                ; store 3-byte number of bytes free
+        STD     BYTES_FREE+1    ; low word
+        LDA     A,UTW_S1        ; high byte
+        STA     A,BYTES_FREE
+
+        LDA     A,UTW_S1+1      ; store 3 byte address
+        STA     A,FREE_ADDRESS
+        LDD     UTW_S0
+        STD     FREE_ADDRESS+1
+
+        To count the number of records in A:MAIN :
+
+FILENAME:
+        .ASCIC  "A:MAIN"
+
+        LDX     #FILE_NAME
+        OS      FL$OPEN         ; open "A:MAIN"
+        BCS     ERROR
+
+        OS      FL$SIZE         ; get file info
+        BCS     ERROR
+
+        STX     N_RECORDS       ; store number of records in file
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_RO    244     READ ONLY PACK
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+         _______
+<a id="p12.2.23">12.2.23</a>  FL$WRIT
+
+
+VECTOR NUMBER :         055
+
+INPUT PARAMETERS :      X = address of string to be written
+                                (leading count byte)
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Appends a new record of the current record  type  to  the  records  on  the
+current  device.  The data to be saved in the new record is a leading count
+byte string at X, containing between one and 254  characters.   Records  of
+length  255  are <u>truncated to 254</u> characters.  The current record number is
+set to the number of records of the current type.   A  subsequent  call  to
+FL$READ will return the record just written.
+
+FL$WRIT checks that there is sufficient space free first.  Usually if there
+is a "WRITE PACK ERROR" on an EPROM, the record will have been deleted.
+
+Used in the OPL command APPEND.
+
+EXAMPLE
+
+        To write the record "ILKLEY" to the file C:WYORKS
+
+RECORD:
+        .ASCIC  "ILKLEY"
+FILE_NAME:
+        .ASCIC  "C:WYORKS"
+
+        LDX     #FILE_NAME
+        OS      FL$OPEN
+        BCS     ERROR
+
+        LDX     #RECORD
+        TST     0,X
+        BEQ     1$
+        OS      FL$WRIT
+        BCS     ERROR
+1$:     ...
+
+
+ERRORS
+
+    ER_GN_BL    194     BATTERY TOO LOW
+    ER_PK_BR    200     READ PACK ERR
+    ER_FL_CY    232     PAK NOT COPYABLE
+    ER_FL_DF    233     DIRECTORY FULL
+    ER_FL_NX    234     FILE NOT FOUND
+    ER_FL_BN    236     BAD FILE NAME
+    ER_FL_EF    238     END OF FILE
+    ER_FL_PF    239     PACK FULL
+    ER_PK_IV    240     UNKNOWN PACK
+    ER_PK_NB    241     PACK NOT BLANK
+    ER_PK_CH    242     PAK CHANGED
+    ER_PK_DV    243     BAD DEVICE NAME
+    ER_PK_RO    244     READ ONLY PACK
+    ER_PK_DE    245     WRITE PACK ERR
+    ER_PK_NP    246     NO PACK
+
+
+
+         _______
+<a id="p12.2.24">12.2.24</a>  TL$CPYX
+
+
+VECTOR NUMBER :         102
+
+INPUT PARAMETERS :      NONE
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Performs the top level COPY, complete with "FROM" and "TO" prompts.
+
+EXAMPLE
+
+        OS      TL$CPYX
+
+ERRORS
+
+        NONE - errors are reported directly on the screen
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech11.htm">Ch. 11</a></li>
+<li class=navactive>Ch. 12</li>
+<li><a href="tech13.htm">Ch. 13</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

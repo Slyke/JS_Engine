@@ -1,0 +1,120 @@
+{
+  name: "Midway 8080 Arcade",
+  cpu: {
+    module: "./cpu/i8080.js?v=debug-pc-sample-2",
+    initialPc: 0,
+    initialSp: 0,
+    debugSampleIgnorePcs: [8, 16],
+    debugSampleInstructionInterval: 31
+  },
+  controls: {
+    inputs: [
+      { id: "coin", label: "Coin", pulse: true },
+      { id: "start1", label: "Start 1", pulse: true },
+      { id: "start2", label: "Start 2", pulse: true },
+      { id: "left", label: "Left" },
+      { id: "right", label: "Right" },
+      { id: "shoot", label: "Shoot" }
+    ],
+    pulseInputs: ["coin", "start1", "start2"],
+    pulseDurations: { coin: 320, start1: 900, start2: 900 },
+    commandHotkeys: { pause: "KeyP", step: "KeyN", reset: "Shift+KeyT", saveState: "KeyI", loadState: "KeyO" },
+    inputHotkeys: { coin: "KeyC", start1: "Digit1", start2: "Digit2", left: "KeyA", right: "KeyD", shoot: "Space" }
+  },
+  memory: {
+    mmu: "./memory/mmu/z80.js",
+    devices: [
+      {
+        type: "flat",
+        index: 0,
+        label: "64K Address Space",
+        module: "./memory/flat.js",
+        start: 0,
+        size: 65536,
+        writable: true
+      }
+    ],
+    segments: [
+      { type: "rom", label: "ROM 0", start: 0, size: 8192, writable: true },
+      { type: "ram", label: "Work RAM", start: 8192, size: 1024, writable: true },
+      { type: "video", label: "Video RAM", start: 9216, size: 7168, writable: true },
+      { type: "ram", label: "RAM Mirror", start: 16384, size: 49152, writable: true }
+    ],
+    map: {
+      start: 0,
+      size: 65536,
+      columns: 256,
+      rows: 256,
+      bytesPerCell: 1,
+      valueMode: "max",
+      samplesPerCell: 16,
+      colors: {
+        rom: { zero: [24, 24, 20], active: [255, 78, 20] },
+        ram: { zero: [0, 20, 38], active: [45, 90, 255] },
+        video: { zero: [0, 50, 20], active: [32, 255, 90] },
+        unmapped: { zero: [0, 0, 0], active: [255, 40, 40] },
+        pc: [80, 255, 120],
+        sp: [90, 170, 255]
+      }
+    }
+  },
+  roms: [
+    { path: "/real_roms/invaders/invaders1.h.bin", offset: 0 },
+    { path: "/real_roms/invaders/invaders2.g.bin", offset: 2048 },
+    { path: "/real_roms/invaders/invaders3.f.bin", offset: 4096 },
+    { path: "/real_roms/invaders/invaders4.e.bin", offset: 6144 }
+  ],
+  video: {
+    module: "./video/midway-8080-bitmap.js",
+    driver: "midway-8080-bitmap",
+    width: 224,
+    height: 256,
+    memoryStart: 9216,
+    memoryEnd: 16384,
+    fps: 60
+  },
+  audio: { module: "./audio/midway-8080.js", volume: 0.35 },
+  websocket: {
+    enabled: true,
+    autoConnect: false,
+    endpoints: [
+      {
+        id: "debug",
+        label: "Debug API",
+        url: "ws://127.0.0.1:8765/debug",
+        autoConnect: false,
+        channels: ["commands", "events", "rules"]
+      },
+      {
+        id: "events",
+        label: "Event Sink",
+        url: "ws://127.0.0.1:8765/events",
+        autoConnect: false,
+        channels: ["events", "rules"]
+      }
+    ]
+  },
+  debugger: {
+    disassembly: { beforeLines: 10, afterLines: 12 }
+  },
+  debuggerCards: [
+    { id: "midway-audio", title: "Audio", module: "./debugger/midway-8080-audio-card.js", columns: 5, rows: 3 }
+  ],
+  debuggerLayout: {
+    sections: {
+      game: { columns: 5 },
+      debugger: { columns: 7, collapsedWidth: "3.25rem" }
+    },
+    cards: [
+      { id: "memory-map", columns: 5, rows: 5 },
+      { id: "disassembly", columns: 7, rows: 5 },
+      { id: "cpu", columns: 8, rows: 2 },
+      { id: "flags", columns: 4, rows: 2 },
+      { id: "status", columns: 5, rows: 2 },
+      { id: "ports", columns: 7, rows: 3 },
+      { id: "memory-editor", columns: 7, rows: 5 },
+      { id: "search", columns: 5, rows: 5 },
+      { id: "midway-audio", columns: 5, rows: 3 }
+    ]
+  }
+}

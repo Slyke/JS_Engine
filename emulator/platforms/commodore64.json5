@@ -1,0 +1,153 @@
+{
+  name: "Commodore 64",
+  storage: { platform: "commodore64", rom: "commodore64-64c-basic-kernal" },
+  runOnStart: true,
+  cpu: {
+    module: "./cpu/6510.js",
+    initialPc: 0,
+    initialSp: 253,
+    maxInstructionsPerFrame: 20000,
+    commandHotkeys: { pause: "KeyP", step: "KeyN", reset: "Shift+KeyT", saveState: "KeyI", loadState: "KeyO" }
+  },
+  controls: {
+    inputs: [
+      { id: "return", label: "Return", pulse: true },
+      { id: "runstop", label: "RUN/STOP", pulse: true },
+      { id: "shift", label: "Shift" },
+      { id: "space", label: "Space", pulse: true },
+      { id: "delete", label: "Delete", pulse: true },
+      { id: "home", label: "Home", pulse: true }
+    ],
+    advancedInputs: [
+      { id: "f1", label: "F1", pulse: true },
+      { id: "f3", label: "F3", pulse: true },
+      { id: "f5", label: "F5", pulse: true },
+      { id: "f7", label: "F7", pulse: true },
+      { id: "cursorLeft", label: "Cursor Left", pulse: true },
+      { id: "cursorRight", label: "Cursor Right", pulse: true },
+      { id: "cursorUp", label: "Cursor Up", pulse: true },
+      { id: "cursorDown", label: "Cursor Down", pulse: true },
+      { id: "commodore", label: "Commodore" },
+      { id: "control", label: "Control" },
+      { id: "plus", label: "+", pulse: true },
+      { id: "minus", label: "-", pulse: true },
+      { id: "asterisk", label: "*", pulse: true },
+      { id: "slash", label: "/", pulse: true },
+      { id: "equals", label: "=", pulse: true },
+      { id: "colon", label: ":", pulse: true },
+      { id: "semicolon", label: ";", pulse: true },
+      { id: "at", label: "@", pulse: true }
+    ],
+    inputHotkeys: {
+      return: "Enter",
+      runstop: "Escape",
+      shift: ["ShiftLeft", "ShiftRight"],
+      space: "Space",
+      delete: "Backspace",
+      home: "Home",
+      cursorLeft: "ArrowLeft",
+      cursorRight: "ArrowRight",
+      cursorUp: "ArrowUp",
+      cursorDown: "ArrowDown"
+    },
+    keyboardGroups: ["letters", "numbers", "arrows", "special"],
+    pulseInputs: ["return", "runstop", "space", "delete", "home", "f1", "f3", "f5", "f7", "cursorLeft", "cursorRight", "cursorUp", "cursorDown"],
+    pulseDurations: { default: 120, return: 160, runstop: 180, delete: 120 },
+    keyboardInputMode: "queued",
+    queuedKeyboardPressMs: 120,
+    queuedKeyboardGapMs: 60,
+    keyboardReleaseDelayMs: 120,
+    textInputMap: {
+      "0": "0", "1": "1", "2": "2", "3": "3", "4": "4", "5": "5", "6": "6", "7": "7", "8": "8", "9": "9",
+      a: "a", b: "b", c: "c", d: "d", e: "e", f: "f", g: "g", h: "h", i: "i", j: "j", k: "k", l: "l", m: "m",
+      n: "n", o: "o", p: "p", q: "q", r: "r", s: "s", t: "t", u: "u", v: "v", w: "w", x: "x", y: "y", z: "z",
+      A: "a", B: "b", C: "c", D: "d", E: "e", F: "f", G: "g", H: "h", I: "i", J: "j", K: "k", L: "l", M: "m",
+      N: "n", O: "o", P: "p", Q: "q", R: "r", S: "s", T: "t", U: "u", V: "v", W: "w", X: "x", Y: "y", Z: "z",
+      " ": "space",
+      "\n": "return",
+      Enter: "return",
+      Backspace: "delete",
+      Escape: "runstop",
+      "+": "plus",
+      "-": "minus",
+      "*": "asterisk",
+      "/": "slash",
+      "=": "equals",
+      ":": "colon",
+      ";": "semicolon",
+      ".": ".",
+      ",": ",",
+      "@": "at"
+    }
+  },
+  memory: {
+    mmu: "./memory/mmu/commodore64.js",
+    devices: [
+      {
+        type: "commodore64",
+        index: 0,
+        label: "C64 RAM, ROM, Color RAM, and I/O",
+        module: "./memory/commodore64.js",
+        start: 0,
+        size: 65536,
+        writable: true
+      }
+    ],
+    map: {
+      start: 0,
+      size: 65536,
+      columns: 256,
+      rows: 256,
+      bytesPerCell: 1,
+      valueMode: "max",
+      samplesPerCell: 16,
+      colors: {
+        rom: { zero: [22, 22, 30], active: [245, 210, 85] },
+        ram: { zero: [0, 18, 42], active: [60, 140, 255] },
+        io: { zero: [34, 15, 40], active: [220, 95, 255] },
+        unmapped: { zero: [0, 0, 0], active: [255, 40, 40] },
+        pc: [80, 255, 120],
+        sp: [90, 170, 255]
+      }
+    }
+  },
+  roms: [
+    { path: "/roms/commodore64/64c.251913-01.bin", offset: 0, target: "system", label: "C64C BASIC + KERNAL ROM 251913-01" }
+  ],
+  romLoading: { defaultOffset: "0x0000" },
+  video: {
+    module: "./video/commodore64-vic-ii.js",
+    driver: "commodore64-vic-ii",
+    width: 384,
+    height: 272,
+    fps: 60
+  },
+  audio: {
+    module: "./audio/commodore64-sid.js",
+    enabled: true,
+    volume: 0.28
+  },
+  websocket: {
+    enabled: true,
+    autoConnect: false,
+    endpoints: [
+      {
+        id: "debug",
+        label: "Debug API",
+        url: "ws://127.0.0.1:8765/debug",
+        autoConnect: false,
+        channels: ["commands", "events", "rules"]
+      },
+      {
+        id: "events",
+        label: "Event Sink",
+        url: "ws://127.0.0.1:8765/events",
+        autoConnect: false,
+        channels: ["events", "rules"]
+      }
+    ]
+  },
+  debugger: {
+    disassembly: { beforeLines: 10, afterLines: 12 }
+  }
+}

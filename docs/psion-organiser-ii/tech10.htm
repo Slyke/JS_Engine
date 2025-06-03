@@ -1,0 +1,320 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 10 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech10.htm", "name": "Chapter 10" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 10</li>
+</ol>
+
+
+<PRE>                                CHAPTER 10
+
+                               _____________
+                               SYSTEM TIMING
+
+
+
+System timing is controlled by two interrupts:
+
+     1.  The NMI interrupt handles the real-time clock and auto-switch  off
+         delay.
+
+     2.  The  KEYBOARD  INTERRUPT  provides  a  frame-counter  and  handles
+         keyboard delays and display timing etc.
+
+
+
+
+      _______________
+<a id="p10.1">10.1</a>  REAL TIME CLOCK
+
+     The clock time is stored in binary in 6 fields from $20C5 to $20CA:
+
+
+        VARIABLE        ADDRESS         DESCRIPTION             RANGE
+        ========        =======         ===========             =====
+        TMB_YEAR        $20C5           YEAR                    0 - 99
+        TMB_MONS        $20C6           MONTH                   0 - 11
+        TMB_DAYS        $20C7           DATE OF MONTH           0 - 31
+        TMB_HOUR        $20C8           HOUR                    0 - 23
+        TMB_MINS        $20C9           MINUTES                 0 - 59
+        TMB_SECS        $20CA           SECONDS                 0 - 59
+
+Note that:
+
+     1.  A month of 0 represents JANUARY and a date of 0 represents the 1st
+         day of the month.
+
+     2.  On a cold start only, the clock  is  initialised  to  1  JAN  1987
+         00:00:00
+
+     3.  The real-time  clock  should  not  be  read  directly  from  these
+         variables  because  it  may  be  being updated by an NMI.  Instead
+         system service TM$TGET  should  be  used  to  get  a  valid  time.
+         Similarly  these  variables  should  not  be  written  to  without
+         checking for an NMI.
+
+
+
+        ________________________
+<a id="p10.1.1">10.1.1</a>  KEEPING TIME WITH NMI ON
+
+     An NMI interrupt is generated from the semi-custom chip  every  second
+to  provide  an  accurate real-time clock.  When the machine is on, the NMI
+interrupt updates the time by 1 second, see TM$UPDT.
+
+
+
+        _________________________
+<a id="p10.1.2">10.1.2</a>  KEEPING TIME WITH NMI OFF
+
+     When NMIs are switched off the processor, (e.g.  when  the  machine  is
+switched  off)  an internal counter in the semi-custom chip is connected to
+the NMI line so that NMIs can still be counted, enabling  the  time  to  be
+updated when restoring NMIs to the processor.
+
+The counter has 11 bits, so the maximum time it can  store  is  2048  secs.
+When  the counter reaches this value, the ACOUT bit of PORT 5 goes high and
+the machine switches on.  Hence the machine can  be  forced  to  switch  on
+automatically  at  any  time  up  to  34mins  8secs after switching off, be
+pre-counting the counter.  This is done when an alarm is due.
+
+Whenever the machine switches on it updates  the  real-time  clock  by  the
+amount  in  the  counter (less any pre-counting).  If ACOUT is high, and no
+alarm was due, the machine switches back off immediately after updating the
+clock.   This can be seen as the screen flashes on for an instant, every 34
+mins and 8 secs while the machine is off.
+
+To disable NMIs and keep the time, system services BT$NOF and BT$NON should
+be used, see sections <a href="tech05.htm#p5.7.3">5.7.3</a> and <a href="tech05.htm#p5.7.4">5.7.4</a>.
+
+
+
+        ________________________
+<a id="p10.1.3">10.1.3</a>  AUTO-SWITCH-OFF TIME OUT
+
+     The following three variables control the auto-switch-off:
+
+        VARIABLE        ADDRESS         DESCRIPTION
+        ========        =======         ===========
+        TMB_SWOF        $007C           AUTO-SWITCH-OFF FLAG
+        TMW_TOUT        $007D,$007E     TIME LEFT BEFORE SWITCH OFF
+        TMW_TCNT        $20CD,$20CE     DEFAULT NUMBER OF SECONDS TO
+TIME-OUT
+
+The time before the machine switches off (in secs) is  stored  in  TMW_TCNT
+and  is  set to $012C on cold start (5 mins).  The contents of TMW_TCNT are
+copied into TMW_TOUT whenever a key is pressed or  KB$GETK  is  called  and
+TMW_TOUT  is  decremented  until  zero by the NMI routine every second.  If
+TMW_TOUT is found to be zero in KB$TEST, the machine will switch off.
+
+The contents  of  TMW_TCNT  can  be  changed  at  any  time  to  alter  the
+auto-switch-off  time,  up to a maximum of 65535 seconds (18 hours, 12 mins
+and 15 secs).  If it is set to less than 15, the machine  will  still
+stay on for 15 secs.
+
+To disable the auto-switch-off completely, TMB_SWOF should be set to  zero.
+This  will  inhibit  the NMI from decrementing TMW_TOUT and prevent KB$TEST
+testing it.
+
+
+
+      _________________________
+<a id="p10.2">10.2</a>  KEYBOARD INTERRUPT TIMERS
+
+     The timer 1 compare interrupt is used to scan the  keyboard  to  allow
+keyboard  buffering  and  to  provide  a  timing service.  The time between
+interrupts is controlled by the variable KBW_TDEL which is  initialised  on
+cold  start  to  be $B3DD.  This value makes the KI interrupt occur exactly
+every 50 milliseconds and is used extensively by the operating  system  for
+timing purposes.
+
+
+
+        ________
+<a id="p10.2.1">10.2.1</a>  TMW_FRAM
+
+     TMW_FRAM is incremented by 1 on each keyboard interrupt.   When  $ffff
+is  reached,  it  wraps back to $0000.  It can be read at any time and used
+for accurate timing.
+
+
+
+        ________
+<a id="p10.2.2">10.2.2</a>  DPW_REDY
+
+     DPW_REDY is decremented by 1 on each keyboard interrupt until zero  is
+reached.   It  can  be  used  to  provide  delays (e.g.  TM$WAIT stores D in
+DPW_REDY and waits for it to reach zero - see below).
+
+
+
+      _______________
+<a id="p10.3">10.3</a>  SYSTEM SERVICES
+
+     This section describes the operating system calls available for system
+timing.
+
+Note that TM$DAYV and  TM$UPDT  work  from  any  buffer  pointed  to  by  X
+containing  a  6  byte time representation exactly like the real-time clock
+(TMB_YEAR...).  These routine should not operate  on  the  real-time  clock
+itself if an NMI is imminent, so NMIs must be checked for or TM$TGET should
+be used to copy the time to another buffer.
+
+
+
+<a id="p10.3.1">10.3.1</a>  TM$DAYV
+
+VECTOR NUMBER:          105
+INPUT PARAMETERS:       X register - Address of time buffer.
+OUTPUT VALUES:          B register - numeric value of day.
+                        X register - address of 3 byte day name.
+
+DESCRIPTION
+
+
+         Calculates the day of the week for a given date between 1 JAN 1900
+    and  31  DEC  1999.   X  must  point  to the time buffer containing the
+    particular date in the standard format.
+
+    The numeric value of the day (0 to 6) is returned in the B register  (0
+    represents   MONDAY,   1   TUESDAY,  etc)  and  X  will  point  to  the
+    corresponding 3 byte day  name  in  ascii  (MON,TUE,WED,THU,FRI,SAT  or
+    SUN).
+
+EXAMPLE:
+
+The following routine will calculate and print the day for 2 JAN 1963:
+
+        LDX     #BUFFER ;POINT TO TIME BUFFER
+        LDD     #$3F00          ;YEAR 1963, MONTH JANUARY
+        STD     0,X
+        LDA     A,#$01          ;DATE 2ND
+        STA     A,2,X
+        OS      TM$DAYV         ;CALCULATE DAY
+        LDA     A, 3
+        PSH     A               ;DAY NAME LENGTH
+        PSHX                    ;ADDRESS OF DAY STRING
+        OS      UT$DISP
+        .BYTE   D_FF            ;CLEAR DISPLAY
+        .ASCIZ  /%b/            ;PRINT DAY
+
+
+ERRORS:                 None.
+
+
+
+<a id="p10.3.2">10.3.2</a>  TM$TGET
+
+VECTOR NUMBER:          106
+INPUT PARAMETERS:       X register - Address of 6 byte buffer to store
+time.
+OUTPUT VALUES:          None.
+REGISTERS PRESERVED:    X
+
+DESCRIPTION
+
+    Get a copy of the real-time clock into  a  buffer  at  x.   It  is  not
+    possible  to  read the clock directly in case it is being updated by an
+    NMI.
+
+EXAMPLE:
+
+        LDX     #BUFFER         ;X POINTS TO A 6 BYTE BUFFER
+        OS      TM$TGET         ;COPY TIME INTO BUFFER AT X
+
+
+ERRORS:                 None.
+
+
+
+<a id="p10.3.3">10.3.3</a>  TM$UPDT
+
+VECTOR NUMBER:          107
+INPUT PARAMETERS:       A register - Number of minutes to update.
+                        B register - Number of seconds to update.
+                        X register - Address of 6 byte buffer containing
+time.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+
+         Updates the time pointed to by X by A minutes and  B  seconds.   A
+    and  B  must be in the range 0 - 59.  X must point to the year field of
+    the 6 byte time buffer in standard format.
+
+EXAMPLE:
+
+        LDX     #BUFFER ;POINT TO 6 BYTE BUFFER
+        OS      TM$TGET         ;GET REALTIME. PRESERVES X
+        LDD     #$003B          ;UPDATE BY 0 MINS 59 SECS.
+        OS      TM$UPDT         ;ADD 59 SECS TO TIME IN BUFFER
+
+
+ERRORS:                 None.
+
+
+
+<a id="p10.3.4">10.3.4</a>  TM$WAIT
+
+VECTOR NUMBER:          108
+INPUT PARAMETERS:       D register - Time to pause in ticks.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+
+         Waits for D  ticks  (1  tick  is  the  interval  between  keyboard
+    interrupts,  controlled  by  KBW_TDEL  and set to 50ms by default).  If
+    interrupts are disabled (I mask set) then  this  routine  waits  for  D
+    <u>5</u>0ms.
+
+EXAMPLE:
+
+        LDD     #20             ;20 x <u>5</u>0ms
+        OS      TM$WAIT         ;PAUSE FOR 1 SEC
+
+ERRORS:                 None.
+
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech09.htm">Ch. 9</a></li>
+<li class=navactive>Ch. 10</li>
+<li><a href="tech11.htm">Ch. 11</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

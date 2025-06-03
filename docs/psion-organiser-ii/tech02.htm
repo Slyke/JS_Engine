@@ -1,0 +1,788 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 2 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech02.htm", "name": "Chapter 2" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 2</li>
+</ol>
+
+
+<PRE>                                 CHAPTER 2
+
+                               ____________
+                               SYSTEM BOARD
+
+
+
+     _______
+<a id="p2.1">2.1</a>  GENERAL
+
+     Internally the Organiser consists of two circuit boards.   The  system
+board  holds all the digital electronics and has integral interfaces to the
+display and keyboard.  The power supply board controls power regulation and
+distribution to the system and also carries connectors to the I/O slots and
+buzzer.  The two boards are connected together by a 27 way strip connector.
+
+     This section describes the system board hardware,  and  the  following
+two sections complete the Organiser hardware description.  Reference should
+be made while reading this section to the following separate data :-
+
+     1.  Fig 2.1 System board schematic diagram
+
+     2.  HD6303X Microprocessor family users manual
+
+     3.  HD44780 LCD driver users manual
+
+
+     The System board is a CMOS 8 bit computer including the following :-
+
+      -  8 bit HD6303X processor running at 0.912 MHz
+
+      -  32 kbyte prom containing system code
+
+      -  8,16,31  kbyte  static  ram  option   slots   (CM,XP,LA   versions
+         respectively)
+
+      -  16 character by two line dot matrix LCD and driver ICs
+
+      -  PCB pads and interface for 36 key keyboard
+
+      -  real time clock running from 32768 Hz crystal
+
+      -  27 way connector to PSU board for external I/O,  power  and  power
+         control
+
+     The  board  has  been  engineered  to   minimise   space   and   power
+requirements.   Small  size  is  achieved  through  the  extensive  use  of
+surface-mounted components and by design of a  semi-custom  IC  to  perform
+control  functions.   Low  power  is  achieved by the use of CMOS circuitry
+throughout and by taking advantage of the special power saving modes of the
+processor.
+
+
+
+     ___________________
+<a id="p2.2">2.2</a>  CIRCUIT DESCRIPTION
+
+     Figure 2.1 is a schematic of the System board circuit.   This  section
+describes  the  circuit in general terms, and specific areas are covered in
+more detail later.
+
+     There are 8 positions for ICs on the board, some of which are optional
+to  provide  different  memory  configurations.   All ICs are CMOS with low
+power standby modes, and all are surface-mounted.
+
+
+     IC1 is the HD6303XFP microprocessor in an 80-pin flat  package.   This
+is  an  8  bit  processor derived from the 6800 family, with standard 8 bit
+data and 16 bit address busses shown  to  its  left  on  the  diagram.   In
+addition  it  has three 8 bit I/O ports inbuilt, and these are shown to the
+right.  The oscillator formed  by  XTAL2,  C2  and  C3  provides  an  input
+frequency  of  3.6864  MHz,  which  is  divided  by  four  internally to an
+operating frequency of 0.9216 MHz.   Processor  startup  and  shutdown  are
+controlled by the STBY_B and RES_B signals from the control IC.
+
+
+     IC2 and IC3 control the LCD display.  The HD44780 (IC2) is the  master
+driver  with inbuilt character-generator ROM and display data RAM.  The LCD
+is accessed in the processor memory-map, decoded by the  EOUT  signal  from
+the  control  IC.   IC3  is  a  slave  driver to extend display width to 16
+characters.  The LCD plate is  mounted  to  the  board  through  conductive
+rubber  connector  strips.   There  are  96  connections,  16 to drive each
+horizontal dot row (commons) and 80  to  drive  each  vertical  dot  column
+(segments).  The display has two rows of 16 characters, with each character
+as an 8 by 5 dot matrix.
+
+
+     IC4 is a semi-custom IC to supervise  circuit  operation.   It's  main
+functions are :-
+
+      -  To decode and select devices in the processor memory-map.  Address
+         lines  A6-A15 are input and are used together with the processor E
+         clock to decode memory device blocks (CS1_B  to  CS6_B),  the  LCD
+         driver   (to  the  EOUT  signal)  and  internal  control  latches.
+         Internal latches are  used  to  control  a  variety  of  functions
+         including  processor  startup  and shutdown, polling the keyboard,
+         clock output to the processor  NMI  interrupt,  the  buzzer  ALARM
+         signal and the PULSE signal to the power supply.
+
+      -  To provide the real-time clock facility.  XTAL1,R9,R10,C1  and  C2
+         form  a  32768 Hz oscillator circuit.  This is divided down in two
+         stages.  The first stage provides a 1 Hz output which is  normally
+         switched  to  the processor NMI input to update the clock when the
+         processor is on.  When the Organiser is off, the second  stage  is
+         used  to  record  elapsed  time  since  switch-off,  and  when the
+         Organiser is next switched on the processor reads the elapsed  time
+         to   re-synchronise   its   time   registers.   The  Organiser  is
+         automatically switched on if the second stage  divider  times-out,
+         after an interval of 34 minutes 8 seconds.
+
+      -  To control processor startup and shutdown sequences.   Startup  is
+         initiated by either a rising edge at the AC input or by timeout of
+         the second stage counter.  The ON_B signal  to  the  power  supply
+         immediately goes low to switch on supply rail regulators.  After a
+         time delay to allow  power  rails  to  settle,  the  processor  is
+         started  by  sequencing the STBY_B and RES_B signals.  Shutdown is
+         initiated by the processor itself, by accessing a  control  latch.
+         STBY_B  and RES_B are immediately brought low, and the ON_B signal
+         set high.
+
+      -  To poll the keyboard.  The keyboard is arranged as a 7 by 5 switch
+         matrix.   The  seven outputs K1-K7 are open-drain, and to poll the
+         matrix they are set low one at a time, with the rest floating.  At
+         each  step  the  processor  reads the inputs KBD1-KBD5 via port 5,
+         detecting a key  pressed  if  an  input  is  low.   The  processor
+         controls  the K1-K7 outputs via control latches within the control
+         IC.  The AC key is separate to the matrix, being input directly to
+         the  IC4  AC  input and to a separate bit of the processor port 5.
+         The keyboard switches are PCB pads underneath the Organiser  keys.
+         When  a  key  is  pressed  a  conductive rubber pad shorts the key
+         contacts.
+
+
+     The control IC is reset by the RC network R12, C5.  This is only  done
+on "cold start" i.e. when power is first applied to the board.
+
+
+     Power to the board is supplied through the VCC1, VCC2 and V_LCD  rails
+from  the  power supply.  VCC1 is always present and powers all circuit ICs
+except the LCD drivers.  Power consumption is typically  30  microamp  when
+the  Organiser  is  off, mainly due to the real-time clock oscillator.  RAM
+data in both the processor and external RAM devices are  retained  in  this
+mode.   When  the  Organiser  is on (ON_B low) the VCC2 and V_LCD rails are
+switched on to power the LCD drivers.  Contrast adjustment is  achieved  by
+adjusting  the  V_LCD  voltage.   Power consumption in this state can be 20
+milliamp with the processor running code, reducing to 4 milliamp  when  the
+processor is set into its "sleep" mode.  Capacitors C6-C8 decouple the VCC1
+rail.
+
+
+
+     ______________
+<a id="p2.3">2.3</a>  MICROPROCESSOR
+
+     The HD6303XFP processor is a member of the 6301-6303 family (which are
+CMOS  parts  derived  from the 6800 series).  This member is a romless part
+with a full 64k external memory-map, 1  MHz  maximum  operating  speed  and
+mounted  in an 80 pin flat package.  The processor is described in depth in
+the 6301-6303 family users guide, and the notes in this  section  only  add
+information in the context of the Organiser application.
+
+
+
+       _______________
+<a id="p2.3.1">2.3.1</a>  OPERATING MODES
+
+     The processor has five operating states:  standby, reset, active, halt
+and  sleep.   The  Organiser does not use halt mode, and reset is only used
+during the switch-on sequence as a transition between standby  and  active.
+The three remaining states are used in the following way :-
+
+     1.  Standby mode.  When the Organiser is powered but is switched  off,
+         the processor is in this state (with the SBY_B and RES_B pins both
+         low).  The processor is inactive with all port pins tri-state  and
+         the  oscillator shut down.  In this state the power consumption of
+         the processor is negligible, and the internal RAM is retained.
+
+     2.  Active mode.  When the Organiser is switched on, the processor  is
+         put  into  Reset  mode  (SBY_B  high  and  RES_B low) for 30 to 60
+         millisecs to allow the oscillator and E clock to start up, and  is
+         then  set  into  Active  mode  (SBY_B and RES_B high).  The memory
+         busses are made active and the processor starts running code.  The
+         I/O  ports remain set as inputs until initialised by the software.
+         In active mode the processor is in control of the  whole  circuit.
+         To return to Standby mode (Organiser off) the processor accesses a
+         switch-off address in its memory-map.  This triggers  an  "ON/OFF"
+         latch  in  the  control  IC which immediately sets SBY_B and RES_B
+         low.
+
+     3.  Sleep mode.  This is used to reduce  power  consumption  when  the
+         processor is active, and is entirely under software control.
+
+
+
+
+       __________
+<a id="p2.3.2">2.3.2</a>  MEMORY_MAP
+
+     Processor ports 1,3,4 and 7 control the 64k memory-map.  Ports 1 and 4
+form  the  16  bit address bus A0-A15, port 3 the 8 bit data bus D0-D7, and
+port 7 supplies the control lines R_B,  W_B  and  R/W_B.   External  access
+cycles are decoded and synchronised with the E clock by the control IC.
+
+     The memory map is assigned in four address areas :-
+
+        $8000-$FFFF     are assigned to external PROM devices.
+                        8,16 or 32 kbyte may be present, filled
+                        from the top down.
+
+        $0400-$7FFF     are assigned to external RAM.
+                        8,16 or 31 kbyte may be present, filled
+                        from $2000 up except for the 31 kbyte
+                        option which is from $0400 up.
+
+        $0100-$03FF     are assigned to external I/O devices
+                        including the LCD and latches in the
+                        control IC.
+
+        $0000-$00FF     are reserved for internal processor
+                        RAM and registers.
+
+    External devices are described further in the following sections.
+
+
+
+       ______
+<a id="p2.3.3">2.3.3</a>  PORT 5
+
+T.B.S.
+
+
+
+
+
+       _____________
+<a id="p2.3.4">2.3.4</a>  PORTS 2 AND 6
+
+T.B.S.
+
+
+
+
+
+     __________________________
+<a id="p2.4">2.4</a>  MEMORY DEVICES AND OPTIONS
+
+       ____
+<a id="p2.4.1">2.4.1</a>  PROM
+
+     System software is carried on the board in the form of PROM  (strictly
+speaking they are One-time programmable CMOS EPROM devices).  Three options
+are catered for :-
+
+         8 kbytes at addresses  $E000-$FFFF
+
+         16 kbytes at addresses $C000-$FFFF
+
+         32 kbytes at addresses $8000-$FFFF
+
+
+     Note  that  in  all  options  the  processor  re-start  and  interrupt
+addresses at the top of the memory-map are included in the PROM area.
+
+     The PROMs used are byte-wide CMOS devices in  28  pin  flat  packages,
+with access times of 250 ns or better.  The two types used are:-
+
+         27C64FP        with 8 kbyte capacity
+
+         27C256FP       with 32 kbyte capacity
+
+
+     PROMS installed are powered at all times, and  have  a  typical  power
+consumption in standby mode (with the CS_B pin high) of 1 microamp.
+
+     PROMS are fitted to IC5 and IC6 positions on the board.  IC5 is always
+present  in  either  8 or 32 kbyte size.  IC6 is only used for the 16 kbyte
+option, which needs two 8 kbyte chips.
+
+
+
+       ___
+<a id="p2.4.2">2.4.2</a>  RAM
+
+     As with the PROM above, there are three options for RAM in the  memory
+map :-
+
+         8 kbytes at addresses  $2000-$3FFF
+
+         16 kbytes at addresses $2000-$5FFF
+
+         31 kbytes at addresses $0400-$7FFF
+
+
+     Note that in all cases RAM is continuous from address  $2000  upwards,
+and this address is used by the system for the start of system variables.
+
+     The RAMs used are byte-wide CMOS devices in 28 pin flat packages, with
+access times of 250 ns or better.  The two types used are :-
+
+         6264LFP        with 8 kbyte capacity
+
+         62256LFP       with 32 kbyte capacity
+
+
+     RAMS installed are powered at all times, and hence retain  their  data
+when  the Organiser is off.  In the standby mode their power consumption is
+typically 2 microamp.
+
+     RAMs are fitted to IC7 and IC8 positions on the board.  IC8 is  always
+present  in  either  8 or 32 kbyte size.  IC7 is only used for the 16 kbyte
+option, which needs 8k chips in both positions.  For the 31 kbyte option, a
+32  kbyte  chip  is  used  but  the  bottom  1 kbyte ($0000-$03FF) is never
+accessed.
+
+     In addition to the RAM devices above, their are two other areas of RAM
+on the board and common to all options :-
+
+         The processor includes 192 bytes of RAM at addresses  $0040-$00FF,
+         and this is also retained when the Organiser is off.
+
+         The LCD driver has its own RAM for display data.  This is  not  in
+         the processor memory map and is not retained when the Organiser is
+         off.
+
+
+
+
+       _________________________
+<a id="p2.4.3">2.4.3</a>  MEMORY DECODING AND LINKS
+
+     The six memory selection signals from the control IC (CS1_B to  CS6_B)
+are mapped to the following memory areas :-
+
+         CS1_B  $8000-$FFFF     (32k)
+
+         CS2_B  $E000-$FFFF     (8k)
+
+         CS3_B  $C000-$DFFF     (8k)
+
+         CS4_B  $4000-$5FFF     (8k)
+
+         CS5_B  $2000-$3FFF     (8k)
+
+         CS6_B  $0400-$7FFF     (31k)
+
+
+     They are normally high, and go to  their  active-low  state  when  the
+relevant  memory  area  is  addressed  by the processor.  These six outputs
+cover all PROM/RAM options, and a maximum of four can be used at any  time.
+Links  L1-L8  on  the  board  are  used to match the correct signals to the
+available memory options.  They are arranged as four pairs:  L1-L2,  L3-L4,
+L5-L6,  and  L7-L8.  Of each pair only one should be fitted, with the other
+left open-circuit.
+
+     If a 32 kbyte PROM is fitted in IC5 then links L1  and  L4  should  be
+fitted.  L1 routes CS1_B to the PROM to decode it in the $8000-$FFFF range.
+L4 makes the A14 address line available to the PROM.
+
+     If an 8 kbyte PROM is fitted in IC5 then links L2  and  L3  should  be
+fitted.  L2 routes CS2_B to the PROM to decode it in the $E000-$FFFF range.
+L3 pulls the PROM pin 27 high since A14 is not required.
+
+     If a 32 kbyte RAM is used in IC8 then L6 should be  fitted,  to  route
+the CS6_B signal to the RAM and decode it in the $0400-$7FFF range.
+
+     If an 8 kbyte RAM is used in IC8 then L5 should be fitted to route the
+CS5_B signal to the RAM and decode it in the $2000-$3FFF range.
+
+     Links L7 and L8 set the state of the control IC  CTRL  input.   L7  is
+normally fitted, and in this case the CS1_B to CS6_B outputs are internally
+gated with the processor E clock so that they are active only  when  the  E
+clock  is  high.   If  L8 is fitted the decode outputs are dependent on the
+address lines only.
+
+
+
+       ________________________
+<a id="p2.4.4">2.4.4</a>  OPTIONS FOR CM, XP AND LA
+
+     The three production versions of  the  Organiser  have  the  following
+device options and links :-
+
+    - CM version        32 kbyte PROM           $8000-$FFFF
+                         8 kbyte RAM            $2000-$3FFF
+                        links fitted:  L1,L4,L5,L7
+
+    - XP version        32 kbyte PROM           $8000-$FFFF
+                         8 kbyte RAM            $2000-$3FFF
+                         8 kbyte RAM            $4000-$5FFF
+                        links fitted:  L1,L4,L5,L7
+
+    - LA version        32 kbyte PROM           $8000-$FFFF
+                        32 kbyte RAM            $0400-$7FFF
+                        links fitted:  L1,L4,L6,L7
+
+
+
+
+     _________________
+<a id="p2.5">2.5</a>  MEMORY MAPPED I/O
+
+       __________________
+<a id="p2.5.1">2.5.1</a>  ADDRESS ASSIGNMENT
+
+     The previous sections have covered memory areas $0000-$0100 (processor
+internal  functions)  and  $0400-$FFFF  (memory devices).  The area between
+these ($0100-$03FF) is used to  decode  the  LCD  and  latches  within  the
+control  IC.   The control IC decodes these from its address inputs A6-A15,
+and since A0-A5 are not available each  function  must  span  addresses  in
+blocks  of  64 bytes or multiples of this.  The functions and their address
+ranges are :-
+
+        $0100-$017F     not used
+        $0180-$01BF     LCD ENABLE
+        $01C0-$01FF     SWITCH OFF
+        $0200-$023F     PULSE ENABLE
+        $0240-$027F     PULSE DISABLE
+        $0280-$02BF     ALARM SET
+        $02C0-$02FF     ALARM RESET
+        $0300-$033F     COUNTER RESET
+        $0340-$037F     COUNTER CLOCK
+        $0380-$03BF     NMI ENABLE
+        $03C0-$03FF     NMI DISABLE
+
+    The LCD ENABLE function is a simple decoding one which is output
+to the EOUT signal on pin 39. This is normally low, and is set high
+when any address in the range is selected. The LCD is covered further
+in section <a href="#p2.7">2.7</a>.
+    All the other functions listed perform actions within the control
+IC which are address-controlled, latched events. Address-controlled
+means that any processor access to an address within the range will
+cause the event, irrespective of whether it is a read or write access
+or of data on the data bus. Once an access has occurred, the affected
+latch remains in the state set until a further access alters it. If
+a latch is set, then further accesses to set it will have no effect
+and a reset access is required to change its state.
+
+
+
+       ____________
+<a id="p2.5.2">2.5.2</a>  PULSE SIGNAL
+
+     The PULSE output is a control signal to the power supply  board,  used
+in   generating  the  voltages  necessary  to  program  datapacks.   It  is
+controlled by an internal PULSE latch.   When  set,  the  PULSE  signal  is
+enabled and a 32 kHz square-wave signal of between 40-60 percent duty cycle
+is output to the PULSE output pin.  When reset, the output is disabled  and
+is low.  The latch is automatically reset when the Organiser is off.
+
+     Caution should be used when accessing the PULSE latch, as damage could
+occur  to  the  power  supply if it is left enabled for too long.  PULSE is
+only used by the Organiser during datapack programming, and in  a  strictly
+controlled  loop using the READY signal as a feedback input.  In this loop,
+PULSE is disabled as soon as the READY input goes high.  This is  discussed
+further in the power supply section.
+
+
+
+       ____________
+<a id="p2.5.3">2.5.3</a>  ALARM SIGNAL
+
+     The ALARM signal is a direct output from the ALARM latch.  It is  used
+to  drive  the piezoelectric buzzer element mounted from the power supply
+board.
+
+     When the ALARM latch is set, the  output  signal  goes  high  and  the
+voltage  is  applied  across the buzzer element.  When reset, the signal is
+removed.  ALARM may be left in either state, but the buzzer  only  produces
+sound  at  transitions  between  the  two  states.   To produce a tone, the
+software must access the ALARM  set  and  reset  functions  alternately  to
+produce the frequency required.
+
+     The alarm signal is also used as an  interlock  in  the  power  supply
+circuit, to allow datapack programming voltages to be applied to the packs.
+This is described further in the power supply section.
+
+
+
+       ___
+<a id="p2.5.4">2.5.4</a>  NMI
+
+     T.B.S
+
+
+
+       _______
+<a id="p2.5.5">2.5.5</a>  COUNTER
+
+     T.B.S
+
+
+
+       __________
+<a id="p2.5.6">2.5.6</a>  SWITCH OFF
+
+     T.B.S
+
+
+
+     __________________
+<a id="p2.6">2.6</a>  CLOCK AND KEYBOARD
+
+     The real-time clock and keyboard poll are both functions dealt with by
+the  control  IC.   Although at first sight they are completely independent
+functions, they are linked together in the control IC  since  the  keyboard
+poll  outputs  K1-K7  are part of the clock divider chain.  For this reason
+they are described together in this section.
+
+
+
+       _____________
+<a id="p2.6.1">2.6.1</a>  DIVIDER CHAIN
+
+     The clock divider chain is implemented in the control IC as a  27  bit
+binary counter split into two stages :-
+
+         Stage 1 is a 15 bit free-running binary  counter  clocked  by  the
+         32768 Hz oscillator input.  Each cycle of the clock increments the
+         counter, and when all bits are high the next cycle resets them all
+         to  low.   In other terms, each bit of the counter alternates high
+         and low at a frequency of one half the previous  bit.   Hence  the
+         last bit, bit 15, oscillates at a frequency of 1 Hz.
+
+              Three of the bits of this stage may appear at output pins :-
+
+          -  Bit 0 (32768 Hz) is gated with the PULSE latch, and when PULSE
+             is enabled appears at the output pin.
+
+          -  Bit 5 (1024 Hz) is gated with the processor RES_B output,  and
+             when  the processor is active (RES_B high), appears at the OSC
+             output.
+
+          -  Bit 15 (1 Hz) is gated with the NMI latch,  and  when  enabled
+             appears  at  the  NMI  output to interrupt the processor every
+             second.  When NMI is  disabled,  the  1  Hz  signal  is  gated
+             internally to clock the stage 2 counter.
+
+
+         Stage 2 is a 12 bit binary counter which may be clocked  from  one
+         of  two  sources:  either from the 1 Hz signal if NMI is disabled,
+         or by a  processor  access  to  the  COUNTER  CLOCK  area  of  its
+         memory-map.   In  addition this stage may be reset by an access to
+         the COUNTER RESET function.  Eight of  the  twelve  bits  of  this
+         stage  appear at the output pins.  Bits 1-7 appear as the keyboard
+         poll  outputs  K1-K7  respectively.   Since  they  are  open-drain
+         outputs  they  are  pulled  low when the counter bits are low, and
+         float when the counter bits are high.  Bit 12 appears as the ACOUT
+         signal,  and when high internally sets the ON/OFF latch to start a
+         switch-on sequence.
+
+     With the two stages linked together (i.e. with NMI disabled),  the  last
+bit  (ACOUT)  would  have  a  cycle  time  of  68 mins 16 secs if left as a
+free-running counter.  In practice the counter is never left to  free  run,
+and if started from a reset condition is interrupted after half a cycle (34
+mins 8 sec) when it switches the Organiser on.
+
+
+
+       ____________
+<a id="p2.6.2">2.6.2</a>  KEEPING TIME
+
+     The date and time are  kept  and  updated  by  the  processor  in  its
+internal  RAM.   When  the Organiser is on, it is normally receiving an NMI
+interrupt every second, and so can update the time on a  second  by  second
+basis.   Clearly when the Organiser is off this cannot be done, and in this
+case the stage 2 counter is used instead to  keep  track  of  elapsed  time
+since the Organiser was switched off.
+
+     To explain this process, imagine that the clock is  set  exactly  with
+the  processor running and receiving NMI interrupts every second.  The time
+is incremented immediately following each interrupt.   When  the  Organiser
+switches off it follows the following sequence :-
+
+     1.  Wait for NMI and increment clock
+
+     2.  Access COUNTER RESET address to reset the stage 2 counter
+
+     3.  Access SWITCH OFF address.  This automatically  disables  the  NMI
+         output  and switches the 1 Hz signal to start clocking the stage 2
+         counter.
+
+
+     The next and subsequent  1  Hz  cycles  will  increment  the  stage  2
+counter,  and  this  will  continue  for  34 mins 8 secs until the last bit
+(ACOUT) is set high.  This starts the switch-on sequence  to  re-start  the
+processor.   When  running,  the  processor  enables the NMI latch to start
+updating the clock directly every second.  It also reads the state  of  the
+ACOUT  signal,  and  because  it is high it knows the clock is 34 minutes 8
+seconds slow, and adds this to its time registers.  Hence the time and date
+are accurate again and being updated every second.
+
+     This explains the general mechanism of keeping time when the processor
+is  off, using the stage 2 counter.  A few other details need clarifying to
+explain the system fully:-
+
+     1.  On switch on, the test on the ACOUT signal determines  the  reason
+         for  the processor to be started.  If ACOUT is high then a counter
+         timeout has  occurred  as  indicated  above.   In  this  case  the
+         processor   will  update  its  time  registers  as  described  and
+         immediately switch off again.  When left off, the Organiser  keeps
+         time  by  automatically  switching on every 34 min 8 sec, updating
+         the time and switching off again.
+
+     2.  If ACOUT is low when the processor starts, then a counter  timeout
+         is  not  responsible  (i.e. the AC key or the external AC input must
+         have been activated).  In this case the same startup procedure  is
+         followed,  but  the  processor  does not immediately know how much
+         elapsed time to add to bring its clock registers up  to  date  (i.e.
+         how  long  since the Organiser was switched off).  To find out, it
+         repeatedly accesses the COUNTER  CLOCK  address  until  the  ACOUT
+         signal goes high.  The number of clock cycles required effectively
+         gives the number of seconds until the  next  counter  timeout  was
+         due.  This can be subtracted from 34 min 8 sec to give the elapsed
+         time since switch  off,  and  this  time  is  added  to  the  time
+         registers.
+
+     3.  If the Organiser is about to switch off and an alarm has been  set
+         within  the next 34 min 8 sec, it can pre-load the stage 2 counter
+         instead of resetting it just before switch-off.   To  do  this  it
+         first  RESETs  the  counter  and  then clocks it using the COUNTER
+         CLOCK address Each clock will reduce the time to the next  counter
+         timeout by one second.
+
+     4.  The stage 2 counter is normally used to keep track of elapsed time
+         when the Organiser is off, but the same mechanism can also be used
+         when the processor  is  running.   This  is  sometimes  done  when
+         running   time-critical   code   where  NMI  interrupts  would  be
+         unacceptable.
+
+     5.  Two adjustments are required to make the descriptions above  fully
+         accurate.  Firstly, in any sequence where time-keeping is switched
+         from direct NMI interrupt to stage 2 counter and back  again,  one
+         second  is  gained and must be adjusted for in the software.  This
+         is a result of the hardware mechanism used  to  switch  the  1  Hz
+         signal   between  NMI  and  the  counter.   Secondly,  during  the
+         switch-on sequence following a counter timeout  (ACOUT  high),  an
+         extra  clock  cycle  to  the counter may have occurred between the
+         initiation cycle and the time that the processor switches  to  NMI
+         interrupt.   To  detect if this has happened, the processor clocks
+         the counter through (as after an AC press) until ACOUT switches
+
+
+
+
+       ____________
+<a id="p2.6.3">2.6.3</a>  THE KEYBOARD
+
+     The AC key at the keyboard top left is a special case since it is used
+to  switch  the  Organiser  on.  As such it is the only key on the keyboard
+whose function cannot be totally software defined.  The AC key switches the
+AC signal on the board, and is input both to the control IC AC input and to
+the processor port 5 bit 7.  It is normally low,  and  is  pulled  high  on
+pressing  the  key.   Pressing  AC  when  the Organiser is off will set the
+ON/OFF latch in the control IC and start a switch-on  sequence.   When  the
+processor  is  running,  it  polls this key by reading port 5 bit 7.  (1=AC
+pressed, 0=AC not pressed).  The external AC input from the  Organiser  top
+slot  is in parallel with the AC key.  This is used to switch the Organiser
+on from an external input, but it is disabled whenever the ON/OFF latch  is
+set and so cannot be polled.
+
+     The other 35 keys on the keyboard are arranged as  a  7  by  5  switch
+matrix.   They  are  polled using the K1-K7 outputs from the control IC and
+the KBD1-KBD5 inputs to the processor port  5.   The  inputs  are  normally
+high,  and  are pulled low when a key is pressed and the relevant output is
+set low.  The keys are arranged in the following way :-
+
+        input:          KBD5    KBD4    KBD3    KBD2    KBD1
+        port5 bit:       6       5       4       3       2
+        ------------------------------------------------------
+        output
+
+        K7               D       J       P       V       S
+
+        K6               F       L       R       X       EXE
+
+        K5               G       K       Q       W       DEL
+
+        K4               C       I       O       U       Z
+
+        K3               B       H       N       Y       Y
+
+        K2               A       G       M       S       SH
+
+        K1               RA      LA      DA      UA      MODE
+
+
+     To poll the matrix, the processor first RESETs the  stage  2  counter.
+All  outputs  K1-K7  will  now  be  pulled  low  and all rows of the matrix
+accessed simultaneously; i.e.  if any key is pressed then one of the port  5
+inputs will be pulled low.  Conversely, if all inputs are high then no keys
+are pressed and no further polling is required.  If a key press is detected
+at  this stage then the processor polls each row of keys in turn to isolate
+which key is responsible.
+
+     To do this it accesses the COUNTER CLOCK address until the  K7  output
+is  low  but K1-K6 are all floating.  The first row of the matrix above are
+now accessed, and depression of the D,J,P,V or S keys is detected if a  low
+is  present at the corresponding bit of port 5.  To poll the next row, more
+COUNTER CLOCK accesses are required until the K6 output is low with K7  and
+K1-K5  floating.  This process is repeated 7 times until all rows have been
+read.
+
+     Because this process uses the stage 2 counter, the keyboard  can  only
+be polled when the NMI latch is set to directly interrupt the processor.
+
+
+
+     ___________
+<a id="p2.7">2.7</a>  LCD DISPLAY
+
+     The  LCD  is  driven  by  IC2  and  IC3,  parts  HD44780  and  HD44100
+respectively.  Both these ICs are described in detail in the LCD Driver LSI
+Databook, and the notes in this section only add information in the context
+of the Organiser application.
+
+     The Organiser display is 32 characters arranged in  two  lines  of  16
+characters  each.  In this configuration the HD44780 provides the 16 common
+lines and the display is driven with a 1/16 duty cycle.   The  two  display
+lines  are each 7 dots tall plus a separate cursor line.  Each character is
+5 dots wide and so 80 segment lines are required.  The first  40  of  these
+(left half of the display) are provided by the HD44780, and the rest by the
+HD44100 slave driver.
+
+     The  display  is  accessed  by  the  processor  in  the  memory   area
+$0180-$01BF as described in section <a href="#p2.5">2.5</a>.  The two registers are selected by
+the A0 address line, so even addresses in this range access the Instruction
+Register,  odd  ones the Data Register.  The 8 bit mode is used to transfer
+data to the processor, and this must  be  selected  when  the  drivers  are
+initialised.
+
+     The display drivers and LCD plate are powered by the  VCC2  and  V_LCD
+rails  from  the  power  supply  board.  These are swished off whenever the
+Organiser is off, and so the LCD must  be  initialised  at  each  processor
+start-up.   The intermediate voltages required are provided by the resistor
+chain R1-R5.  Contrast adjustment is controlled by the  thumbwheel  on  the
+power  supply  board, by adjusting the V_LCD voltage between limits of +0.6
+and -3 volts.  Power required is typically 2 milliamp  from  VCC2  and  0.5
+milliamp from V_LCD.
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech01.htm">Ch. 1</a></li>
+<li class=navactive>Ch. 2</li>
+<li><a href="tech03.htm">Ch. 3</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

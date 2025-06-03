@@ -1,0 +1,1243 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 15 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech15.htm", "name": "Chapter 15" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 15</li>
+</ol>
+
+
+<PRE>                                CHAPTER 15
+
+                              _______________
+                              MATHS FUNCTIONS
+
+
+
+     This chapter describes the floating-point mathematics  routines  (add,
+subtract,  multiply  and divide), the scientific functions and the routines
+to convert between a floating-point number and an ascii text string.
+
+
+
+      ______________________
+<a id="p15.1">15.1</a>  FLOATING-POINT NUMBERS
+
+These consist of a 12-digit precision BCD-packed mantissa with one byte for
+the  sign  and  a  one byte signed binary exponent.  They are structured as
+follows:  (low memory -&gt; high memory)
+
+        mantissa_1      low-order byte
+        mantissa_2          .
+        mantissa_3          .
+        mantissa_4          .
+        mantissa_5          .
+        mantissa_6      high-order byte
+        exponent        1 byte
+        sign            1 byte
+
+Each byte of the mantissa contains two decimal digits, the high-order digit
+in  the  top 4 bits and the low-order digit in the bottom 4 bits.  The sign
+byte has the normal sign convention i.e.  negative if bit  7  set,  positive
+otherwise.   Standard practice in the Organiser operating system is $80 for
+negative and zero for positive.  An  exponent  of  zero  (with  a  non-zero
+mantissa)  implies  that  the  value  of  the  number  lies  between  1 and
+9.99999999999 inclusive.
+
+The mathematical routines operate on two  floating-point  registers,  which
+are  identical  in  structure to the floating-point numbers described above
+except for the addition of a guard byte to the mantissa.  These  bytes  are
+used for rounding purposes.
+
+The registers are arranged in zero-page  memory  as  follows  (see  section
+<a href="tech06.htm#p6.5.1.2">6.5.1.2</a> on memory usage):
+     _______    _____________           ________
+     Address    Variable name           Function
+
+        $c5      MTT_AMAN               accumulator: guard byte
+        $c6         -                   start of accumulator mantissa
+        $cc      MTB_AEXP               accumulator exponent
+        $cd      MTB_ASGN               accumulator sign
+
+        $ce      MTT_OMAN               operand: guard byte
+        $cf         -                   start of operand mantissa
+        $d5      MTB_OEXP               operand exponent
+        $d6      MTB_OSGN               operand sign
+
+Thus the floating-point number -12345.0006789 can be declared as follows:
+
+FP_CONST:
+        .BYTE   $89,$67,$00,$50,$34,$12         ;mantissa
+        .BYTE   4                               ;exponent
+        .BYTE   $80                             ;negative sign
+
+and copied into the accumulator by the following code:
+
+        LDD     #MTT_AMAN+1
+        LDX     #8
+        STX     UTW_S0:
+        LDX     #FP_CONST
+        OS      UT$CPYB
+
+
+
+
+      _________________________
+<a id="p15.2">15.2</a>  FLOATING-POINT ARITHMETIC
+
+The four binary  operators  add,  subtract,  multiply  and  divide  operate
+directly on the floating-point registers in the order
+
+          accumulator (operator) operand = accumulator
+
+e.g.  to do the operation 6/3 = 2, 6 is placed in the accumulator, 3 in the
+operand  and  the  result after calling mt_fdiv will be in the accumulator.
+Any number used as an argument to these routines must  be  normalised,  i.e.
+the  most  significant  digit  of  the  mantissa  must  be non-zero for all
+non-zero numbers.  Any number having zero in the most significant  byte  is
+treated as zero.  For example declaring the number 0.00009999 as follows
+
+        .BYTE   0,0,$99,$99,0,0         ;most significant digit is zero
+        .BYTE   -1
+        .BYTE   0
+
+is incorrect. It should read:
+
+        .BYTE   0,0,0,0,$99,$99         ;non-zero digits shifted to
+                                        ;most significant position
+        .BYTE   -5                      ;and exponent adjusted accordingly
+        .BYTE   0
+
+These routines also require the exponent to be in the range -99 to 99.  The
+result  is  always  returned  as  a normalised floating-point number in the
+accumulator, the operand remains  unchanged,  and  both  guard  digits  are
+cleared to zero.  No validation is made of the contents of the registers on
+input, and the arithmetic routines  will  attempt  to  operate  on  invalid
+floating-point numbers with unpredictable results.
+
+To prevent it from being corrupted, the operand is copied into the start of
+the work buffer MTT_WBUF at $2288 (see section <a href="tech06.htm#p6.5.1.3">6.5.1.3</a> on memory usage) and
+then restored before returning from the routine.
+
+A description of the system services to  handle  floating-point  arithmetic
+follows.
+
+
+
+        _______
+<a id="p15.2.1">15.2.1</a>  MT$FADD
+
+VECTOR NUMBER:          082
+INPUT PARAMETERS:       Floating-point registers contain the two numbers
+                        to be added.
+OUTPUT VALUES:          Accumulator contains accumulator + operand.
+
+DESCRIPTION
+
+    Does a floating-point add on the accumulator and operand registers.
+
+    When adding two numbers of equal exponent, the register  mantissas  are
+    added  (or the smaller mantissa subtracted from the larger if the signs
+    are not the same).  The exponent is incremented  by  1  if  the  result
+    overflows,  and decremented if underflow occurs in subtraction.  If the
+    exponents differ,  the  mantissa  of  the  register  with  the  smaller
+    exponent  is  shifted  to  the  right (downwards in memory) by n digits
+    where n is the difference  between  the  two  exponents.   The  shifted
+    mantissa  is  then  added  to or subtracted from the other.  The larger
+    exponent is taken as the exponent of the  result  after  adjusting  for
+    over- or underflow as above.
+
+    The alignment and addition/subtraction of mantissas are always done  on
+    the  full 7 bytes of the register mantissas, i.e.  to 14 digit accuracy.
+    If the result requires more than 12  digits  of  precision,  the  guard
+    digits are used to round the least significant digit accordingly.
+
+EXAMPLE
+
+    To add 1.0E+11 and 202.88, the following constants can be set up:
+
+    FP_CONST1:
+        .BYTE   0,0,0,0,0,$10           ;mantissa
+        .BYTE   11                      ;exponent
+        .BYTE   0                       ;positive sign
+    DUMMY_GUARD_BYTE:
+        .BYTE   0
+    FP_CONST2:
+        .BYTE   0,0,0,$80,$28,$20       ;mantissa
+        .BYTE   2                       ;exponent
+        .BYTE   0                       ;sign
+
+    and the following code executed (taking advantage of the fact that  the
+    operand follows immediately after the accumulator in memory):
+
+        LDD     #MTT_AMAN+1             ;D -&gt; byte above guard digit
+        LDX     #2*SZBCD+1              ;length to move
+        STX     UTW_S0:
+        LDX     #FP_CONST1
+        OS      UT$CPYB                 ;copy constants into registers
+        OS      MT$FADD
+
+    then after the mantissas  have  been  aligned  they  will  contain  the
+    following:
+
+                                ________                    ___________
+                                Mantissa                    Guard Digit
+
+        Accumulator:            10 00 00 00 00 00           00
+        Operand:                00 00 00 00 02 02           88
+
+        Result after adding:    10 00 00 00 02 02           88
+
+    Before returning this is rounded up and  the  guard  digit  cleared  to
+    give:
+
+                                10 00 00 00 02 03           00
+
+ERRORS:                 ER_MT_EX - exponent overflow
+                        i.e. MTB_AEXP &gt; 99 or MTB_AEXP &lt; -99
+
+
+
+        _______
+<a id="p15.2.2">15.2.2</a>  MT$FSUB
+
+VECTOR NUMBER:          090
+INPUT PARAMETERS:       Floating-point registers contain the two numbers
+                        to be subtracted.
+OUTPUT VALUES:          Accumulator contains accumulator - operand.
+
+DESCRIPTION
+
+    Subtracts the floating-point operand from the accumulator.
+
+    The subtract routine simply toggles the sign byte of  the  operand  and
+    adds  the registers as described in MT$FADD above, and is called in the
+    same way.
+
+ERRORS:                 ER_MT_EX - exponent overflow
+                        i.e. MTB_AEXP &gt; 99 or MTB_AEXP &lt; -99
+
+
+
+        _______
+<a id="p15.2.3">15.2.3</a>  MT$FNGT
+
+VECTOR NUMBER:          089
+INPUT PARAMETERS:       X register - address of the floating-point
+                        register to be negated.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    Toggles the sign of the register pointed to by X.
+
+    Note that as this routine operates on a register, it assumes a mantissa
+    length  of  7  bytes.  To negate a normal BCD number, X should point to
+    the byte below the first byte of the number in memory.
+
+EXAMPLE
+
+    To change the sign of the accumulator, execute the following code:
+
+        LDX     #MTT_AMAN
+        OS      MT$FNGT
+
+    and to negate the constant 202.88 in the addition  example  in  section
+    <a href="#p15.2.1">15.2.1</a> above:
+
+        LDX     #FP_CONST2-1
+        OS      MT$FNGT
+
+REGISTERS PRESERVED:    B and X.
+ERRORS:                 None.
+
+
+
+        _______
+<a id="p15.2.4">15.2.4</a>  MT$FMUL
+
+VECTOR NUMBER:          088
+INPUT PARAMETERS:       Floating-point registers contain the numbers
+                        to be multiplied.
+OUTPUT VALUES:          Accumulator contains accumulator * operand.
+
+DESCRIPTION
+
+    Performs a floating-point multiply on the BCD registers.
+
+    The mantissas are  multiplied  by  repeated  addition  of  the  operand
+    mantissa into a temporary 28-digit double-precision mantissa (14 bytes)
+    located in the floating-point  work  buffer  (see  section  <a href="tech06.htm#p6.5.1.3">6.5.1.3</a>  on
+    memory usage) at MTT_WBUF+8, i.e.  immediately following the stored copy
+    of the operand (see <a href="#p15.2">15.2</a> above).  The top seven bytes,  i.e.   the  most
+    significant  14  digits,  are  then  copied from this register into the
+    accumulator and rounded to 12 digits as for addition above.
+
+EXAMPLE
+
+    To multiply pi (3.14159265359) by -7160, set up the following:
+
+    FP_PI:
+        .BYTE   $59,$53,$26,$59,$41,$31 ;mantissa
+        .BYTE   0                       ;exponent
+        .BYTE   0                       ;sign
+    DUMMY_GUARD_BYTE:
+        .BYTE   0
+    FP_CONST:
+        .BYTE   0,0,0,0,$60,$71         ;mantissa
+        .BYTE   3                       ;exponent
+        .BYTE   $80
+
+    and execute the following code (taking advantage of the fact  that  the
+    operand follows immediately after the accumulator in memory):
+
+        LDD     #MTT_AMAN+1             ;D -&gt; byte above guard digit
+        LDX     #2*SZBCD+1              ;length to move
+        STX     UTW_S0:
+        LDX     #FP_PI
+        OS      UT$CPYB                 ;copy constants into registers
+        OS      MT$FMUL
+
+    The accumulator will now contain the result of -22493.8033997 and  will
+    look like this:
+
+    MTT_AMAN:   00
+    MTT_AMAN+1: 97
+    MTT_AMAN+2: 39
+    MTT_AMAN+3: 03
+    MTT_AMAN+4: 38
+    MTT_AMAN+5: 49
+    MTT_AMAN+6: 22
+    MTB_AEXP:   04
+    MTB_ASGN:   80
+
+    The operand is not affected by the operation, so still contains -7160.
+
+ERRORS:                 ER_MT_EX - exponent overflow
+                        i.e. MTB_AEXP &gt; 99 or MTB_AEXP &lt; -99
+
+
+
+        _______
+<a id="p15.2.5">15.2.5</a>  MT$FDIV
+
+VECTOR NUMBER:          087
+INPUT PARAMETERS:       Floating-point dividend in accumulator, divisor in
+                        operand.
+OUTPUT VALUES:          Accumulator contains accumulator / operand.
+
+DESCRIPTION
+
+    Performs a floating-point divide on the BCD registers.
+
+    The mantissas are divided  by  repeated  subtraction  of  the  operator
+    mantissa  from the accumulator mantissa, with the result being built up
+    in a seven-byte temporary mantissa located  at  MTT_WBUF+8.   Once  the
+    process  is  complete,  the  contents  of  the  register  are copied to
+    MTT_AMAN and rounded to 12 digits as with multiplication above.
+
+EXAMPLE
+
+    To divide the result of -22493.8033997 obtained in  the  multiplication
+    example above by 0.00654, first set up the divisor as a constant:
+
+    FP_DIVISOR:
+        .BYTE   0,0,0,0,$40,$65         ;mantissa
+        .BYTE   -3                      ;exponent
+        .BYTE   0                       ;sign
+
+    then execute the following code:
+
+        LDD     #MTT_OMAN+1             ;target is operand
+        LDX     #SZBCD                  ;length of one f.p. number
+        STX     UTW_S0:
+        LDX     #FP_DIVISOR
+        OS      UT$CPYB                 ;copy divisor into operand
+        OS      MT$FDIV                 ;and do division
+
+    The accumulator will now contain the  result  -3439419.48008  and  will
+    look like this:
+
+    MTT_AMAN:   00
+    MTT_AMAN+1: 08
+    MTT_AMAN+2: 80
+    MTT_AMAN+3: 94
+    MTT_AMAN+4: 41
+    MTT_AMAN+5: 39
+    MTT_AMAN+6: 34
+    MTB_AEXP:   06
+    MTB_ASGN:   80
+
+ERRORS:                 ER_MT_EX - exponent overflow
+                        ER_MT_DI - divide by zero
+
+
+
+      _________________________________________
+<a id="p15.3">15.3</a>  CONVERTING NUMERIC TEXT TO FLOATING POINT
+
+<a id="p15.3.1">15.3.1</a>  MT$BTOF
+
+VECTOR NUMBER:          081
+INPUT PARAMETERS:       X register - address of start of input string.
+                        D register - address of target floating-point
+                        number.
+OUTPUT VALUES:          Floating-point representation of input string.
+                        X points to terminator at end of input string.
+
+DESCRIPTION
+
+    Converts the numeric ascii string at X to the floating-point number  at
+    D.   The string may be terminated by any character which is not numeric
+    (and not by ".", "E" or "e" unless these have  previously  occurred  in
+    the input string).
+
+    The floating-point result is returned in  the  8  bytes  following  the
+    address  given by D on entry (D should be preserved before calling this
+    routine, as there is no pointer to the result on exit from it).
+
+    Error ER_MT_IS is returned if:
+
+     -  The exponent is greater than 99 or less than -99  (irrespective  of
+        the value of the mantissa)
+
+     -  The input string contains more  than  12  significant  digits  (not
+        including leading or trailing zeros)
+
+     -  The total of significant digits + trailing zeros exceeds 44
+
+     -  There are no valid numeric digits in the mantissa (e.g.  .E5)
+
+     -  There are no valid numeric digits in the exponent (e.g.  6E)
+
+
+EXAMPLE
+
+    The following code will convert the string "172.65" to floating-point:
+
+        LDX     #INP_STRING
+        LDD     #FP_BUF
+        OS      MT$BTOF
+
+    INP_STRING:
+        .ASCIZ  "172.65"
+
+    FP_BUF:
+        .BLKB   8
+
+    It may be useful to put the floating-point representation of  a  string
+    into  one  of  the  registers used by the arithmetic routines described
+    above.  The  following  code  will  convert  the  same  string  into  a
+    floating-point number in the accumulator:
+
+        LDX     #INP_STRING
+        LDD     #MTT_AMAN+1             ;skip guard digit
+        OS      MT$BTOF
+
+
+ERRORS:                 ER_MT_IS - String to floating-point failed
+
+
+
+      ________________________________________
+<a id="p15.4">15.4</a>  CONVERTING FLOATING-POINT TO TEXT STRING
+
+There are four routines to handle this, one for each of  the  four  formats
+decimal,  scientific,  integer  and  general.   On  entry,  the  X register
+contains the address of the start of the  output  string,  the  A  register
+contains  the maximum length of the output string, and the B register gives
+the number of decimal places if relevant.  The  floating-point  accumulator
+(see  section  <a href="#p15.1">15.1</a> on floating-point numbers above) is always taken as the
+source number to  be  converted,  since  it  contains  the  result  of  all
+floating-point arithmetic operations.
+
+The floating-point work buffer MTT_WBUF  (see  section  <a href="tech06.htm#p6.5.1.3">6.5.1.3</a>  on  memory
+usage) is used to build up the intermediate result, which is then copied to
+the output area pointed to by X provided there is sufficient space for  it.
+The floating-point registers are preserved.
+
+If   successful,   these   routines   return   the   output   string   (not
+zero-terminated) at the address given by X on entry, with the length of the
+string in B.  There is no right-justification  of  the  string  within  the
+given field width.  X should be preserved before calling these routines, as
+there is no pointer to the output string on exit.
+
+There is no validation of the number contained in the accumulator, so if it
+contains garbage then the output routines will produce garbage.
+
+A description of the four routines for floating-point  to  text  conversion
+follows.
+
+
+
+<a id="p15.4.1">15.4.1</a>  MT$FBDC
+
+
+VECTOR NUMBER:          083
+INPUT PARAMETERS:       A register - field width of output string.
+                        B register - decimal places required.
+                        X register - address of output buffer.
+OUTPUT VALUES:          B register - length of the output string.
+
+DESCRIPTION
+
+    Converts floating-point accumulator  to  numeric  ascii  text,  decimal
+    format.   This  is  the  format nnnn.nnn, i.e.  a decimal number with no
+    exponent.  If the number of significant digits after the decimal  point
+    is  greater  than  the  decimal  places  specified  in B, the number is
+    rounded off to B decimal places.  Otherwise it is  zero-filled  on  the
+    right to make up the necessary decimal places.
+
+EXAMPLES
+
+    The following  code  will  convert  the  value  172.65  placed  in  the
+    accumulator  in  the  example  in  MT$BTOF  (section <a href="#p15.3.1">15.3.1</a> above) to a
+    decimal format string with 5 decimal places in a field width of 16:
+
+        LDX     #STRING_BUF
+        LDD     #16*256 + 5     ;field width in A, dec. places in B
+        OS      MT$FBDC
+
+    STRING_BUF:
+        .BLKB   16
+
+    STRING_BUF will now contain the string "172.65000" and the  B  register
+    will  contain  9.   The  string  will  not  be  zero-terminated  unless
+    STRING_BUF is zero-filled before the routine is called.
+
+    Further  examples  of  the  output  strings  corresponding  to  various
+    floating-point values follow:
+
+    ___________         _____   ___________     _____________
+    Accumulator         Width   Dec. Places     Output String
+
+    0.0000004            20        4            0.0000
+    0.00006              20        4            0.0001
+    0                    20        4            0.0000
+    1234.5               20        4            1234.5000
+    1234.5                8        4            Error
+                                                (Width too small)
+    34E+10               20        4            340000000000.0000
+    9E+20                60       14            Error
+                                                (Too long for work buffer)
+
+ERRORS:                 ER_MT_FL - output string too long for field width
+                        or greater than maximum work buffer length of 34
+
+
+
+<a id="p15.4.2">15.4.2</a>  MT$FBEX
+
+
+VECTOR NUMBER:          084
+INPUT PARAMETERS:       A register - field width of output string.
+                        B register - decimal places required.
+                        X register - address of output buffer.
+OUTPUT VALUES:          B register - length of the output string.
+
+DESCRIPTION
+
+    Converts  floating-point  accumulator  to  numeric   ascii   text,   in
+    exponential  (scientific)  format.   This is in the form n.nnnnnE+nn, a
+    decimal mantissa with one digit before the decimal  point  followed  by
+    the  exponent.   The  exponent  is  always  expressed  as a + or - sign
+    followed by 2 numeric digits.
+
+EXAMPLES
+
+    The following  code  will  convert  the  value  172.65  placed  in  the
+    accumulator  in  the  example  in  MT$BTOF (section <a href="#p15.3.1">15.3.1</a> above) to an
+    exponential format string with 4 decimal places in a field width of 16:
+
+        LDX     #STRING_BUF
+        LDD     #16*256 + 4     ;field width in A, dec. places in B
+        OS      MT$FBEX
+
+    STRING_BUF:
+        .BLKB   16
+
+    STRING_BUF will now contain the string "1.7267E+02" and the B  register
+    will  contain 10.  Further examples of the output strings corresponding
+    to various floating-point values follow:
+
+    ___________         _____   ___________     _____________
+    Accumulator         Width   Dec. Places     Output String
+
+    0                    10         4           0.0000E+00
+    640                  16         4           6.4000E+02
+    112233445566         30        16           1.1223344556600000E+11
+    112233445566         20        16           Error
+                                                (Width too small)
+    0.000071             10         0           7E-05
+    0.000076             10         0           8E-05
+    0.99999              10         3           1.000E+00
+
+ERRORS:                 ER_MT_FL - output string too long for field width
+                        or greater than maximum work buffer length of 34
+
+
+
+<a id="p15.4.3">15.4.3</a>  MT$FBIN
+
+
+VECTOR NUMBER:          086
+INPUT PARAMETERS:       A register - field width of output string.
+                        X register - address of output buffer.
+OUTPUT VALUES:          B register - length of the output string.
+
+DESCRIPTION
+
+    Converts floating-point accumulator to numeric ascii text,  in  integer
+    format.   The value in the B register is irrelevant in this routine, as
+    there  are  no  decimal  places  involved.   If  the   value   in   the
+    floating-point accumulator is not an integer, then the string output is
+    the accumulator value rounded to the nearest integer.
+
+EXAMPLES
+
+    The following  code  will  convert  the  value  172.65  placed  in  the
+    accumulator  in  the  example  in  MT$BTOF (section <a href="#p15.3.1">15.3.1</a> above) to an
+    integer format string in a field width of 16:
+
+        LDX     #STRING_BUF
+        LDA     A,#16           ;field width in A
+        OS      MT$FBIN
+
+    STRING_BUF:
+        .BLKB   16
+
+    STRING_BUF will now contain the string "173" and the  B  register  will
+    contain  3.   Further  examples  of the output strings corresponding to
+    various floating-point values follow:
+
+    ___________         _____           _____________
+    Accumulator         Width           Output String
+
+    -10102               10             -10102
+    500                   3             500
+    -500                  3             Error
+    6666.7               10             6667
+    0                    10             0
+    0.0002                5             0
+
+ERRORS:                 ER_MT_FL - output string too long for field width
+                        or greater than maximum work buffer length of 34
+
+
+
+<a id="p15.4.4">15.4.4</a>  MT$FBGN
+
+
+VECTOR NUMBER:          085
+INPUT PARAMETERS:       A register - field width of output string.
+                        B register - number of decimal places
+                                     (disabled if negative).
+                        X register - address of output buffer.
+OUTPUT VALUES:          B register - length of the output string.
+
+DESCRIPTION
+
+    Converts floating-point accumulator to numeric ascii  text  in  general
+    format,  i.e.   in  whichever  of  the  above  three formats is the most
+    suitable for the given number and field width.
+
+    The output string will  be  in  integer  format  if  the  number  is  a
+    floating-point  integer,  otherwise decimal format.  If the field width
+    is not sufficient for the above, the number  is  output  in  scientific
+    format  rounded  to  as  many decimal places as can be accommodated.  A
+    field width of 7 is sufficient to  convert  any  floating-point  number
+    without  returning  an  error, though severe truncation of the mantissa
+    may result.
+
+    Fixing the number of decimal places is optional, and is disabled  if  B
+    is  negative  (bit  7  set).  In this case the number of decimal places
+    will be set equal to the number of significant digits to the  right  of
+    the  decimal  point.   If B is positive, then it contains the number of
+    decimal places to be fixed.
+
+EXAMPLES
+
+    The following  code  will  convert  the  value  172.65  placed  in  the
+    accumulator  in the example in MT$BTOF (section <a href="#p15.3.1">15.3.1</a> above) to a text
+    string in a field width of 16:
+
+        LDX     #STRING_BUF
+        LDA     B,#$80          ;disable fixed decimal places
+        LDA     A,#16           ;field width in A
+        OS      MT$FBGN
+
+    STRING_BUF:
+        .BLKB   16
+
+    STRING_BUF will now contain the string "172.65" and the B register will
+    contain 6.  Note that the format in this case is decimal as this can be
+    fitted into the given width.  Further examples of  the  output  strings
+    corresponding to various floating-point values follow:
+
+    ___________         _____   ___________     _____________
+    Accumulator         Width   Dec. Places     Output String
+
+    0                     1     Disabled        0
+    3000000.078          20     Disabled        3000000.078
+    -0.00005              8     Disabled        -0.00005
+    -0.00005              7     Disabled        -5E-05
+    123456789012000000   16     Disabled        1.2345678901E+17
+    0.00123456789012     16     Disabled        0.00123456789012
+    0.99999999            6     Disabled        1E+00
+    -0.9                  6     Disabled        -0.9
+    -0.99999999           7     Disabled        -1E+00
+    7000000               4     Disabled        Error
+    7000000               7     Disabled        7000000
+    5000                 10        3            5000.000
+    234.77               20       12            234.770000000000
+
+ERRORS:                 ER_MT_FL - output string too long for field width
+
+
+
+      ________________________
+<a id="p15.5">15.5</a>  THE SCIENTIFIC FUNCTIONS
+
+With a few exceptions, the system services for these  functions  require  a
+single  floating-point  number  on the run-time stack (described in section
+<a href="tech17.htm#p17.2.13">17.2.13</a>) as input.  On exit this number is replaced by  the  floating-point
+result,  with  the stack pointer unchanged.  The result is also left in the
+floating-point  accumulator  (see  section  <a href="#p15.1">15.1</a>  above  on  floating-point
+numbers).
+
+A call to one  of  these  services  can  be  set  up  by  decrementing  the
+stack-pointer  RTA_SP at $A5 (see section <a href="tech06.htm#p6.5.1.2">6.5.1.2</a> on memory usage) by 8 and
+copying the argument into the 8 bytes pointed to by RTA_SP.  After  calling
+the system service corresponding to the desired function the result will be
+pointed to by RTA_SP which must be incremented by 8 to restore  it  to  its
+original value.
+
+Note that RTA_SP is used extensively  by  the  operating  system,  so  care
+should  be  taken always to leave it pointing to the same place after using
+it in these routines.  No testing for sufficient stack space  is  necessary
+as  the  operating system ensures that there are always at least $100 bytes
+available on the stack.  Beware of using the  stack  pointer  simply  as  a
+pointer  to a floating-point constant in memory as intermediate results are
+pushed onto the run-time stack and will destroy anything  in  memory  below
+the  argument.   At least 60 bytes should be reserved as a work area in the
+memory area immediately below the argument.
+
+The functions make use of the table interpreter (see chapter  18)  and  the
+floating-point  addition, subtraction, multiplication and division routines
+described in section  <a href="#p15.2">15.2</a>  above,  and  follow  the  algorithms  given  in
+"Software Manual For The Elementary Functions" by Cody and Waite.
+
+
+
+<a id="p15.5.1">15.5.1</a>  FN$ATAN
+
+VECTOR NUMBER:          056
+INPUT PARAMETERS:       Floating-point argument on the stack.
+OUTPUT VALUES:          Floating-point result on the stack.
+
+DESCRIPTION
+
+    Returns the arctangent in radians of the floating-point number  on  the
+    run-time stack.  The stack pointer (RTA_SP) remains unchanged.
+
+EXAMPLE
+
+    The following subroutine will return the arctan of 0.5 in FN_RESULT.
+
+        LDD     RTA_SP:
+        SUBD    #8              ;make room for argument on stack
+        STD     RTA_SP:         ;D now has destination for UT$CPYB
+        LDX     #8              ;length for copying argument
+        STX     UTW_S0:
+        LDX     #FN_ARG         ;source address for UT$CPYB
+        OS      UT$CPYB         ;copy argument to stack
+        OS      FN$ATAN
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_ARG:
+        .BYTE   0,0,0,0,0,$50,-1,0
+
+    FN_RESULT:
+        .BLKB   8
+
+    FN_RESULT will now contain the floating-point result 0.463647609001.
+
+ERRORS:                 ER_MT_EX - exponent overflow
+
+
+
+<a id="p15.5.2">15.5.2</a>  FN$COS
+
+VECTOR NUMBER:          057
+INPUT PARAMETERS:       Floating-point argument on the stack.
+OUTPUT VALUES:          Floating-point result on the stack.
+
+DESCRIPTION
+
+    Returns the cosine of the  floating-point  number  (assumed  to  be  in
+    radians)  on  the  run-time  stack.  The stack pointer (RTA_SP) remains
+    unchanged.
+
+    Error ER_FN_BA is returned if the argument is greater than 3141590.4292
+    or less than -3141590.4292.
+
+EXAMPLE
+
+    The following subroutine will return the cosine  of  3.1416  (PI  to  4
+    decimal places) in FN_RESULT.
+
+        LDD     RTA_SP:
+        SUBD    #8              ;make room for argument on stack
+        STD     RTA_SP:         ;D now has destination for UT$CPYB
+        LDX     #8              ;length for copying argument
+        STX     UTW_S0:
+        LDX     #FN_ARG         ;source address for UT$CPYB
+        OS      UT$CPYB         ;copy argument to stack
+        OS      FN$COS
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_ARG:
+        .BYTE   0,0,0,$60,$41,$31,0,0
+
+    FN_RESULT:
+        .BLKB   8
+
+    FN_RESULT will now contain the floating-point result -0.999999999974.
+
+ERRORS:                 ER_FN_BA - bad argument in function call
+
+
+
+<a id="p15.5.3">15.5.3</a>  FN$EXP
+
+VECTOR NUMBER:          058
+INPUT PARAMETERS:       Floating-point argument on the stack.
+OUTPUT VALUES:          Floating-point result on the stack.
+
+DESCRIPTION
+
+    Returns the result of the arithmetic constant  e  (2.71828...)  to  the
+    power  of  the  floating-point number on the run-time stack.  The stack
+    pointer (RTA_SP) remains unchanged.
+
+    Error ER_FN_BA is returned if the argument is greater than or equal  to
+    231.
+
+EXAMPLE
+
+    The following subroutine will return e to the power 230 in FN_RESULT.
+
+        LDD     RTA_SP:
+        SUBD    #8              ;make room for argument on stack
+        STD     RTA_SP:         ;D now has destination for UT$CPYB
+        LDX     #8              ;length for copying argument
+        STX     UTW_S0:
+        LDX     #FN_ARG         ;source address for UT$CPYB
+        OS      UT$CPYB         ;copy argument to stack
+        OS      FN$EXP
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_ARG:
+        .BYTE   0,0,0,0,0,$23,2,0
+
+    FN_RESULT:
+        .BLKB   8
+
+    FN_RESULT will now contain the floating-point result 7.72201849998E+99
+
+ERRORS:                 ER_FN_BA - bad argument in function call
+
+
+
+<a id="p15.5.4">15.5.4</a>  FN$LN
+
+VECTOR NUMBER:          059
+INPUT PARAMETERS:       Floating-point argument on the stack.
+OUTPUT VALUES:          Floating-point result on the stack.
+
+DESCRIPTION
+
+    Returns the logarithm to the base e of the floating-point number on the
+    run-time stack.  The stack pointer (RTA_SP) remains unchanged.
+
+    Error ER_FN_BA is returned if the argument is negative or zero.
+
+EXAMPLE
+
+    The  following  subroutine  will  return   the   natural   log   of   e
+    (2.71828182846) in FN_RESULT.
+
+        LDD     RTA_SP:
+        SUBD    #8              ;make room for argument on stack
+        STD     RTA_SP:         ;D now has destination for UT$CPYB
+        LDX     #8              ;length for copying argument
+        STX     UTW_S0:
+        LDX     #FN_ARG         ;source address for UT$CPYB
+        OS      UT$CPYB         ;copy argument to stack
+        OS      FN$LN
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_ARG:
+        .BYTE   $46,$28,$18,$28,$18,$27,0,0
+
+    FN_RESULT:
+        .BLKB   8
+
+    FN_RESULT will now contain the floating-point result of 1.0.
+
+ERRORS:                 ER_FN_BA - bad argument in function call
+
+
+
+<a id="p15.5.5">15.5.5</a>  FN$LOG
+
+VECTOR NUMBER:          060
+INPUT PARAMETERS:       Floating-point argument on the stack.
+OUTPUT VALUES:          Floating-point result on the stack.
+
+DESCRIPTION
+
+    Returns the logarithm to the base 10 of the  floating-point  number  on
+    the run-time stack.  The stack pointer (RTA_SP) remains unchanged.
+
+    Error ER_FN_BA is returned if the argument is negative or zero.
+
+EXAMPLE
+
+    The following subroutine will return the log to  the  base  10  of  the
+    largest floating-point number (9.99999999999E+99) in FN_RESULT.
+
+        LDD     RTA_SP:
+        SUBD    #8              ;make room for argument on stack
+        STD     RTA_SP:         ;D now has destination for UT$CPYB
+        LDX     #8              ;length for copying argument
+        STX     UTW_S0:
+        LDX     #FN_ARG         ;source address for UT$CPYB
+        OS      UT$CPYB         ;copy argument to stack
+        OS      FN$LOG
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_ARG:
+        .BYTE   $99,$99,$99,$99,$99,$99,$63,0
+
+    FN_RESULT:
+        .BLKB   8
+
+    FN_RESULT will now contain the floating-point result of 100.
+
+ERRORS:                 ER_FN_BA - bad argument in function call
+
+
+
+<a id="p15.5.6">15.5.6</a>  FN$POWR
+
+VECTOR NUMBER:          064
+INPUT PARAMETERS:       Two floating-point arguments on the stack.
+OUTPUT VALUES:          Floating-point result on the stack.
+
+DESCRIPTION
+
+    Returns the result of X ** Y where X and Y are  floating-point  numbers
+    on  the  run-time stack.  The arguments should be pushed onto the stack
+    in the order X first, then Y.   The  stack  pointer  (RTA_SP)  will  be
+    incremented by 8 after the operation.
+
+    Error ER_FN_BA is returned if:
+
+     -  Both arguments are zero
+
+     -  X is negative and Y non-integer
+
+     -  The result is greater than 9.99999999999E+99
+
+
+EXAMPLE
+
+    The following subroutine will return 2 ** 10 in FN_RESULT.
+
+        LDD     RTA_SP:
+        SUBD    #16             ;make room for arguments on stack
+        STD     RTA_SP:         ;D now has destination for UT$CPYB
+        LDX     #16             ;length for copying arguments
+        STX     UTW_S0:         ;(copying both together)
+        LDX     #FN_Y           ;source address for UT$CPYB
+        OS      UT$CPYB         ;copy arguments to stack
+        OS      FN$POWR
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_Y:                               ;Y first, then X
+        .BYTE   0,0,0,0,0,$10,1,0       ;(from low -&gt; high memory)
+    FN_X:
+        .BYTE   0,0,0,0,0,$20,0,0
+    FN_RESULT:
+        .BLKB   8
+
+    FN_RESULT will now contain the floating-point result 1024.0.
+
+ERRORS:                 ER_FN_BA - bad argument in function call
+
+
+
+<a id="p15.5.7">15.5.7</a>  FN$RND
+
+VECTOR NUMBER:          062
+INPUT PARAMETERS:       None.
+OUTPUT VALUES:          Floating-point random number on the stack.
+
+DESCRIPTION
+
+    Pushes a random floating-point number onto  the  run-time  stack.   The
+    number  will  always  lie  between 0 and 0.999999999999 inclusive.  The
+    stack pointer (RTA_SP) is decremented by 8.
+
+    The seed for the random number generator is held  in  the  7  bytes  at
+    FNT_SEED.   If  these  bytes  are  set  to  a particular value then the
+    sequence of random numbers following this will always be the same.
+
+EXAMPLE
+
+    The following subroutine will place a random floating-point  number  in
+    FN_RESULT.
+
+        OS      FN$RND          ;call random number generator
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_RESULT:
+        .BLKB   8
+
+ERRORS:                 None.
+
+
+
+<a id="p15.5.8">15.5.8</a>  FN$SIN
+
+VECTOR NUMBER:          063
+INPUT PARAMETERS:       Floating-point argument on the stack.
+OUTPUT VALUES:          Floating-point result on the stack.
+
+DESCRIPTION
+
+    Returns the sine of the floating-point number (assumed to  be  radians)
+    on the run-time stack.  The stack pointer (RTA_SP) remains unchanged.
+
+    Error ER_FN_BA is returned if the argument is greater than  3141592  or
+    less than -3141592.
+
+EXAMPLE
+
+    The following subroutine will return  the  sine  of  3.1416  (PI  to  4
+    decimal places) in FN_RESULT.
+
+        LDD     RTA_SP:
+        SUBD    #8              ;make room for argument on stack
+        STD     RTA_SP:         ;D now has destination for UT$CPYB
+        LDX     #8              ;length for copying argument
+        STX     UTW_S0:
+        LDX     #FN_ARG         ;source address for UT$CPYB
+        OS      UT$CPYB         ;copy argument to stack
+        OS      FN$SIN
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_ARG:
+        .BYTE   0,0,0,$60,$41,$31,0,0
+
+    FN_RESULT:
+        .BLKB   8
+
+    FN_RESULT will contain the floating-point result -7.34641020669E-06.
+
+ERRORS:                 ER_FN_BA - bad argument in function call
+
+
+
+<a id="p15.5.9">15.5.9</a>  FN$SQRT
+
+VECTOR NUMBER:          064
+INPUT PARAMETERS:       Floating-point argument on the stack.
+OUTPUT VALUES:          Floating-point result on the stack.
+
+DESCRIPTION
+
+    Returns the square root of the floating-point number  on  the  run-time
+    stack.  The stack pointer (RTA_SP) remains unchanged.
+
+    Error ER_FN_BA is returned if the argument is negative.
+
+EXAMPLE
+
+    The following  subroutine  will  return  the  square  root  of  101  in
+    FN_RESULT.
+
+        LDD     RTA_SP:
+        SUBD    #8              ;make room for argument on stack
+        STD     RTA_SP:         ;D now has destination for UT$CPYB
+        LDX     #8              ;length for copying argument
+        STX     UTW_S0:
+        LDX     #FN_ARG         ;source address for UT$CPYB
+        OS      UT$CPYB         ;copy argument to stack
+        OS      FN$SQRT
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_ARG:
+        .BYTE   0,0,0,0,$10,$10,2,0
+
+    FN_RESULT:
+        .BLKB   8
+
+    FN_RESULT will now contain the floating-point result 10.0498756211
+
+ERRORS:                 ER_FN_BA - bad argument in function call
+
+
+
+<a id="p15.5.10">15.5.10</a>  FN$TAN
+
+VECTOR NUMBER:          065
+INPUT PARAMETERS:       Floating-point argument on the stack.
+OUTPUT VALUES:          Floating-point result on the stack.
+
+DESCRIPTION
+
+    Returns the tangent of the floating-point number on the run-time stack.
+    The  stack pointer (RTA_SP) remains unchanged.  The argument is assumed
+    to be in radians.
+
+    Error ER_FN_BA is returned if the argument is greater than 3141590.4292
+    or less than -3141590.4292.
+
+EXAMPLE
+
+    The  following  subroutine  will   return   the   tangent   of   3*PI/4
+    (2.35619449019 radians) in FN_RESULT.
+
+        LDD     RTA_SP:
+        SUBD    #8              ;make room for argument on stack
+        STD     RTA_SP:         ;D now has destination for UT$CPYB
+        LDX     #8              ;length for copying argument
+        STX     UTW_S0:
+        LDX     #FN_ARG         ;source address for UT$CPYB
+        OS      UT$CPYB         ;copy argument to stack
+        OS      FN$TAN
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_ARG:
+        .BYTE   $19,$90,$44,$19,$56,$23,0,0
+
+    FN_RESULT:
+        .BLKB   8
+
+    FN_RESULT will now contain the floating-point result -1.0.
+
+ERRORS:                 ER_FN_BA - bad argument in function call
+
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech14.htm">Ch. 14</a></li>
+<li class=navactive>Ch. 15</li>
+<li><a href="tech16.htm">Ch. 16</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

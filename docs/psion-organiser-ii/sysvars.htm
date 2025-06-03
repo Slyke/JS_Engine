@@ -1,0 +1,3284 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Psion II Machine Code: System variables - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script language="JavaScript1.1" type="text/javascript"><!--
+function insertemail(first,last){var em = first+"@"+last;document.write("<a href='mailto:"+em+"' onmouseover='return prev(-1)'>"+em+"<\/a>");}
+//--></script>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "sysvars.htm", "name": "System Variables" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li>System Variables</li>
+</ol>
+
+<h1>The System Variables</h1>
+
+<hr>
+
+<p>The operating system of the Psion uses the memory area between addresses
+$0000 and about $2400 to hold all the information it needs to run properly.
+These so called system variables are useful for programming, especially when
+using machine code. I have collected as much information as I could from
+various sources, trying to make this list as complete as possible. If you have
+any information about any of the variables which is not here, please let me
+(<script language="JavaScript" type="text/javascript"><!--
+insertemail("psion", "jaap"+"sch."+"net");
+//--></script><noscript>psion a t jaapsch d o t net.</noscript>) know. I do not
+guarantee that this information is completely correct, nor am I responsible
+for any loss of data or any other damage resulting from your use of this
+information.
+
+<p>The system variables of the most interest are printed in <b>bold</b> letters.
+
+<hr>
+
+<p>The addresses in the range $01 to $1F are used as internal registers
+by the 6303 processor. OPL does not allow PEEK/POKE in the area 00-3F.
+Extreme care should be taken with these addresses. These addresses
+control/receive/send data to and from the other hardware. For example
+the operating system uses these for access to packs. It is obviously
+much easier to use the system routines for such tasks. Those marked W
+can only be written to, and similarly those marked R should only be
+read. The most useful and least dangerous is Port 5 ($15) which is used
+to read the keyboard and test for low battery.</p>
+
+<table border=0 cellspacing=0 width='100%' cellpadding=0 summary="">
+  <tr valign=top>
+    <td width="8%">&nbsp;</td>
+    <td width="5%" align=right>00</td>
+    <td>&nbsp;</td>
+    <td width="5%">&nbsp;</td>
+    <td>Not used</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_ddr2</td>
+    <td align=right>01</td>
+    <td></td>
+    <td align=right>W&nbsp;&nbsp;</td>
+    <td>Port 2 data direction register. Bit 0 controls the direction of bit
+0 of port 6 (1=output,0=input) and bit 1 control the direction of bits 1-7 of
+port 6.</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>02</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Port 1. This is the low byte of the address bus. Do not use.</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_port2</td>
+    <td align=right>03</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Port 2. Used as data bus to slots, i.e. to packs etc.</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>04</td>
+    <td></td>
+    <td align=right>W&nbsp;&nbsp;</td>
+    <td>Port 3 data direction register of data bus. Do not use.</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>05</td>
+    <td></td>
+    <td>&nbsp;</td>
+    <td>Not used</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>06</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Port 3. This the data bus. Do not use.</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>07</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Port 4. This is the high byte of the address bus. Do not use.</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_tcsr1</td>
+    <td align=right>08</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Timer Control/Status 1. Bit 3 (EOCI1) is used to enable or disable OCI
+interrupts.</td>
+  </tr>
+  <tr valign=top>
+    <td>pow_frc</td>
+    <td align=right>09/0A</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Timer 1 Free Running Counter, automatically incremented by processor
+clock. Used for OCI interrupts.</td>
+  </tr>
+  <tr valign=top>
+    <td>pow_ocr1</td>
+    <td align=right>0B/0C</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Timer 1 output compare register. When pow_frc (Timer 1 frc) reaches this
+value, pow_frc is set back to zero and an OCI interrupt is generated. The OCI
+interrupt is used in the Psion as the keyboard interrupt.</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>0D/0E</td>
+    <td></td>
+    <td align=right>R&nbsp;&nbsp;</td>
+    <td>Input capture register</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_tcsr2</td>
+    <td align=right>0F</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Timer control/Status register 2</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_rmcr</td>
+    <td align=right>10</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Rate, mode control register</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_trcsr</td>
+    <td align=right>11</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Tx/Rx control status register</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_rdr</td>
+    <td align=right>12</td>
+    <td></td>
+    <td align=right>R&nbsp;&nbsp;</td>
+    <td>Receive data register</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_tdr</td>
+    <td align=right>13</td>
+    <td></td>
+    <td align=right>W&nbsp;&nbsp;</td>
+    <td>Transmit data register</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_rcr</td>
+    <td align=right>14</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>RAM/Port 5 control register. Note that bit 7 (STBY PWR) is used to
+test whether a cold or warm boot is needed on startup. If it is clear on
+startup, then it is set and a cold boot is performed, but if bit 7 was already
+set it only does a warm boot. If bit 6 (RAME) is cleared, it disables the
+internal RAM ($40-$FF) of the processor so that these addresses refer to
+external memory instead. This feature is not used on the Psion though it is
+probably possible. Bits 0-3 control whether the corresponding bits read from
+port 5 are the port lines or the lines IRQ1, IRQ2, MRE or HLTE respectively.
+On the Psion these 4 bits normally are clear, so that the normal port 5 lines
+are used. The external interrupts IRQ1 and IRQ2 are therefore ignored.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>pob_port5</b></td>
+    <td align=right><b>15</b></td>
+    <td></td>
+    <td align=right>R&nbsp;&nbsp;</td>
+    <td>Port 5, input port only. On the Psion it is used to read the activated
+keyboard lines and ON/CLEAR key. Bit 7 is clear when ON/CLEAR pressed, and
+bits 2 to 6 are cleared whenever the corresponding key is pressed on one of
+the active keyboard lines. (See $0340). Bit 0 is clear when the battery is
+running low. Bit 1 (ACOUT) is connected to bit 12 of the clock counter (see
+$0340), so that when the organiser switches on this bit will show whether it
+was because the timer elapsed (e.g. an alarm or because 2048 seconds elapsed)
+or whether it was because ON/CLEAR was pressed (or an external device like the
+comms link caused it).</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_ddr6</td>
+    <td align=right>16</td>
+    <td></td>
+    <td align=right>W&nbsp;&nbsp;</td>
+    <td>Port 6 data direction register, controlling the direction of each of
+the bits of port 6 individually.</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_port6</td>
+    <td align=right>17</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Port 6. Bits 7 to 0 are labelled PACON, CS3, CS2, CS1, OE, PGM, MR,
+CLK. This port is used in the Psion to control whether the packs are on or
+off, which pack is selected, and to set the pack address.</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>18</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Port 7</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>19/1A</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Output compare register</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_tcsr3</td>
+    <td align=right>1B</td>
+    <td></td>
+    <td>&nbsp;</td>
+    <td>Timer control/Status register for timer 2. Bits 0-1 select the clock
+used (if both set then bit 7 of port 2 used for timing, otherwise the internal
+clock is used). Bits 2-3 selects the action is needed at bit 6 of port 2 when
+time-out is reached (if bit 3 is set then bit 2 will be output, if bit 3 clear
+and bit 2 set then port 2 bit 6 is toggled, if bit 2, 3 both clear then port2
+bit 6 becomes an I/O port). If bit 4 cleared then timer 2 is temporarily
+disabled. Bit 5 is unused. If Bit 6 is set then a timeout causes an interrupt
+(CMI). Bit 7 is set whenever a timeout occurs (is not reset
+automatically).</td>
+  </tr>
+  <tr valign=top>
+    <td>pob_tconr</td>
+    <td align=right>1C</td>
+    <td></td>
+    <td align=right>W&nbsp;&nbsp;</td>
+    <td>Timer constant register for timer 2. The timer 2 up counter is
+incremented until this value is reached at which time the action indicated by
+the control register is taken.</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>1D</td>
+    <td></td>
+    <td align=right>R/W&nbsp;&nbsp;</td>
+    <td>Timer 2 Up counter.</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>1E</td>
+    <td></td>
+    <td>&nbsp;</td>
+    <td>Not used</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>1F</td>
+    <td></td>
+    <td>&nbsp;</td>
+    <td>Test register. Do not use.</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td align=right>20-3F</td>
+    <td></td>
+    <td>&nbsp;</td>
+    <td>Not used</td>
+  </tr>
+</table>
+
+<hr>
+
+<p>The addresses in the range $40 to $FF are registers in the
+processor's internal memory. The machine code instructions to access these
+'zero-page' addresses are shorter, and therefore execute faster than those
+accessing two-byte addresses.</p>
+
+<table border=0 cellspacing=0 width='100%' cellpadding=0 summary="">
+  <tr valign=top>
+    <td width="10%">utb_7e</td>
+    <td width="10%" align=right>40</td>
+    <td width="4%">&nbsp;</td>
+    <td>JMP instruction for vector in utw_s0, used in sound routines.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>utw_s0</b></td>
+    <td align=right><b>41/42</b></td>
+    <td></td>
+    <td rowspan="6">General word variables S0 - S5. Can be freely used, but
+some OS calls use these too.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>utw_s1</b></td>
+    <td align=right><b>43/44</b></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td><b>utw_s2</b></td>
+    <td align=right><b>45/46</b></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td><b>utw_s3</b></td>
+    <td align=right><b>47/48</b></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td><b>utw_s4</b></td>
+    <td align=right><b>49/4A</b></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td><b>utw_s5</b></td>
+    <td align=right><b>4B/4C</b></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>utw_r0</td>
+    <td align=right>4D/4E</td>
+    <td></td>
+    <td rowspan="7">General word/byte variables R0 - R6. Their high and low
+bytes are denoted by utb_h* and utb_l*. These must be preserved. They can be
+stored/ retrieved on the stack using BT$PPRG (SWI 0B).</td>
+  </tr>
+  <tr valign=top>
+    <td>utw_r1</td>
+    <td align=right>4F/50</td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>utw_r2</td>
+    <td align=right>51/52</td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>utw_r3</td>
+    <td align=right>53/54</td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>utw_r4</td>
+    <td align=right>55/56</td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>utw_r5</td>
+    <td align=right>57/58</td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>utw_r6</td>
+    <td align=right>59/5A</td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>btb_nmfl</td>
+    <td align=right>5B</td>
+    <td></td>
+    <td>Cleared when an NMI occurs. It can be used to check for an NMI by
+setting this to non-zero, and waiting till it is cleared.</td>
+  </tr>
+  <tr valign=top>
+    <td>btw_ccnt</td>
+    <td align=right>5C/5D</td>
+    <td></td>
+    <td>Time (in seconds) that it is planned to be switched off (until next
+alarm check or end of temporary switch-off).</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_rtop</td>
+    <td align=right>5E/5F</td>
+    <td></td>
+    <td>Address of Ramtop</td>
+  </tr>
+  <tr valign=top>
+    <td>rtb_lbat</td>
+    <td align=right>60</td>
+    <td></td>
+    <td>Run time low battery flag</td>
+  </tr>
+  <tr valign=top>
+    <td>xxb_xxxx</td>
+    <td align=right>61</td>
+    <td></td>
+    <td>Reserved. Unused in Rom versions 4.4 and earlier. Used in version
+4.6.</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_cpos</td>
+    <td align=right>62</td>
+    <td></td>
+    <td>Current cursor position (0-31 if 2 lines, 0-79 if 4 line mode on an
+LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_cust</td>
+    <td align=right>63</td>
+    <td></td>
+    <td>Cursor state (as passed in DP$STAT, i.e. bit 7 set if cursor on, bit 0
+set for line cursor or clear for block)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_vlin</td>
+    <td align=right>64</td>
+    <td></td>
+    <td>Scrolling line position (0-1 or 0-3) when used in VIEW. Current menu
+item number when used in MENU.</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_vsiz</td>
+    <td align=right>65</td>
+    <td></td>
+    <td>Number of characters to scroll when used in VIEW. Total number of menu
+items when used in MENU.</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_vdir</td>
+    <td align=right>66</td>
+    <td></td>
+    <td>Scroll direction (1=right, 2=left, 0=paused). Used in VIEW.</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_spos</td>
+    <td align=right>67</td>
+    <td></td>
+    <td>Saved cursor position. Used by DP$SAVE and DP$REST.</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_scus</td>
+    <td align=right>68</td>
+    <td></td>
+    <td>Saved cursor state. Used by DP$SAVE and DP$REST.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>dpw_sped</b></td>
+    <td align=right><b>69/6A</b></td>
+    <td></td>
+    <td>Horizontal scrolling rate (in 50ms intervals). Default is 4. Delay
+before scrolling is four times dpw_sped.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>dpw_dely</b></td>
+    <td align=right><b>6B/6C</b></td>
+    <td></td>
+    <td>Vertical scrolling rate (in 50ms intervals). Default is 10.</td>
+  </tr>
+  <tr valign=top>
+    <td>dpw_redy</td>
+    <td align=right>6D/6E</td>
+    <td></td>
+    <td>Decremented every 50ms (on keyboard interrupt) until it is zero. Used
+for timing, e.g. by DP$WRDY and TM$WAIT.</td>
+  </tr>
+  <tr valign=top>
+    <td>dpa_vadd</td>
+    <td align=right>6F/70</td>
+    <td></td>
+    <td>Address of scrolling string. Used in VIEW.</td>
+  </tr>
+  <tr valign=top>
+    <td>kbw_tdel</td>
+    <td align=right>71/72</td>
+    <td></td>
+    <td>This word controls the rate of keyboard interrupts. When an interrupt
+occurs the value in kbw_tdel is stored in the Timer 1 Output Compare Register
+1, and the Free Running Counter is set to zero, so that the next interrupt
+will occur after kbw_tdel clock cycles. There is an overhead of 35 cycles for
+each interrupt. Hence, the time between interrupts = ( kbw_tdel + 35 ) /
+921600 secs. The default value for kbw_tdel is $B3DD, giving a time interval
+of 0.05 secs. Note that a value of zero in kbw_tdel, will cause the machine
+to lock up. It is used extensively by the operating  system  for timing
+purposes.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>kbb_back</b></td>
+    <td align=right><b>73</b></td>
+    <td></td>
+    <td>Offset in kbt_buff to oldest key in buffer.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>kbb_nkys</b></td>
+    <td align=right><b>74</b></td>
+    <td></td>
+    <td>Number of keys in buffer</td>
+  </tr>
+  <tr valign=top>
+    <td>kbb_prev</td>
+    <td align=right>75</td>
+    <td></td>
+    <td>Key pressed on last keyboard poll, used to check if same key is still
+pressed for auto-repeat.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>kbb_wait</b></td>
+    <td align=right><b>76</b></td>
+    <td></td>
+    <td>Unget key, zero if no key else the key</td>
+  </tr>
+  <tr valign=top>
+    <td><b>kbb_dlay</b></td>
+    <td align=right><b>77</b></td>
+    <td></td>
+    <td>This byte stores the delay before auto-repeat of the keys begins in
+terms of the number of keyboard interrupts. The default value is 14, so with
+interrupts running at 20 times per second, the delay is 0.7 secs.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>kbb_rept</b></td>
+    <td align=right><b>78</b></td>
+    <td></td>
+    <td>This byte stores the delay between keys when auto-repeating in terms
+of keyboard interrupts. The default value is 0 which is the fastest value. A
+value of 1 will repeat at half normal speed, 2 at a third normal speed
+etc.</td>
+  </tr>
+  <tr valign=top>
+    <td>kbb_cntr</td>
+    <td align=right>79</td>
+    <td></td>
+    <td>Keyboard counter, counts down from kbb_dlay at last new keypress. If
+zero and still same key pressed, then auto-repeat is activated.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>kbb_knum</b></td>
+    <td align=right><b>7A</b></td>
+    <td></td>
+    <td>Offset into keyboard table</td>
+  </tr>
+  <tr valign=top>
+    <td><b>kbb_stat</b></td>
+    <td align=right><b>7B</b></td>
+    <td></td>
+    <td>
+      <table border="0" cellpadding="0" cellspacing="0" summary="">
+        <tr valign=top>
+          <td colspan="3">kbb_stat stores the following flags:</td>
+        </tr>
+        <tr valign=top>
+          <td width="10%">Bit 7</td>
+          <td width="10%">ky_shft</td>
+          <td>Set if shift is depressed.</td>
+        </tr>
+        <tr valign=top>
+          <td>Bit 6</td>
+          <td>ky_numb</td>
+          <td>Set if Num Lock on.</td>
+        </tr>
+        <tr valign=top>
+          <td>Bit 2</td>
+          <td>ky_mlky</td>
+          <td>Set if Multi-lingual Key Lock. (Shift rightarrow, for accented
+characters etc). Multi-lingual machines only.</td>
+        </tr>
+        <tr valign=top>
+          <td>Bit 1</td>
+          <td>ky_cpnm</td>
+          <td>Set if any lock keys were pressed. This is used by the key
+translate routine to signify that a keyboard click should occur despite
+returning no character.</td>
+        </tr>
+        <tr valign=top>
+          <td>Bit 0</td>
+          <td>ky_caps</td>
+          <td>Set if Lower Case Lock.</td>
+        </tr>
+        <tr valign=top>
+          <td colspan="3">kbb_stat can be read directly, but system service
+KB$STAT should be used to write to it.</td>
+        </tr>
+    </table>
+    </td>
+  </tr>
+  <tr valign=top>
+    <td><b>tmb_swof</b></td>
+    <td align=right><b>7C</b></td>
+    <td></td>
+    <td>Auto-switch-off flag. Clear to disable. This  will  inhibit the NMI
+from decrementing tmw_tout and prevent KB$TEST testing it.</td>
+  </tr>
+  <tr valign=top>
+    <td>tmw_tout</td>
+    <td align=right>7D/7E</td>
+    <td></td>
+    <td>Time left before next switch off. The contents of tmw_tcnt are copied
+into tmw_tout whenever a key is pressed or KB$GETK is called and tmw_tout is
+decremented until zero by the NMI routine every second. If tmw_tout is found
+to be zero in KB$TEST, the machine will switch off.</td>
+  </tr>
+  <tr valign=top>
+    <td>edb_mlen</td>
+    <td align=right>7F</td>
+    <td></td>
+    <td>Maximum input length</td>
+  </tr>
+  <tr valign=top>
+    <td>edb_plen</td>
+    <td align=right>80</td>
+    <td></td>
+    <td>Prompt length</td>
+  </tr>
+  <tr valign=top>
+    <td>edb_flin</td>
+    <td align=right>81</td>
+    <td></td>
+    <td>First editable line</td>
+  </tr>
+  <tr valign=top>
+    <td>edb_poff</td>
+    <td align=right>82</td>
+    <td></td>
+    <td>First editable character in first line</td>
+  </tr>
+  <tr valign=top>
+    <td>edb_clin</td>
+    <td align=right>83</td>
+    <td></td>
+    <td>Current line edit</td>
+  </tr>
+  <tr valign=top>
+    <td>edb_stat</td>
+    <td align=right>84</td>
+    <td></td>
+    <td>Editor cursor status</td>
+  </tr>
+  <tr valign=top>
+    <td>edw_cpos</td>
+    <td align=right>85</td>
+    <td></td>
+    <td>Current position within line</td>
+  </tr>
+  <tr valign=top>
+    <td>edw_cb</td>
+    <td align=right>87/88</td>
+    <td></td>
+    <td>Offset to current line</td>
+  </tr>
+  <tr valign=top>
+    <td>edw_bl</td>
+    <td align=right>89/8A</td>
+    <td></td>
+    <td>Total buffer length</td>
+  </tr>
+  <tr valign=top>
+    <td>pkb_curp</td>
+    <td align=right>8B</td>
+    <td></td>
+    <td>Set by PK$SETP this is the current device being looked at by the
+operating system. It contains the contents of B register on the last call to
+PK$SETP. If this is zero (i.e.. device A: internal RAM pack selected) then the
+ports may be left selecting device B,C or D.</td>
+  </tr>
+  <tr valign=top>
+    <td>pkb_cpak</td>
+    <td align=right>8C</td>
+    <td></td>
+    <td>Set by PK$SETP and PK$PKOF. Actual current slot. Only set if the
+current slot is powered up and selected. Set to $FF when packs are turned off
+by PK$PKOF. If this byte is zero then device A: has been selected but the
+slots will be still powered up.</td>
+  </tr>
+  <tr valign=top>
+    <td>pkw_rasi</td>
+    <td align=right>8D/8E</td>
+    <td></td>
+    <td>Length of internal RAM pack (device A:).</td>
+  </tr>
+  <tr valign=top>
+    <td>pkw_cmad</td>
+    <td align=right>8F/90</td>
+    <td></td>
+    <td>Offset into RAM file. Set by all pack routines when accessing ram
+file.</td>
+  </tr>
+  <tr valign=top>
+    <td>pkb_hpad</td>
+    <td align=right>91</td>
+    <td></td>
+    <td>High order byte of pack address. Set by all pack routines when
+accessing devices B,C,D.</td>
+  </tr>
+  <tr valign=top>
+    <td>pkw_cpad</td>
+    <td align=right>92/93</td>
+    <td></td>
+    <td>Pack address. Set by all pack routines when accessing devices
+B,C,D.</td>
+  </tr>
+  <tr valign=top>
+    <td>pka_pkid</td>
+    <td align=right>94/95</td>
+    <td></td>
+    <td>Pointer to current pack identifier in array pkt_id. Set by
+PK$SETP.</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_rect</td>
+    <td align=right>96</td>
+    <td></td>
+    <td>Current record type in use - set by FL$RECT, and implicitly set by
+FL$OPEN, FL$CRET etc. Returned by FL$OPEN, FL$CRET and others.</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_cpak</td>
+    <td align=right>97</td>
+    <td></td>
+    <td>Current device used by file system, set by FL$SETP, and implicitly set
+by FL$OPEN, FL$CRET etc.</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_cont</td>
+    <td align=right>98</td>
+    <td></td>
+    <td>Device being DIR-ed</td>
+  </tr>
+  <tr valign=top>
+    <td>flw_drec</td>
+    <td align=right>99/9A</td>
+    <td></td>
+    <td>Next directory record number</td>
+  </tr>
+  <tr valign=top>
+    <td>flw_crec</td>
+    <td align=right>9B/9C</td>
+    <td></td>
+    <td>Current record number, 1 is the first record. Counts the records of
+type flb_rect. Set by many routines including FL$RSET, FL$NEXT.</td>
+  </tr>
+  <tr valign=top>
+    <td>flw_fnad</td>
+    <td align=right>9D/9E</td>
+    <td></td>
+    <td>Address of file name </td>
+  </tr>
+  <tr valign=top>
+    <td>flw_nrec</td>
+    <td align=right>9F/A0</td>
+    <td></td>
+    <td>Number of records</td>
+  </tr>
+  <tr valign=top>
+    <td>xfb_rect</td>
+    <td align=right>A1</td>
+    <td></td>
+    <td>Current record type</td>
+  </tr>
+  <tr valign=top>
+    <td>tlb_cpak</td>
+    <td align=right>A2</td>
+    <td></td>
+    <td>Current default pack (0-2)</td>
+  </tr>
+  <tr valign=top>
+    <td>tlb_mode</td>
+    <td align=right>A3</td>
+    <td></td>
+    <td>Which option: FIND, SAVE or ERASE</td>
+  </tr>
+  <tr valign=top>
+    <td><b>bzb_mute</b></td>
+    <td align=right><b>A4</b></td>
+    <td></td>
+    <td>Non-zero to mute buzzer</td>
+  </tr>
+  <tr valign=top>
+    <td>rta_sp</td>
+    <td align=right>A5/A6</td>
+    <td></td>
+    <td>Language stack pointer. rta_sp points at the lowest byte of the stack.
+So if an integer is stacked, rta_sp is decremented by 2 and the word is saved
+at the address pointed to by rta_sp.</td>
+  </tr>
+  <tr valign=top>
+    <td>rta_fp</td>
+    <td align=right>A7/A8</td>
+    <td></td>
+    <td>Frame (procedure) pointer. rta_fp points into the header of the
+current procedure. Each procedure header has the form:
+      <table border="0" cellpadding="0" cellspacing="0" summary="">
+        <tr><td>Device (zero if top procedure)</td></tr>
+        <tr><td>Return rta_pc</td></tr>
+        <tr><td>ONERR address</td></tr>
+        <tr><td>base_sp</td></tr>
+        <tr><td>Previous rta_fp. rta_fp points to this word.</td></tr>
+        <tr><td>Start address of the global name table</td></tr>
+        <tr><td>Global name table</td></tr>
+        <tr><td>Indirection table for externals/parameters</td></tr>
+      </table>
+This is followed by the variables, and finally by the Q code. rta_fp points
+at the previous rta_fp, so it is easy to jump up through all the procedures
+above. The language uses this when resolving external references and when
+handling errors.</td>
+  </tr>
+  <tr valign=top>
+    <td>rta_pc</td>
+    <td align=right>A9/AA</td>
+    <td></td>
+    <td>Program counter. rta_pc points at the current operand/operator
+executed and is incremented after execution - except at the start of a
+procedure or a GOTO when rta_pc is set up appropriately.</td>
+  </tr>
+  <tr valign=top>
+    <td>lgw_clin</td>
+    <td align=right>AB/AC</td>
+    <td></td>
+    <td>Current line being edited</td>
+  </tr>
+  <tr valign=top>
+    <td>lxa_curr</td>
+    <td align=right>AD/AE</td>
+    <td></td>
+    <td>Current character pointer</td>
+  </tr>
+  <tr valign=top>
+    <td>lxb_ptok</td>
+    <td align=right>AF</td>
+    <td></td>
+    <td>Previous token</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_1x</td>
+    <td align=right>B0/B1</td>
+    <td></td>
+    <td>Array index</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_2x</td>
+    <td align=right>B2/B3</td>
+    <td></td>
+    <td>Maximum string size</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_prec</td>
+    <td align=right>B4/B5</td>
+    <td></td>
+    <td>Pointer to variable</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_cons</td>
+    <td align=right>B6/B7</td>
+    <td></td>
+    <td>Temporary constants</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_glcd</td>
+    <td align=right>B8/B9</td>
+    <td></td>
+    <td>Global O code size</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_left</td>
+    <td align=right>BA/BB</td>
+    <td></td>
+    <td>Current free O code bytes</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_ocsz</td>
+    <td align=right>BC/BD</td>
+    <td></td>
+    <td>Total O code size</td>
+  </tr>
+  <tr valign=top>
+    <td>acb_nest</td>
+    <td align=right>BE</td>
+    <td></td>
+    <td>Structure next level</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_labl</td>
+    <td align=right>BF/C0</td>
+    <td></td>
+    <td>Next new label number</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_r0</td>
+    <td align=right>C1/C2</td>
+    <td></td>
+    <td>General language word</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_r1</td>
+    <td align=right>C3/C4</td>
+    <td></td>
+    <td>General language word</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>Run time variables, overlayed against the language
+translator variables:</td>
+  </tr>
+  <tr valign=top>
+    <td>rtb_escf</td>
+    <td align=right>B0</td>
+    <td></td>
+    <td>Escape flag</td>
+  </tr>
+  <tr valign=top>
+    <td>rtb_logn</td>
+    <td align=right>B1</td>
+    <td></td>
+    <td>Current logical name</td>
+  </tr>
+  <tr valign=top>
+    <td>rtb_trap</td>
+    <td align=right>B2</td>
+    <td></td>
+    <td>Trap flag</td>
+  </tr>
+  <tr valign=top>
+    <td>rtb_eror</td>
+    <td align=right>B3</td>
+    <td></td>
+    <td>Current error condition</td>
+  </tr>
+  <tr valign=top>
+    <td>rtb_crfl</td>
+    <td align=right>B4</td>
+    <td></td>
+    <td>Carriage return flag</td>
+  </tr>
+  <tr valign=top>
+    <td>rtb_cdrv</td>
+    <td align=right>B5</td>
+    <td></td>
+    <td>Device of top procedure</td>
+  </tr>
+  <tr valign=top>
+    <td>rtw_s0</td>
+    <td align=right>B6/B7</td>
+    <td></td>
+    <td>General word variables</td>
+  </tr>
+  <tr valign=top>
+    <td>rtw_s1</td>
+    <td align=right>B8/B9</td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>rtw_s2</td>
+    <td align=right>BA/BB</td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>rtw_s3</td>
+    <td align=right>BC/BD</td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>rtw_s4</td>
+    <td align=right>BE/BF</td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>rtw_s5</td>
+    <td align=right>C0/C1</td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>rtw_s6</td>
+    <td align=right>C2/C3</td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>rtb_top</td>
+    <td align=right>C4</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>xtb_read</td>
+    <td align=right>C5</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>mtt_aman</td>
+    <td align=right>C5-CB</td>
+    <td></td>
+    <td>accumulator: guard byte and mantissa. Guard byte lengthens the
+mantissa for rounding purposes.</td>
+  </tr>
+  <tr valign=top>
+    <td>mtb_aexp</td>
+    <td align=right>CC</td>
+    <td></td>
+    <td>accumulator exponent</td>
+  </tr>
+  <tr valign=top>
+    <td>mtb_asgn</td>
+    <td align=right>CD</td>
+    <td></td>
+    <td>accumulator sign</td>
+  </tr>
+  <tr valign=top>
+    <td>mtt_oman</td>
+    <td align=right>CE-D4</td>
+    <td></td>
+    <td>operand: guard byte and mantissa</td>
+  </tr>
+  <tr valign=top>
+    <td>mtb_oexp</td>
+    <td align=right>D5</td>
+    <td></td>
+    <td>operand exponent</td>
+  </tr>
+  <tr valign=top>
+    <td>mtb_osgn</td>
+    <td align=right>D6</td>
+    <td></td>
+    <td>operand sign</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>Diary variables, overlayed against the maths
+variables:</td>
+  </tr>
+  <tr valign=top>
+    <td>dib_year</td>
+    <td align=right>C5</td>
+    <td></td>
+    <td>Year</td>
+  </tr>
+  <tr valign=top>
+    <td>dib_mons</td>
+    <td align=right>C6</td>
+    <td></td>
+    <td>Month</td>
+  </tr>
+  <tr valign=top>
+    <td>dib_days</td>
+    <td align=right>C7</td>
+    <td></td>
+    <td>Day</td>
+  </tr>
+  <tr valign=top>
+    <td>dib_hour</td>
+    <td align=right>C8</td>
+    <td></td>
+    <td>Hour</td>
+  </tr>
+  <tr valign=top>
+    <td>dib_mins</td>
+    <td align=right>C9</td>
+    <td></td>
+    <td>Mins</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>Alarm variables, overlayed against the maths
+variables:</td>
+  </tr>
+  <tr valign=top>
+    <td>amt_temp</td>
+    <td align=right>C5-CB</td>
+    <td></td>
+    <td>Alarm temporary area</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>ita_pcnt</td>
+    <td align=right>D7/D8</td>
+    <td></td>
+    <td>Table program counter</td>
+  </tr>
+  <tr valign=top>
+    <td>ita_base</td>
+    <td align=right>D9/DA</td>
+    <td></td>
+    <td>Table base</td>
+  </tr>
+  <tr valign=top>
+    <td>ita_sptr</td>
+    <td align=right>DB/DC</td>
+    <td></td>
+    <td>Table stack pointer</td>
+  </tr>
+  <tr valign=top>
+    <td>itb_test</td>
+    <td align=right>DD</td>
+    <td></td>
+    <td>Table flag</td>
+  </tr>
+  <tr valign=top>
+    <td>ima_gptr</td>
+    <td align=right>DE/DF</td>
+    <td></td>
+    <td>General pointer</td>
+  </tr>
+  <tr valign=top>
+    <td>zpg_free</td>
+    <td align=right>E0</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>amb_svei</td>
+    <td align=right>E1</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>E0-FF</td>
+    <td></td>
+    <td>Transient application area. Used by most device drivers as a temporary
+scratch area. For example, the Comms link copies its variables from dv_spar
+(214F) to here temporarily every time it is used so that the code is faster
+and more compact. Note also that a WARM BOOT uses $F8 to $FF.</td>
+  </tr>
+</table>
+
+<hr>
+
+<p>In the memory map between $180 and $3FF lie the semi-
+custom chip addresses. These addresses do not point to a memory chip, but
+connect to the semi-custom chip which controls all external communication for
+the CPU including the LCD screen, the keyboard and the buzzer. OPL does not
+allow PEEK/POKE in the area 0182-03FF. The semi-custom chip does not decode
+all the address lines. For the LCD driver the even addresses $180,$182... up
+to $1BE are considered identical, as are the odd ones $181 up to $1BF.  For
+the other addresses all of the bottom 6 bits are ignored by the semi-custom
+chip (except that LZ only ignores only bottom 5 bits, see below). Simply
+performing a TST instruction on any of these addresses will have the required
+effect. Only the LCD addresses are such that STA or LDA instructions are
+required.</p>
+
+<table border=0 cellspacing=0 width='100%' cellpadding=0 summary="">
+  <tr valign=top>
+    <td width="10%"><b>sca_lcdcontrol</b></td>
+    <td width="10%" align=right><b>0180</b></td>
+    <td width="4%">&nbsp;</td>
+    <td>Liquid Crystal Display control register. When bit 7 of the contents
+of this register is set it means that the LCD is busy and cannot take any
+commands. The remaining 7 bits contain the current address pointer in the LCD
+memory. Writing to this register (only when bit 7 is clear) is used to pass
+a command to the LCD chip. The most important of these are $40+x which sets
+the address pointer to the UDG pattern space (x in range 0 to $3F).</td>
+  </tr>
+  <tr valign=top>
+    <td><b>sca_lcddata</b></td>
+    <td align=right><b>0181</b></td>
+    <td></td>
+    <td>LCD data register. Is used to pass data to/from the LCD chip (only do
+this when bit 7 of $0180 is clear). Any data written/read here is stored
+at/read from the current LCD address, after which the address pointer is
+automatically incremented. Therefore to store/read a new UDG pattern, pass
+$40+8*u to $0180 (u betw 0 and 7), then store/read the 8 bytes of the pattern
+at $0181. Before each read/write you must read $0180 to check whether the LCD
+is ready. Note that in OPL this is not necessary as the ROM will do it for
+you.</td>
+  </tr>
+  <tr valign=top>
+    <td>sca_switchoff</td>
+    <td align=right>01C0</td>
+    <td></td>
+    <td>Switch off</td>
+  </tr>
+  <tr valign=top>
+    <td>sca_pulseenable</td>
+    <td align=right>0200</td>
+    <td></td>
+    <td>Pulse enable. Enables a high voltage pulse used in writing to
+datapaks. Take extreme care.</td>
+  </tr>
+  <tr valign=top>
+    <td>sca_pulsedisable</td>
+    <td align=right>0240</td>
+    <td></td>
+    <td>Pulse disable. Disables the high voltage pulse.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>sca_alarmhigh</b></td>
+    <td align=right><b>0280</b></td>
+    <td></td>
+    <td>Buzzer on</td>
+  </tr>
+  <tr valign=top>
+    <td><b>sca_alarmlow</b></td>
+    <td align=right><b>02C0</b></td>
+    <td></td>
+    <td>Buzzer off</td>
+  </tr>
+  <tr valign=top>
+    <td><b>sca_counterreset</b></td>
+    <td align=right><b>0300</b></td>
+    <td></td>
+    <td>Set counter for kybd + clock to zero.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>sca_counterclock</b></td>
+    <td align=right><b>0340</b></td>
+    <td></td>
+    <td>Counter for kybd + clock increment once. The keyboard has 7 lines of
+5 keys (ON/Clear is separate). Bits 0 to 6 of the clock/keyboard counter
+determines which of these lines are active. When reset, all lines are active.
+To make only one line active, set the counter to 3F, 5F, 6F, 77, 7B, 7D or 7E
+which have only one of its low bits clear. These values activate the following
+key lines:
+      <table border="0" cellspacing="0" cellpadding="0" width="100%" summary="">
+        <tr valign=top>
+          <td width="5%">&nbsp;</td>
+      <td width="10%">3F</td>
+          <td>mode up down left right</td>
+        </tr>
+        <tr valign=top>
+      <td></td>
+          <td>5F</td>
+          <td>AGMS shift</td>
+        </tr>
+        <tr valign=top>
+      <td></td>
+          <td>6F</td>
+          <td>BHNT delete</td>
+        </tr>
+        <tr valign=top>
+      <td></td>
+          <td>77</td>
+          <td>CIOUY</td>
+        </tr>
+        <tr valign=top>
+      <td></td>
+          <td>7B</td>
+          <td>DJPVZ</td>
+        </tr>
+        <tr valign=top>
+      <td></td>
+          <td>7D</td>
+          <td>EKQW space</td>
+        </tr>
+        <tr valign=top>
+      <td></td>
+          <td>7E</td>
+          <td>FLRX exe</td>
+        </tr>
+      </table>
+      Which of these keys is pressed (and the ON/CLEAR key) can then be read
+at pob_port5 ($15). This counter is also used to control the number of seconds
+that the organiser is switched off, and the number of NMI's that were missed
+if they are disabled.</td>
+  </tr>
+  <tr valign=top>
+    <td>sca_nmimpu</td>
+    <td align=right>0380</td>
+    <td></td>
+    <td>Enable NMI to processor. Links the NMI's to the processor, enabling
+them.</td>
+  </tr>
+  <tr valign=top>
+    <td>sca_nmicounter</td>
+    <td align=right>03C0</td>
+    <td></td>
+    <td>Enable NMI to counter. Disables the NMI's to the processor but links
+them to the clock counter, so that they are counted.</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>The LZ, P350 and multi-lingual XP need more control lines
+for their memory management, and for this the following semi-custom addresses
+are used:</td>
+  </tr>
+  <tr valign=top>
+    <td><b>sca_bankreset</b></td>
+    <td align=right><b>0360</b></td>
+    <td></td>
+    <td>Reset ROM and RAM to first banks (LZ/P350/M-XP).</td>
+  </tr>
+  <tr valign=top>
+    <td><b>sca_nextram</b></td>
+    <td align=right><b>03A0</b></td>
+    <td></td>
+    <td>Select next RAM bank (LZ/P350).</td>
+  </tr>
+  <tr valign=top>
+    <td><b>sca_nextrom</b></td>
+    <td align=right><b>03E0</b></td>
+    <td></td>
+    <td>Select next ROM bank (LZ/M-XP).</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>As bit 5 of the semi-custom addresses is now tested to
+distinguish the memory bank switches above, the following addresses are also
+available. These probably control the program mode of the Hitachi HD6303X CPU (lines MP0 and MP1 on
+the chip). The organiser uses only one of these modes, so these should not be used in any
+way. In fact these are only used once by the operating system, namely at the
+start of a cold or warm boot.</td>
+  </tr>
+  <tr valign=top>
+    <td>sca_setmode1</td>
+    <td align=right>02A0</td>
+    <td></td>
+    <td>Select mode 1 bit (LZ/P350/M-XP).</td>
+  </tr>
+  <tr valign=top>
+    <td>sca_setmode2</td>
+    <td align=right>02E0</td>
+    <td></td>
+    <td>Select mode 2 bit (LZ/P350/M-XP).</td>
+  </tr>
+  <tr valign=top>
+    <td>sca_modereset</td>
+    <td align=right>0320</td>
+    <td></td>
+    <td>Clear mode bits (LZ/P350/M-XP).</td>
+  </tr>
+</table>
+
+<hr>
+
+<table border="0" cellspacing="0" cellpadding="0" summary="">
+  <tr valign=top>
+    <td width="10%">&nbsp;</td>
+    <td align=right width="10%">0400-1FFF</td>
+    <td width="4%">&nbsp;</td>
+    <td>Low RAM area. If present it is used for code/data for booted devices.
+If the device code to be loaded still fits in Low RAM it will be placed here,
+otherwise the permanent allocator cell is used. This area is not available on CM's and normal
+XP's, but only on machines with 32k or more RAM.</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>alt_base</td>
+    <td align=right>2000</td>
+    <td></td>
+    <td>Base of allocator cells. Allocator cells are parts of memory
+used for storing data of variable size. These cells are held consecutively in memory and
+immediately follow the system variables. 2000-203F are the so-called tags of
+the cells, and hold the addresses of the start of the allocator cells or zero of a cell is not
+in use. The cells are manipulated by the system calls AL$FREE  (SWI 00) to AL$ZERO (SWI 06)</td>
+  </tr>
+  <tr valign=top>
+    <td><b>permcell</b></td>
+    <td align=right><b>2000/01</b></td>
+    <td></td>
+    <td>Permanent cell, used for code/data from booted devices. If
+available, Low RAM is filled first. The first cell always starts at the same address (usually
+23E9 for CM, 2413 for XP, 268D for LZ), so the device programs will not be moved about in
+memory. Other cells are moved when a previous cell changes size.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>menucell</b></td>
+    <td align=right><b>2002/03</b></td>
+    <td></td>
+    <td>Top level menu cell. Contains the main menu. Each item
+consists of an lbc string containing the name, followed by a word containing the address to
+jump to when that item is chosen. Inserted OPL items have a zero word, and on the LZ notepads
+have a 1, files a 2. The list is terminated by a zero byte.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>dirycell</b></td>
+    <td align=right><b>2004/05</b></td>
+    <td></td>
+    <td>Diary cell. Each diary item consists of:
+      <table border="0" cellpadding="0" cellspacing="0" summary="">
+        <tr><td>0: Length byte. Contains length of the text of the diary entry.</td></tr>
+        <tr><td>1: Year (0-99 on CM/XP, 0-255 on LZ)</td></tr>
+        <tr><td>2: Month (0-11)</td></tr>
+        <tr><td>3: Day (0-30)</td></tr>
+        <tr><td>4: Hour (0-23)</td></tr>
+        <tr><td>5: Minutes (0 or 30 on CM/XP, 0,15,30,45 on LZ)</td></tr>
+        <tr><td>6: Alarm, 0=no alarm, else one more than the number of minutes before the
+given time it will sound.</td></tr>
+        <tr><td>This is followed by the text of the diary entry, its length byte is byte 0
+above.</td></tr>
+      </table>
+      The list of diary entries is terminated by a zero byte.</td>
+  </tr>
+  <tr valign=top>
+    <td>textcell</td>
+    <td align=right>2006/07</td>
+    <td></td>
+    <td>Language text cell, used for editing/translating OPL/CALC.</td>
+  </tr>
+  <tr valign=top>
+    <td>symbcell</td>
+    <td align=right>2008/09</td>
+    <td></td>
+    <td>Symbol table cell, used when translating OPL/CALC.</td>
+  </tr>
+  <tr valign=top>
+    <td>globcell</td>
+    <td align=right>200A/0B</td>
+    <td></td>
+    <td>Global record cell, used when translating OPL/CALC.</td>
+  </tr>
+  <tr valign=top>
+    <td>ocodcell</td>
+    <td align=right>200C/0D</td>
+    <td></td>
+    <td>QCODE output cell, used when translating/running OPL/CALC.</td>
+  </tr>
+  <tr valign=top>
+    <td>fsy1cell</td>
+    <td align=right>200E/0F</td>
+    <td></td>
+    <td rowspan="4">Field name symbol tables. Contain field names for files opened in
+OPL, one allocator cell for each of the logical filenames A to D. Each field variable
+name is preceded by a byte that is 0 for an integer, 1 for a floating point variable and 2
+for a string. Each name is followed by a TAB character to signify its end.</td>
+  </tr>
+  <tr valign=top>
+    <td>fsy2cell</td>
+    <td align=right>2010/11</td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>fsy3cell</td>
+    <td align=right>2012/13</td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>fsy4cell</td>
+    <td align=right>2014/15</td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td><b>fbf1cell</b></td>
+    <td align=right><b>2016/17</b></td>
+    <td></td>
+    <td rowspan="4">File buffers for files opened in OPL, one cell for each of the logical filenames
+A to D. Each opened file has a cell of 256 bytes. It contains the current record, each
+field separated by a TAB character.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>fbf2cell</b></td>
+    <td align=right><b>2018/19</b></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td><b>fbf3cell</b></td>
+    <td align=right><b>201A/1B</b></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td><b>fbf4cell</b></td>
+    <td align=right><b>201C/1D</b></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>datacell</td>
+    <td align=right>201E/1F</td>
+    <td></td>
+    <td>Database cell, contains all the data on device A: on CM/XP machines. The LZ
+(and P350) uses RAM banks, so this cell is used slightly differently.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>ntpdcell</b></td>
+    <td align=right><b>2020/21</b></td>
+    <td></td>
+    <td>Notepad cell (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dumycell</td>
+    <td align=right>2022/23</td>
+    <td></td>
+    <td>Dummy cell for spreadsheet, contains only $FF. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right><b>2024-203E</b></td>
+    <td></td>
+    <td>14 free cells for use by applications</td>
+  </tr>
+  <tr valign=top>
+    <td>ala_free</td>
+    <td align=right>2040/41</td>
+    <td></td>
+    <td>Top of allocator area, the end of the last cell in use.</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_2iq</td>
+    <td align=right>2042/43</td>
+    <td></td>
+    <td>IRQ2 re-vector address, no effect.</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_cmi</td>
+    <td align=right>2044/45</td>
+    <td></td>
+    <td>CMI re-vector address, no effect.</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_bug</td>
+    <td align=right>2046/47</td>
+    <td></td>
+    <td>TRAP re-vector address</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_sio</td>
+    <td align=right>2048/49</td>
+    <td></td>
+    <td>SIO re-vector address, no effect.</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_toi</td>
+    <td align=right>204A/4B</td>
+    <td></td>
+    <td>TOI re-vector address, no effect.</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_oci</td>
+    <td align=right>204C/4D</td>
+    <td></td>
+    <td>OCI re-vector address, keyboard interrupt.</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_ici</td>
+    <td align=right>204E/4F</td>
+    <td></td>
+    <td>ICI re-vector address, no effect.</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_1iq</td>
+    <td align=right>2050/51</td>
+    <td></td>
+    <td>IRQ1 re-vector address, no effect.</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_swi</td>
+    <td align=right>2052/53</td>
+    <td></td>
+    <td>SWI re-vector address</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_nmi</td>
+    <td align=right>2054/55</td>
+    <td></td>
+    <td>NMI re-vector address</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_wrm</td>
+    <td align=right>2056/57</td>
+    <td></td>
+    <td>WRM re-vector address</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_sof</td>
+    <td align=right>2058/59</td>
+    <td></td>
+    <td>SWOF re-vector address</td>
+  </tr>
+  <tr valign=top>
+    <td><b>bta_poll</b></td>
+    <td align=right><b>205A/5B</b></td>
+    <td></td>
+    <td>This vector points to the routine which polls the keyboard. It must return the
+number of the key pressed in the A register. The ROM routine returns 0 if no key was
+pressed, or a number from 1 to 36 otherwise. If the shift key is not disabled (see
+kbb_shfk, $20C4) and the shift key is pressed, the routine will set the shift flag (bit
+7 of bta_stat, $7B) and return the number of the second key pressed if there is
+one.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>bta_tran</b></td>
+    <td align=right><b>205C/5D</b></td>
+    <td></td>
+    <td>This vector points to the routine which translates the key number supplied by
+bta_poll in the A register into the ascii character it represents, returned in the A
+register. To decode the character, the ROM routine uses a table of characters pointed
+to by bta_tabl ($205E). The routine will check the shift flag (see bta_poll, $205A)
+and the other keyboard flags (see bta_stat, $7B) to decide how to translate the
+character. If the shift and numlock flags make it necessary, a character from the second
+half of the table is returned, which contains the numerical or 'shifted' characters. If the
+caps-lock flag is set and a letter would be returned, it is first changed to lower case. This
+routine also checks for the caps/numlock/multi-lingual key combinations (see kbb_capk
+$20C2 and kbb_numk $20C3) and sets the keyboard flags accordingly.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>bta_tabl</b></td>
+    <td align=right><b>205E/5F</b></td>
+    <td></td>
+    <td>This is the vector which points to a table of characters used to translate a key
+press into an ascii character. The vector can be changed to point to a new set of
+characters and should contain 72 characters (36 'shifted') unless, of course, the translate
+routine has been changed or SHIFT has been disabled.</td>
+  </tr>
+  <tr valign=top>
+    <td>utw_fp</td>
+    <td align=right>2060/61</td>
+    <td></td>
+    <td>Frame pointer for ENTER/LEAVE</td>
+  </tr>
+  <tr valign=top>
+    <td>btb_ignm</td>
+    <td align=right>2062</td>
+    <td></td>
+    <td>If zero, next NMI is ignored (i.e. it will do nothing but set this flag).</td>
+  </tr>
+  <tr valign=top>
+    <td>btb_imsk</td>
+    <td align=right>2063</td>
+    <td></td>
+    <td>Save interrupt mask while off.</td>
+  </tr>
+  <tr valign=top>
+    <td>btb_tcsr</td>
+    <td align=right>2064</td>
+    <td></td>
+    <td>Save TCSR1 while off.</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_sbas</td>
+    <td align=right>2065/66</td>
+    <td></td>
+    <td>Language stack base.</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_savstack</td>
+    <td align=right>2067/68</td>
+    <td></td>
+    <td>Save stack pointer while off.</td>
+  </tr>
+  <tr valign=top>
+    <td>btw_1dontuse</td>
+    <td align=right>2069/6A</td>
+    <td></td>
+    <td>Used in SWI's to save D register.</td>
+  </tr>
+  <tr valign=top>
+    <td>btw_2dontuse</td>
+    <td align=right>206B/6C</td>
+    <td></td>
+    <td>Used in SWI's to save X register.</td>
+  </tr>
+  <tr valign=top>
+    <td>btw_3dontuse</td>
+    <td align=right>206D/6E</td>
+    <td></td>
+    <td>Used in SWI's to save return address.</td>
+  </tr>
+  <tr valign=top>
+    <td>btb_4dontuse</td>
+    <td align=right>206F</td>
+    <td></td>
+    <td>Used in SWI's to save flag register.</td>
+  </tr>
+  <tr valign=top>
+    <td>dpt_tlin</td>
+    <td align=right>2070-7F</td>
+    <td></td>
+    <td>16 byte buffer containing contents of top line of the display (on 2-line machine,
+or on LZ when in 2-line mode).</td>
+  </tr>
+  <tr valign=top>
+    <td>dpt_blin</td>
+    <td align=right>2080-8F</td>
+    <td></td>
+    <td>16 byte buffer containing contents of bottom line of the display (on 2-line
+machine, or on LZ when in 2-line mode).</td>
+  </tr>
+  <tr valign=top>
+    <td>dpa_scrn</td>
+    <td align=right>2090/91</td>
+    <td></td>
+    <td>dpa_scrn contains the address of the current screen buffer. When in 2-line
+mode, it contains the address of dpt_tlin - the 2-line screen buffer at the same
+memory location as on 2-line Organisers (for compatibility) When in 4-line mode it
+contains the address of dpt_4lin - the new 80 character 4-line screen buffer. It is set
+by the operating system service DP$MSET. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_nlin</td>
+    <td align=right>2092</td>
+    <td></td>
+    <td>dpb_nlin contains the number of screen lines in the current display mode, i.e.
+2 or 4. It is set by the operating system service DP$MSET. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_wide</td>
+    <td align=right>2093</td>
+    <td></td>
+    <td>dpt_wide contains the screen width in the current display mode, i.e. 16 or 20.
+It is set by the operating system service DP$MSET. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_mflg</td>
+    <td align=right>2094</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_clok</td>
+    <td align=right>2095</td>
+    <td></td>
+    <td>dpb_clok stores the position of the left most character of the 6 character
+UDG clock, so is in the range 0-74.  If bit 7 is set the clock will not be updated (i.e. it is
+off). It is set by the operating system service DP$CSET. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_cred</td>
+    <td align=right>2096</td>
+    <td></td>
+    <td>dpb_cred is the &quot;clock ready&quot; flag, it is used to time the 1/2 second flashing
+of the colon. It counts down from 9 to 0 and the top bit is toggled for the flashing colon.
+If bit 7 is set, the &quot;:&quot; is printed, otherwise just an underline character. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_vpos</td>
+    <td align=right>2097</td>
+    <td></td>
+    <td>Used in VIEW. Current position in scrolling string.</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_cmin</td>
+    <td align=right>2098</td>
+    <td></td>
+    <td>Minute value when clock last displayed. Used to check whether UDG clock
+needs updating. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_bord</td>
+    <td align=right>2099</td>
+    <td></td>
+    <td>dpb_bord contains the character used for the border when in 2-line
+compatibility mode.  Default is $F5 (a chequered square). (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>mnb_xmen</td>
+    <td align=right>209A</td>
+    <td></td>
+    <td>Screen position of menu. Cleared when menu finished, so of little use.
+(LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>mnb_xlin</td>
+    <td align=right>209B</td>
+    <td></td>
+    <td>Line of menu. Cleared when menu finished, so of little use. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td><b>mnb_cptz</b></td>
+    <td align=right><b>209C</b></td>
+    <td></td>
+    <td>If this byte is set to 1, the entries in the menu will not be capitalized, i.e. they will
+appear as they are stored. Default is 0. Once set, ALL menus will appear as they are
+stored until the machine is reset or the byte restored to 0. This flag is used by the
+operating system in the FORMAT menu &quot;PACK B: PACK C:&quot;. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>btw_toff</td>
+    <td align=right>209D/9E</td>
+    <td></td>
+    <td>Length of time in seconds that should be switched off, if there were no alarms
+to be checked. Highest bit set means 'permanent' switch-off (i.e. 2048 seconds). During
+the OFF X% command, this word contains X%, and afterwards the high byte is set to
+FF. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>lgb_flgs</td>
+    <td align=right>209F</td>
+    <td></td>
+    <td>Used to store editor flags, e.g. by LG$EDIT and LG$ENTR. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>lga_tag</td>
+    <td align=right>20A0/A1</td>
+    <td></td>
+    <td>Used to store allocator tag, e.g. by LG$EDIT and LG$ENTR. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>lgb_spos</td>
+    <td align=right>20A2</td>
+    <td></td>
+    <td>??? (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>ntb_spos</td>
+    <td align=right>20A3</td>
+    <td></td>
+    <td>??? (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>lxa_fixp</td>
+    <td align=right>20A4/A5</td>
+    <td></td>
+    <td>??? Temporary storage of lxa_curr. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>tmb_24f</td>
+    <td align=right>20A6</td>
+    <td></td>
+    <td>tmb_24f stores 2 flags: Bit 7 is set for daylight-saving ON, clear for OFF. Bit
+0 is set for 24 hour mode, clear for 12 hour mode. All other bits are reserved. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td><b>amb_wrkd</b></td>
+    <td align=right><b>20A7</b></td>
+    <td></td>
+    <td>amb_wrkd is used to determine which days of the week are workdays. With
+bit 0 representing Monday, bit 1 Tuesday etc. Bits are set for workdays and cleared
+otherwise. The top bit is reserved. Setting amb_wrkd to 0 prevents checking for
+Workday alarms and removes the option from alarm setting. Note - amb_wrkd should
+not be set to $80, as this may cause the machine to lock-up. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>kbb_svst</td>
+    <td align=right>20A8</td>
+    <td></td>
+    <td>Old keyboard state. Used to check whether display driver needs updated cursor
+state. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td><b>dib_1slt</b></td>
+    <td align=right><b>20A9</b></td>
+    <td></td>
+    <td rowspan="3">These three bytes hold the boundaries between the four WEEK
+VIEW &quot;slots&quot;. They are stored in quarter-hours, so e.g. a value of 4 would mean 1:00am.
+This list shows how a day is divided into 4 slots IN THE WEEK VIEW:
+      <table border="0" cellspacing="0" cellpadding="0" summary="">
+        <tr valign=top><td align=right>0 (midnight a.m.)</td><td>Slot 1 starts</td></tr>
+        <tr valign=top><td>dib_1slt</td><td>Slot 1 ends/slot 2 begins</td></tr>
+        <tr valign=top><td>dib_2slt</td><td>Slot 2 ends/slot 3 begins</td></tr>
+        <tr valign=top><td>dib_3slt</td><td>Slot 3 ends/slot 4 begins</td></tr>
+        <tr valign=top><td align=right>96 (midnight p.m.)</td><td>Slot 4 ends</td></tr>
+      </table>
+      The values in the left hand column must be strictly increasing, and may only be
+equal when set to 96. Setting the start time of a slot to 96 disables that slot, and the
+flashing arrow in the week view will not move down onto it slot. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td><b>dib_2slt</b></td>
+    <td align=right><b>20AA</b></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td><b>dib_3slt</b></td>
+    <td align=right><b>20AB</b></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td><b>dib_ap</b></td>
+    <td align=right><b>20AC</b></td>
+    <td></td>
+    <td>If this byte is not zero, alarm prompts are enabled in the diary and whenever
+the user types an entry and set its time so that its date/start time is greater than the
+current system time, an &quot;Alarm? Y/N&quot; prompt is given. If this byte is set to zero, the
+prompt will not be given. This feature is provided for users who rarely or never use
+alarms in the diary, and who don't want to have to type &quot;N&quot; after each entry. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dib_palarm</td>
+    <td align=right>20AD</td>
+    <td></td>
+    <td>??? (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dib_pdrtn</td>
+    <td align=right>20AE</td>
+    <td></td>
+    <td>??? (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>btb_wnmi</td>
+    <td align=right>20AF</td>
+    <td></td>
+    <td>Incremented on every NMI. Used to check whether an NMI has occurred,
+regardless of whether btb_ignm was clear. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td><b>kbt_buff</b></td>
+    <td align=right><b>20B0/BF</b></td>
+    <td></td>
+    <td>16 character wrap-around buffer, to hold keypresses typed ahead.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>kbb_clik</b></td>
+    <td align=right><b>20C0</b></td>
+    <td></td>
+    <td>This byte stores the length of the keyboard click in ms. A value of zero will turn
+off the key click altogether. The default value is 1 giving the shortest possible click.</td>
+  </tr>
+  <tr valign=top>
+    <td>kbb_pkof</td>
+    <td align=right>20C1</td>
+    <td></td>
+    <td>This flag controls whether the packs are switched off by KB$TEST. If it is non-
+zero, which it is by default, the packs will be switched off whenever KB$TEST is called
+and there is are no keys in the keyboard buffer.</td>
+  </tr>
+  <tr valign=top>
+    <td>kbb_capk</td>
+    <td align=right>20C2</td>
+    <td></td>
+    <td>This byte contains the number of the key (1 to 36) required to be the CAP key.
+It is used only by the keyboard translate routine at bta_tran. By default it is set to
+32 (the up-arrow key). To disable the CAP key altogether, a number greater than 36
+should be stored in kbb_capk.</td>
+  </tr>
+  <tr valign=top>
+    <td>kbb_numk</td>
+    <td align=right>20C3</td>
+    <td></td>
+    <td>This byte contains the number of the key required to be the NUM key. It works
+in exactly the same way as kbb_capk.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>kbb_shfk</b></td>
+    <td align=right><b>20C4</b></td>
+    <td></td>
+    <td>This flag is used to disable the shift key. It is tested only in the keyboard poll
+routine at bta_poll. If the flag is set, the SHIFT function is disabled and the SHIFT
+key will act as a normal key. Hence, the key translate routine (see bta_tran $205C)
+will return the 26th character of its lookup table which is usually a &quot;?&quot; character.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>tmb_year</b></td>
+    <td align=right><b>20C5</b></td>
+    <td></td>
+    <td>Current year, 0 - 99 (0 - 255 on LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td><b>tmb_mons</b></td>
+    <td align=right><b>20C6</b></td>
+    <td></td>
+    <td>Current month, 0 - 11.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>tmb_days</b></td>
+    <td align=right><b>20C7</b></td>
+    <td></td>
+    <td>Current date of month, 0 - 30.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>tmb_hour</b></td>
+    <td align=right><b>20C8</b></td>
+    <td></td>
+    <td>Current hour, 0 - 23.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>tmb_mins</b></td>
+    <td align=right><b>20C9</b></td>
+    <td></td>
+    <td>Current minutes, 0 - 59.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>tmb_secs</b></td>
+    <td align=right><b>20CA</b></td>
+    <td></td>
+    <td>Current seconds, 0 - 59. On a cold start, the clock is reset to 1 JAN 1987 (or
+1989 on an LZ), 00:00:00. The real-time clock can be read or written directly from these
+variables but care should be taken that no NMI occurs while doing so, because the clock
+is updated by these interrupts. On the LZ, system services TM$TGET and TM$TSET
+can be used to get or set a valid time. On CM/XP machines, you can use btb_nmfl
+($5B) to check if an NMI occurred during reading, or use it to wait till one has just
+occurred before writing.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>tmw_fram</b></td>
+    <td align=right><b>20CB/CC</b></td>
+    <td></td>
+    <td>tmw_fram is incremented by 1 on each keyboard interrupt. When $FFFF
+is reached, it wraps back to $0000. It can be read at any time and used for accurate
+timing.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>tmw_tcnt</b></td>
+    <td align=right><b>20CD/CE</b></td>
+    <td></td>
+    <td>Default number of seconds to auto-switch-off. Default is $012C, i.e. 5 mins. If it
+is set to less than 15, the machine will set it to 15 secs when next switched on.</td>
+  </tr>
+  <tr valign=top>
+    <td>utt_tbuf</td>
+    <td align=right>20CF-D5</td>
+    <td></td>
+    <td>Temporary buffer, used in UT$DISP</td>
+  </tr>
+  <tr valign=top>
+    <td>pkb_imsk</td>
+    <td align=right>20D6</td>
+    <td></td>
+    <td>Save interrupt mask while 'blowing' i.e. while writing to a pack.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>pkt_id</b></td>
+    <td align=right><b>20D7-FE</b></td>
+    <td></td>
+    <td>An array of 4 elements each 10 bytes long that contain the id string of each of
+the 4 devices A:,B:,C: and D: respectively. Set by PK$SETP. Note that these are copies
+of the pack headers, which are stored in the first ten bytes of a pack (except for pack
+A:). It consists of:
+      <table border="0" cellpadding="0" cellspacing="0" summary="">
+        <tr><td>0: an ID byte:
+          <table border="0" cellpadding="0" cellspacing="0" summary="">
+            <tr><td width="5%">&nbsp;</td><td>bit 0 is clear for valid Org II pack</td></tr>
+            <tr><td></td><td>bit 1 is clear if it is a ram pack (else an EPROM datapack)</td></tr>
+            <tr><td></td><td>bit 2 is set if the pack is page counted, normally only packs of 8K or 16K
+are not paged.</td></tr>
+            <tr><td></td><td>bit 3 is clear if the pack is write protected</td></tr>
+            <tr><td></td><td>bit 4 is clear if the pack is bootable</td></tr>
+            <tr><td></td><td>bit 5 is clear if the pack is not copyable</td></tr>
+            <tr><td></td><td>bit 6 is normally set (reserved for future expansion)</td></tr>
+            <tr><td></td><td>bit 7 is set if the pack is a Organiser I datapack, in which case following
+bytes have been converted from old header format on pack.</td></tr>
+          </table></td></tr>
+        <tr><td>1: a size byte: size of pack in 8K units, i.e. 8 for a 64K pack.</td></tr>
+        <tr><td>2-7: a 6 byte time string: indicates when pack was last sized. Has bytes
+indicating year, month, date, hour, and free running counter (Timer1) at time of sizing.
+If the pack wasn't sized on an organiser this may hold other information.</td></tr>
+        <tr><td>8/9:2 byte checksum: A word checksum of the first 4 words of the ID
+string.</td></tr>
+      </table>
+      If a pack (or device) is bootable, then the time string is replaced by the following
+6 bytes:
+      <table border="0" cellpadding="0" cellspacing="0" summary="">
+        <tr><td>2: Device/code byte: 1 if this is a hardware device (e.g. comms link), 0 if it is
+a software application with no extra hardware. Descriptive purposes only.</td></tr>
+        <tr><td>3: Device number byte: Non-zero number unique to this device. Used to
+identify the devices. Values 1-40, and 80-C0 are reserved to Psion for software resp.
+hardware devices. For example, C0 Comms link, BF Bar code reader, BE Swipe reader,
+0A Concise oxford spelling checker.</td></tr>
+        <tr><td>4: Device version byte: Version number, for descriptive purposes only.</td></tr>
+        <tr><td>5: Device priority byte: Determines order in which devices are booted. Highest
+priority first. Usually identical to device number byte.</td></tr>
+        <tr><td>6/7: Device code address word: Pack address where boot code is located.</td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr valign=top>
+    <td><b>rtt_numb</b></td>
+    <td align=right><b>20FF-214E</b></td>
+    <td></td>
+    <td>10 memory slots for calculator. Each 8 bytes long, in standard floating point
+format.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>dvt_spar</b></td>
+    <td align=right><b>214F-83</b></td>
+    <td></td>
+    <td>$35 bytes reserved for I/O drivers.</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>The Comms Link uses this space in the following way:</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>214F</td>
+    <td></td>
+    <td>Length byte. Contains 1B, which means that the next 1B bytes ($2150-6A) are
+those that are saved in an .OB4 file.</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_baud</td>
+    <td align=right>2150</td>
+    <td></td>
+    <td>Baud rate. Values 0-9 denote 50, 75, 110,  150, 300,  600, 1200, 2400, 4800, 9600.
+Default is 9 (9600).</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_parity</td>
+    <td align=right>2151</td>
+    <td></td>
+    <td>Parity. Values 0-4 denote NONE, ODD, EVEN, MARK, SPACE. Default is 0
+(NONE).</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_bits</td>
+    <td align=right>2152</td>
+    <td></td>
+    <td>Data bits. Values 0-1 denote 7/8 bit data. Default is 1 (8 data bits).</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_stop</td>
+    <td align=right>2153</td>
+    <td></td>
+    <td>Stop bits. Values 0-1 denote 1/2 stop bits. Default  is 0 (1 stop bit).</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_hand</td>
+    <td align=right>2154</td>
+    <td></td>
+    <td>Handshake. Values 0-7 denote NONE, XON, RTS, XON+RTS, DTR,
+DTR+XON, DTR+RTS, ALL. Default is 0 (none).</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_proto</td>
+    <td align=right>2155</td>
+    <td></td>
+    <td>File transfer protocol. Values 0-2 denote NONE, XMODEM, PSION. Default
+is 0 (none).</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_echo</td>
+    <td align=right>2156</td>
+    <td></td>
+    <td>Echo. Values 0-1 denote LOCAL, HOST for terminal emulation. Default is 0
+(local).</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_width</td>
+    <td align=right>2157</td>
+    <td></td>
+    <td>Width. Values 0-250 where 0 denotes no width. Default is 0 (none).</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_timout</td>
+    <td align=right>2158</td>
+    <td></td>
+    <td>Timeout for LPRINT in seconds. Values 0-255 where 0 denotes no
+timeout.</td>
+  </tr>
+  <tr valign=top>
+    <td>rst_reol</td>
+    <td align=right>2159-5B</td>
+    <td></td>
+    <td>REOL string (lbc string of length &lt;=2). Default is 02 0D 0A.</td>
+  </tr>
+  <tr valign=top>
+    <td>rst_reof</td>
+    <td align=right>215C-5E</td>
+    <td></td>
+    <td>REOF string (lbc string of length &lt;=2). Default is 01 1A.</td>
+  </tr>
+  <tr valign=top>
+    <td>rst_rtrn</td>
+    <td align=right>215F-61</td>
+    <td></td>
+    <td>RTRN string (lbc string of length &lt;=2). Default is 00.</td>
+  </tr>
+  <tr valign=top>
+    <td>rst_teol</td>
+    <td align=right>2162-64</td>
+    <td></td>
+    <td>TEOL string (lbc string of length &lt;=2). Default is 02 0D 0A.</td>
+  </tr>
+  <tr valign=top>
+    <td>rst_teof</td>
+    <td align=right>2165-67</td>
+    <td></td>
+    <td>TEOF string (lbc string of length &lt;=2). Default is 01 1A.</td>
+  </tr>
+  <tr valign=top>
+    <td>rst_ttrn</td>
+    <td align=right>2168-6A</td>
+    <td></td>
+    <td>TTRN string (lbc string of length &lt;=2). Default is 00.</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_off_del</td>
+    <td align=right>216B</td>
+    <td></td>
+    <td>Time to off delay in characters, 1-255. Default is 03.</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_xoff_del</td>
+    <td align=right>216C</td>
+    <td></td>
+    <td>Time to off delay with XON/XOFF. 1-255. Default is 07.</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_tcon_val</td>
+    <td align=right>216D</td>
+    <td></td>
+    <td>Time constant value for timer 2 baud rate gen. 0-255.</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_off_ticks</td>
+    <td align=right>216E</td>
+    <td></td>
+    <td>No. of ticks for baud rate dependent Tx off delay, 0-255.</td>
+  </tr>
+  <tr valign=top>
+    <td>rsw_off_tcon</td>
+    <td align=right>216F/70</td>
+    <td></td>
+    <td>Time constant for single tick Tx off delay, 0-65535.</td>
+  </tr>
+  <tr valign=top>
+    <td>rsb_sec_timer</td>
+    <td align=right>2171</td>
+    <td></td>
+    <td>General purpose decrement to zero second timer, 0-255. Decrements every
+second if non-zero. Used to implement time outs, for example by LPRINT.</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>2172/73</td>
+    <td></td>
+    <td>Reserved word.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>rst_entry_point</b></td>
+    <td align=right><b>2174-76</b></td>
+    <td></td>
+    <td>Entry point for assembler programs. Contains a jump instruction to the comms
+link programs. There are 12 possible function calls, and the instruction 'jsr
+rst_entry_point' is followed by a byte (0-11) to indicate which function is needed.</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td><b>dpb_mode</b></td>
+    <td align=right><b>2184</b></td>
+    <td></td>
+    <td>DPB_MODE shows the display mode that is currently in operation, 0 for 2-line
+mode, 1 for 4-line mode. To change it DP$MSET must be used. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td><b>kbb_spec</b></td>
+    <td align=right><b>2185</b></td>
+    <td></td>
+    <td>Contains flags to handle the 'special' keys.
+      <table border="0" cellpadding="0" cellspacing="0" summary="">
+        <tr><td>Bit 7 - set to disable all special SHIFT keys.</td></tr>
+        <tr><td>Bit 1 - set to allow SHIFT-SPACE.</td></tr>
+        <tr><td>Bit 0 - set to allow SHIFT-EXE.</td></tr>
+      </table>
+      All other bits are reserved. It can be read and written to at any time but should be
+preserved around applications. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td><b>btb_lang</b></td>
+    <td align=right><b>2186</b></td>
+    <td></td>
+    <td>Current language. It has one of the following pre-assigned values: 0 for English
+(Default), 1 for French, 2 for German, 3 for Spanish, 4 for Italian, 5 for Portuguese, 6
+for Swedish, 7 for Danish, 8 for Norwegian, 9 for Dutch, 10 for Turkish. Note that LZ
+machines only have 3 of these available. btb_lang can be read on ALL Organiser
+models but to change its value on multi-lingual machines TL$LSET must be used.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>rtb_bl</b></td>
+    <td align=right><b>2187</b></td>
+    <td></td>
+    <td>Run time buffer length</td>
+  </tr>
+  <tr valign=top>
+    <td><b>rtt_bf</b></td>
+    <td align=right><b>2188-2287</b></td>
+    <td></td>
+    <td>Run time buffer ($100 long). Can be freely
+used in machine code programs. Many OPL commands and functions affect this area.
+Keep that in mind when using it to return data from a machine code program back
+to OPL.</td>
+  </tr>
+  <tr valign=top>
+    <td>mtt_wbuf</td>
+    <td align=right>2288-C7</td>
+    <td></td>
+    <td>General purpose buffer for maths + overflow. XP and CM machines (from
+version 2.5 onwards) will store the UDG patterns here when switched off.</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td colspan=4>Overlayed against MTT_WBUF:</td>
+  </tr>
+  <tr valign=top>
+    <td>amt_now</td>
+    <td align=right>2288-8D</td>
+    <td></td>
+    <td>Copy of current time when checking alarms</td>
+  </tr>
+  <tr valign=top>
+    <td>amt_week</td>
+    <td align=right>228E-93</td>
+    <td></td>
+    <td>Time one week from now</td>
+  </tr>
+  <tr valign=top>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td>rtb_fl</td>
+    <td align=right>22C8</td>
+    <td></td>
+    <td>Find buffer length</td>
+  </tr>
+  <tr valign=top>
+    <td>rtt_ff</td>
+    <td align=right>22C9-E8</td>
+    <td></td>
+    <td>Find buffer</td>
+  </tr>
+  <tr valign=top>
+    <td>rtt_file</td>
+    <td align=right>22E9-F8</td>
+    <td></td>
+    <td>4 file control blocks each 4 bytes long. The first byte contains the type of that
+file, between 90 and FE, or 0 if no file opened. The next byte contains the device on
+which the file exists (0 for A:, 1 for B: etc) Then follows a word containing the current
+record number.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>amt_tab</b></td>
+    <td align=right><b>22F9-2328</b></td>
+    <td></td>
+    <td>Alarm table, 6 bytes for each of the 8 alarms. Each entry contains a date-time
+in the usual format, i.e. year (0-99)/(0-255 LZ), month (0-11), day (0-30), hour (0-23),
+minutes (0-59), followed by a flag indicating the type of alarm. On CM and XP machines
+the flag has the following values: 0 means alarm not set, 1 non-repeating, 2 weekly, 3
+daily, 4 hourly repeat. On the LZ machines, bits 0-2 give the repeat setting associated
+with the alarm: 0 means alarm not set, 1 hourly, 2 daily, 3 workdays, 4 weekly, 5 once.
+The top two bits give the associated tone to go with the alarm: 0 Normal, 1 Siren, 2
+Chimes. An alarm entry is cancelled by setting the flag byte to zero. Before setting or
+modifying any alarms, the flag should be cleared and then set last of all. This is to
+prevent interrupts from checking that entry while it is being changed. The date-time of
+a repeating alarm is updated each time it rings so an alarm entry does not contain the
+original date-time.</td>
+  </tr>
+  <tr valign=top>
+    <td><b>dva_bot</b></td>
+    <td align=right><b>2329/2A</b></td>
+    <td></td>
+    <td>LA and LZ only: lowest addr used in low RAM $0400-$1FFF</td>
+  </tr>
+  <tr valign=top>
+    <td><b>dva_top</b></td>
+    <td align=right><b>232B/2C</b></td>
+    <td></td>
+    <td>LA and LZ only: highest addr used in low RAM.</td>
+  </tr>
+  <tr valign=top>
+    <td>mlb_case</td>
+    <td align=right>232D</td>
+    <td></td>
+    <td>??? (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>xtb_cold</td>
+    <td align=right>232E</td>
+    <td></td>
+    <td>Bit 7 is set to disable the language selection menu. Bit 0 is set to disable the
+'second boot' after language selection (second boot allows devices to change language if
+necessary). All other bits are reserved. Default is 0. Note that if bit 7 is set, the second
+boot will still take place unless bit 0 is set. xtb_cold is reset to zero after language
+selection is attempted. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>kbb_lbfl</td>
+    <td align=right>232F</td>
+    <td></td>
+    <td>Set to skip low battery check when empty keyboard buffer found. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>2330-2334</td>
+    <td></td>
+    <td>reserved to PSION</td>
+  </tr>
+  <tr valign=top>
+    <td><b>amb_ei</b></td>
+    <td align=right><b>2335</b></td>
+    <td></td>
+    <td>Disable alarm checking if non-zero.</td>
+  </tr>
+  <tr valign=top>
+    <td>amt_t0</td>
+    <td align=right>2336-3B</td>
+    <td></td>
+    <td>Temporary variable used checking for alarms</td>
+  </tr>
+  <tr valign=top>
+    <td>amt_t1</td>
+    <td align=right>233C-41</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>amt_t2</td>
+    <td align=right>2342-47</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>amw_r1</td>
+    <td align=right>2348/49</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>amb_doit</td>
+    <td align=right>234A</td>
+    <td></td>
+    <td>If set then does alarm check on next keyboard interrupt. An NMI sets this flag
+when the following conditions hold: btb_ignm is non-zero (else the NMI does
+nothing), amb_ei is non-zero (else alarm checking disabled), and tmb_secs is zero
+(i.e. we are on a minute boundary).</td>
+  </tr>
+  <tr valign=top>
+    <td>ita_uvc</td>
+    <td align=right>234B/4C</td>
+    <td></td>
+    <td>Table user vector for use with table interpreter IT$STRT.</td>
+  </tr>
+  <tr valign=top>
+    <td>itt_regs</td>
+    <td align=right>234D-6C</td>
+    <td></td>
+    <td>Table registers for use with table interpreter IT$STRT.</td>
+  </tr>
+  <tr valign=top>
+    <td>itt_stak</td>
+    <td align=right>236D-AC</td>
+    <td></td>
+    <td>Table stack for use with table interpreter IT$STRT.</td>
+  </tr>
+  <tr valign=top>
+    <td>imb_ssgn</td>
+    <td align=right>23AD</td>
+    <td></td>
+    <td>Saved sign </td>
+  </tr>
+  <tr valign=top>
+    <td>fnt_seed</td>
+    <td align=right>23AE-B4</td>
+    <td></td>
+    <td>Random number seed</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_stop</td>
+    <td align=right>23B5/B6</td>
+    <td></td>
+    <td>Q code offset to stop at</td>
+  </tr>
+  <tr valign=top>
+    <td>acw_xtcd</td>
+    <td align=right>23B7/B8</td>
+    <td></td>
+    <td>External O code size</td>
+  </tr>
+  <tr valign=top>
+    <td>act_ddat</td>
+    <td align=right>23B9-BC</td>
+    <td></td>
+    <td>Global &amp; local data sizes</td>
+  </tr>
+  <tr valign=top>
+    <td>act_nvar</td>
+    <td align=right>23BD-C0</td>
+    <td></td>
+    <td>Declared variables count</td>
+  </tr>
+  <tr valign=top>
+    <td>act_bran</td>
+    <td align=right>23C1</td>
+    <td></td>
+    <td>Current branch label number</td>
+  </tr>
+  <tr valign=top>
+    <td>act_psym</td>
+    <td align=right>23C9</td>
+    <td></td>
+    <td>Symbol table data pointer</td>
+  </tr>
+  <tr valign=top>
+    <td>lxa_cend</td>
+    <td align=right>23CD/CE</td>
+    <td></td>
+    <td>End of text pointer</td>
+  </tr>
+  <tr valign=top>
+    <td>lxa_strt</td>
+    <td align=right>23CF/D0</td>
+    <td></td>
+    <td>Start of current token</td>
+  </tr>
+  <tr valign=top>
+    <td>lxb_stok</td>
+    <td align=right>23D1</td>
+    <td></td>
+    <td>Saved token for un-lex</td>
+  </tr>
+  <tr valign=top>
+    <td>lxb_scla</td>
+    <td align=right>23D2</td>
+    <td></td>
+    <td>Saved class for un-lex</td>
+  </tr>
+  <tr valign=top>
+    <td>lxb_ftyp</td>
+    <td align=right>23D3</td>
+    <td></td>
+    <td>Function type</td>
+  </tr>
+  <tr valign=top>
+    <td>lgb_fixp</td>
+    <td align=right>23D4</td>
+    <td></td>
+    <td>Decimal places in calculator display</td>
+  </tr>
+  <tr valign=top>
+    <td>lgb_nl</td>
+    <td align=right>23D5</td>
+    <td></td>
+    <td>Last procedure name length</td>
+  </tr>
+  <tr valign=top>
+    <td>lgt_nf</td>
+    <td align=right>23D6-DD</td>
+    <td></td>
+    <td>Last procedure name</td>
+  </tr>
+  <tr valign=top>
+    <td>lgb_lant</td>
+    <td align=right>23E0</td>
+    <td></td>
+    <td>Language type</td>
+  </tr>
+  <tr valign=top>
+    <td>lgb_menu</td>
+    <td align=right>23E1</td>
+    <td></td>
+    <td>Set to ignore TRAN option after editing</td>
+  </tr>
+  <tr valign=top>
+    <td>rta_1vct</td>
+    <td align=right>23E2/E3</td>
+    <td></td>
+    <td>Extension O code operator code</td>
+  </tr>
+  <tr valign=top>
+    <td>utw_reta</td>
+    <td align=right>23E4/E5</td>
+    <td></td>
+    <td>Return address used in UT$DDSP</td>
+  </tr>
+  <tr valign=top>
+    <td>pkb_ovbl</td>
+    <td align=right>23E6</td>
+    <td></td>
+    <td>Overblow factor</td>
+  </tr>
+  <tr valign=top>
+    <td>bta_vect</td>
+    <td align=right>23E7/E8</td>
+    <td></td>
+    <td>Pointer to SWI vector table.</td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>On machines with ROM version 2.4 (mostly early CM models)
+      this is where the system variables end. The allocator cells then immediately
+      follow.</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>Later ROM versions (2.5 onwards) also have the following:</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_iglb</td>
+    <td align=right>23E9</td>
+    <td></td>
+    <td>Set to skip low battery check.</td>
+  </tr>
+  <tr valign=top>
+    <td>pkb_bblw</td>
+    <td align=right>23EA</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>flt_cfil</td>
+    <td align=right>23EB-2402</td>
+    <td></td>
+    <td>6 bytes for each of the four packs. Used to store pointers to make file handling
+quicker when using files on several packs at the same time. The 6 bytes contain the following:
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="">
+        <tr><td width="5%">&nbsp;</td><td width="10%">0</td><td>Flags</td></tr>
+      <tr><td></td><td>1/2 </td><td>???</td></tr>
+        <tr><td></td><td>3/4</td><td>Current record number</td></tr>
+        <tr><td></td><td>5</td><td>Record type</td></tr>
+    </table>
+  </td>
+  </tr>
+  <tr valign=top>
+    <td>fla_flid</td>
+    <td align=right>2403/04</td>
+    <td></td>
+    <td>Pointer into flt_cfil, for active file on current pack.</td>
+  </tr>
+  <tr valign=top>
+    <td>lna_svsp</td>
+    <td align=right>2405/06</td>
+    <td></td>
+    <td>Saves Stack Pointer when LN$STRT is called.</td>
+  </tr>
+  <tr valign=top>
+    <td>pkb_ramb</td>
+    <td align=right>2407</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>pkb_blow</td>
+    <td align=right>2408</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>From this point on, the various models differ in their use of
+variables. First the single language XP/LA has the following variables:</td>
+  </tr>
+  <tr valign=top>
+    <td>pkb_hsav</td>
+    <td align=right>2409</td>
+    <td></td>
+    <td>Holds highest byte of a pack address.</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r0</td>
+    <td align=right>240A</td>
+    <td></td>
+    <td>General variables used in file handling???</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r1</td>
+    <td align=right>240B</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r3</td>
+    <td align=right>240C</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r4</td>
+    <td align=right>240D</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r5</td>
+    <td align=right>240E</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r6</td>
+    <td align=right>240F</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_fnad</td>
+    <td align=right>2410</td>
+    <td></td>
+    <td>Saves parameter X in DV$LKUP.</td>
+  </tr>
+  <tr valign=top>
+    <td>dvw_r0</td>
+    <td align=right>2411/12</td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>On XP/LA machines this is where the system variables end. The
+allocator cells then immediately follow.</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>Multi-lingual XP/LA machines have the following configuration
+instead.</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>240A-7D</td>
+    <td></td>
+    <td>Used for system messages/menus. A string in the current language is copied
+here from a ROM bank before being used.</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>247E-8E</td>
+    <td></td>
+    <td>Used to hold error message. The error message in the current language is
+copied here from a ROM bank before being displayed.</td>
+  </tr>
+  <tr valign=top>
+    <td>pkb_hsav</td>
+    <td align=right>248F</td>
+    <td></td>
+    <td>As above.</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r0</td>
+    <td align=right>2490</td>
+    <td></td>
+    <td>As above.</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r1</td>
+    <td align=right>2491</td>
+    <td></td>
+    <td>As above.</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r3</td>
+    <td align=right>2492</td>
+    <td></td>
+    <td>As above.</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r4</td>
+    <td align=right>2493</td>
+    <td></td>
+    <td>As above.</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r5</td>
+    <td align=right>2494</td>
+    <td></td>
+    <td>As above.</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_r6</td>
+    <td align=right>2495</td>
+    <td></td>
+    <td>As above.</td>
+  </tr>
+  <tr valign=top>
+    <td>flb_fnad</td>
+    <td align=right>2496</td>
+    <td></td>
+    <td>As above.</td>
+  </tr>
+  <tr valign=top>
+    <td>dvw_r0</td>
+    <td align=right>2497/98</td>
+    <td></td>
+    <td>As above.</td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>On multi-lingual XP/LA machines this is where the system variables
+end. The allocator cells then immediately follow.</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>The P350 has the same variables as the standard XP/LA, along with
+the following ones.</td>
+  </tr>
+  <tr valign=top>
+    <td>btt_mstack</td>
+    <td align=right>2413-2512</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>btb_rbnk</td>
+    <td align=right>2513</td>
+    <td></td>
+    <td>Current RAM bank. (LZ uses 262A instead)</td>
+  </tr>
+  <tr valign=top>
+    <td>btb_wnmi</td>
+    <td align=right>2514</td>
+    <td></td>
+    <td>Incremented on every NMI. Used to check whether an NMI has occurred,
+regardless of whether btb_ignm was clear. (LZ uses 20AF instead)</td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>On P350 machines this is where the system variables end. The
+allocator cells then immediately follow.</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>The LZ has the same variables as the standard XP/LA, along with
+the following ones.</td>
+  </tr>
+  <tr valign=top>
+    <td>btt_mstack</td>
+    <td align=right>2413-2512</td>
+    <td></td>
+    <td>(See P350 above.)</td>
+  </tr>
+  <tr valign=top>
+    <td>mlt_buf</td>
+    <td align=right>2513-DB</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>dib_pastelen</td>
+    <td align=right>25DC</td>
+    <td></td>
+    <td>Length of the Paste buffer. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dib_paste</td>
+    <td align=right>25DD-261C</td>
+    <td></td>
+    <td>Paste buffer. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>flt_dmat</td>
+    <td align=right>261D</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>btb_rbnk</td>
+    <td align=right>262A</td>
+    <td></td>
+    <td>Current RAM bank. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>mlb_bank</td>
+    <td align=right>262B</td>
+    <td></td>
+    <td>Current ROM bank. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpt_4lin</td>
+    <td align=right>262C-7B</td>
+    <td></td>
+    <td>4-line screen buffer. Used instead of the 2-line buffer at dpt_tlin when in 4-line
+mode. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>xfb_nlen</td>
+    <td align=right>267C</td>
+    <td></td>
+    <td>Length of name of opened file in Xfiles menu. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>xft_name</td>
+    <td align=right>267D-84</td>
+    <td></td>
+    <td>Name of opened file in Xfiles menu. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>xfb_cpak</td>
+    <td align=right>2685</td>
+    <td></td>
+    <td>Pack of opened file in Xfiles menu. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>wla_curr</td>
+    <td align=right>2686/87</td>
+    <td></td>
+    <td>Current city in world. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>wla_base</td>
+    <td align=right>2688/89</td>
+    <td></td>
+    <td>Current home in world. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td><b>wlb_gmt</b></td>
+    <td align=right><b>268A</b></td>
+    <td></td>
+    <td>Number of half hours difference with GMT. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_vpar</td>
+    <td align=right>268B</td>
+    <td></td>
+    <td>Used by DP$PVEW to store how many non-scrolling characters there are on
+the line, so that viewing can be continued later. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpb_pvln</td>
+    <td align=right>268C</td>
+    <td></td>
+    <td>Used by DP$VIEW and DP$PVEW to store line (0-3) where viewing takes
+place, so that viewing can be continued later. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>End of these system variables, and usually start of first allocator cell
+of the LZ.</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>The LZ has some further system variables at the top of the
+RAM.</td>
+  </tr>
+  <tr valign=top>
+    <td>btt_bboot</td>
+    <td align=right>7F00-21</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>dpt_sudg</td>
+    <td align=right>7F22-61</td>
+    <td></td>
+    <td>Area for saving UDG patterns when off. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dpt_4sav</td>
+    <td align=right>7F62-B1</td>
+    <td></td>
+    <td>Area for saving screen contents, used by DP$SAVE and DP$REST, whether in
+2 or 4 line mode. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>mlt_ebuf</td>
+    <td align=right>7FB2-C2</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>rtt_fsav</td>
+    <td align=right>7FC3</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td><b>xtt_pasw</b></td>
+    <td align=right><b>7FD6</b></td>
+    <td></td>
+    <td>System password flag. Bit 0 is set if password exists, bit 1 is set if it is switched
+on. Can poke this to zero to remove system password without knowing what it was.
+(LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right><b>7FD7-DF</b></td>
+    <td></td>
+    <td>9 byte system password. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>dis_e</td>
+    <td align=right>7FE0</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>dib_dmode</td>
+    <td align=right>7FE9</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td>ntb_flgs</td>
+    <td align=right>7FEA</td>
+    <td></td>
+    <td>This byte contains flags for the editor (see LG$EDIT) used with the current
+notepad. The following bits are used:
+      <table border="0" cellpadding="0" cellspacing="0" summary="">
+        <tr><td>bit 7 - true if numbered</td></tr>
+        <tr><td>bit 3 - true if on/clear exits editor  : do not change</td></tr>
+        <tr><td>bit 2 - true if prompt to be capitalized</td></tr>
+        <tr><td>bit 1 - true if no title required</td></tr>
+        <tr><td>bit 0 - true if changed (used in editor)</td></tr>
+      </table>
+      The default value for a new notepad is $08 (bit3 set). Note that if bit3 is cleared
+then the notepad cannot be exited. This bit is 0 when using the editor with an OPL
+procedure where the menu includes the item EXIT. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>ntb_pssw</td>
+    <td align=right>7FEB</td>
+    <td></td>
+    <td>This byte is 0 if the current notepad in memory has no password or the
+password length if a password exists. It must not be poked or the editor may attempt to
+decrypt unencrypted data or not to decrypt encrypted data etc. which will cause a crash.
+(LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>7FEC-F3</td>
+    <td></td>
+    <td>???</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>7FF4-7FFC</td>
+    <td></td>
+    <td>9 byte password code of the current notepad. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>ntw_clin</td>
+    <td align=right>7FFD/FE</td>
+    <td></td>
+    <td>This word contains the current line number in the current notepad. Line 0 is the
+line containing the notepad name. This defines which line the cursor is on. This variable
+may be poked to change the line number but should not be given a value greater than
+the last line number in the notepad. The maximum line number is 1 less than the number
+of zero line-delimiters in an unencrypted notepad. (LZ)</td>
+  </tr>
+  <tr valign=top>
+    <td>ntb_cpos</td>
+    <td align=right>7FFF</td>
+    <td></td>
+    <td>This byte contains the cursor position in the current line in the current notepad,
+and has a value between 0 and $FE. This variable may be poked to change the cursor
+position but should not be given a value greater than the length of the current line.
+(LZ)</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr valign=top>
+    <td colspan=4>The following addresses are in the ROM, so their contents can not
+be changed.</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right><b>FFCB</b></td>
+    <td></td>
+    <td>Model byte 2. See Model byte 1 (FFE8). Not used on CM/XP machines, and
+on these this byte is usually $FF.</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFCC-E6</td>
+    <td></td>
+    <td>Copyright message</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right><b>FFE7</b></td>
+    <td></td>
+    <td>Language byte. Its value indicates which languages the organiser has available.
+      <table border="0" cellspacing="0" cellpadding="0" summary="">
+        <tr><td width="10%">&nbsp;</td><td width="10%">00</td><td>English only</td></tr>
+        <tr><td></td><td>01</td><td>French only</td></tr>
+        <tr><td></td><td>02</td><td>German only</td></tr>
+        <tr><td></td><td>80</td><td>11 languages (English default)</td></tr>
+        <tr><td></td><td>81</td><td>3 languages (English default, French,
+German)</td></tr>
+        <tr><td></td><td>82</td><td>3 languages (English default, Spanish,
+Italian)</td></tr>
+        <tr><td></td><td>83</td><td>3 languages (English default, Swedish,
+Danish)</td></tr>
+      </table>
+     Note that bit 7 is set if the machine is multi-lingual. It is only implemented from
+Rom versions 3.6 and later. Earlier Roms are English only, and in those version this byte
+is FF. The current language used on a multi-lingual machine is held in btb_lang
+($2186).</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right><b>FFE8</b></td>
+    <td></td>
+    <td>Model byte 1. The bottom 3 bits indicate the basic model type.
+      <table border=0 cellspacing=0 cellpadding=0 summary="">
+        <tr><td width="10%"></td><td>Bits&nbsp;0-2&nbsp;&nbsp;&nbsp;</td><td>Model&nbsp;&nbsp;&nbsp;</td><td>RAM&nbsp;&nbsp;&nbsp;</td><td>ROM</td></tr>
+        <tr><td></td><td>0</td><td>CM</td><td>8</td><td>32</td></tr>
+        <tr><td></td><td>1</td><td>XP</td><td>16</td><td>32/64</td></tr>
+        <tr><td></td><td>2</td><td>LA</td><td>32</td><td>32/64</td></tr>
+        <tr><td></td><td>3</td><td>?</td><td>?</td><td>?</td></tr>
+        <tr><td></td><td>4</td><td>P350</td><td>96</td><td>32</td></tr>
+        <tr><td></td><td>5</td><td>LZ64</td><td>64</td><td>64</td></tr>
+        <tr><td></td><td>6</td><td>LZ</td><td>32</td><td>64</td></tr>
+        <tr><td></td><td>7</td><td colspan="3"><i>See model byte 2.</i></td></tr>
+      </table>
+      If bits 0-2 are all set, then the basic model type is determined by the bottom three
+bits of model byte 2. These further basic types and type 3 have not been produced as far
+as I know.<br>
+The highest 5 bits of the model byte indicate the special model types. It seems that if bit
+4 is set then the machine is a POS model with a standard keyboard, if instead bit 6 is set
+then it is an alpha POS model, and bit 7 indicates a normal POS model (numeric keyboard).
+If bit 3 is set then the special model type is indicated by the highest 5 bits of model byte
+2. If model byte 2 is used then bit 7 indicates an LZ, and bit 6 indicates LCD type (set
+for the 66780 chip which allows foreign characters, clear for the standard  HD44780 in
+earlier models which has Japanese katakana), and bits 3, 4 and 5 are reserved. Note that
+bit 5 is set on LZ versions 4.5 onwards. I have been able to verify the following values:
+      <table border="0" cellspacing="0" cellpadding="0" summary="">
+        <tr><td width="10%"></td><td>Model</td><td>Byte 1&nbsp;&nbsp;&nbsp;</td><td>Byte 2&nbsp;</td></tr>
+        <tr><td></td><td>CM</td><td>00</td><td>-</td></tr>
+        <tr><td></td><td>XP</td><td>01</td><td>-</td></tr>
+        <tr><td></td><td>LA</td><td>02</td><td>-</td></tr>
+        <tr><td></td><td>LZ</td><td>0E</td><td>C0/E0</td></tr>
+        <tr><td></td><td>LZ64</td><td>0D</td><td>C0/E0</td></tr>
+
+        <tr><td></td><td>POS250</td><td>12</td><td>-</td></tr>
+        <tr><td></td><td>POS350</td><td>14</td><td>-</td></tr>
+        <tr><td></td><td>POS464</td><td>1D</td><td>C0/E0</td></tr>
+        <tr><td></td><td>Alpha POS200&nbsp;&nbsp;</td><td>41/42</td><td>-</td></tr>
+        <tr><td></td><td>POS200</td><td>82</td><td>-</td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right><b>FFE9</b></td>
+    <td></td>
+    <td>ROM software version number. This is a bcd number, for example, if it contains
+$46 the Rom has version number 4.6 etc. LZ machines have versions 4.2 and
+above.</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFEA</td>
+    <td></td>
+    <td>Address of IRQ2 interrupt routine. See bta_2iq (2042)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFEC</td>
+    <td></td>
+    <td>Address of CMI interrupt routine. See bta_cmi (2044)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFEE</td>
+    <td></td>
+    <td>Address of TRAP interrupt routine. See bta_bug (2046)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFF0</td>
+    <td></td>
+    <td>Address of SIO interrupt routine. See bta_sio (2048)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFF2</td>
+    <td></td>
+    <td>Address of TOI interrupt routine. See bta_toi (204A)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFF4</td>
+    <td></td>
+    <td>Address of OCI interrupt routine. See bta_oci (204C)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFF6</td>
+    <td></td>
+    <td>Address of ICI interrupt routine. See bta_ici (204E)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFF8</td>
+    <td></td>
+    <td>Address of IRQ1 interrupt routine. See bta_1iq (2050)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFFA</td>
+    <td></td>
+    <td>Address of SWI interrupt routine. See bta_swi (2052)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFFC</td>
+    <td></td>
+    <td>Address of NMI interrupt routine. See bta_nmi (2054)</td>
+  </tr>
+  <tr valign=top>
+    <td></td>
+    <td align=right>FFFE</td>
+    <td></td>
+    <td>Address of cold boot routine (usually 8000 on CM/XP's, C000 on LZ's).</td>
+  </tr>
+</table>
+
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

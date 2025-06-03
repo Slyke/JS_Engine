@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 21 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech21.htm", "name": "Chapter 21" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 21</li>
+</ol>
+
+
+<PRE>                                CHAPTER 21
+
+                              _____ ________
+                              ERROR HANDLING
+
+
+
+This chapter describes the error handling services ER$LKUP and ER$MESS.
+
+
+
+        _______
+<a id="p21.0.1">21.0.1</a>  ER$LKUP
+
+
+VECTOR NUMBER :         013
+
+INPUT PARAMETERS :      B = error number
+
+OUTPUT VALUES :         X = address of error message
+
+DESCRIPTION
+
+Given an error code in B, returns the  address  of  the  appropriate  error
+message  in  X.  The returned error message is a leading count byte string.
+If there is no error message for this error code, the default message  "***
+ERROR ***" is returned.  ER$LKUP is called by the OPL function ERR$.
+
+EXAMPLE
+
+        LDA     B,ERROR_CODE    ; B = ERROR CODE
+        OS      ER$LKUP
+        LDA     B,0,X           ; GET LENGTH BYTE
+        INX                     ; SKIP PAST
+        OS      DP$PRNT         ; PRINT THE ERROR MESSAGE
+
+ERRORS
+
+        NONE
+
+
+
+          _______
+<a id="p21.0.1.1">21.0.1.1</a>  ER$MESS
+
+
+VECTOR NUMBER :         032
+
+INPUT PARAMETERS :      B = error number
+
+OUTPUT VALUES :         NONE
+
+DESCRIPTION
+
+Displays the error message associated with  the  error  code  given  in  B.
+ER$MESS then waits for the user to press SPACE or ON/CLEAR.  If there is no
+error message for this error code, the default message "*** ERROR  ***"  is
+displayed.
+
+NOTE :  In the case of B = 194, the machine displays the  message  "BATTERY
+TOO LOW" for 4 seconds, then switches off.
+
+EXAMPLE
+
+        LDA     B,ERROR_CODE
+        OS      ER$MESS
+
+ERRORS
+
+        NONE
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech20.htm">Ch. 20</a></li>
+<li class=navactive>Ch. 21</li>
+<li><a href="techidx.htm">Index</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

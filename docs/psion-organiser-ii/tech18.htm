@@ -1,0 +1,978 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 18 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech18.htm", "name": "Chapter 18" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 18</li>
+</ol>
+
+
+<PRE>                                CHAPTER 18
+
+                             _________________
+                             TABLE INTERPRETER
+
+
+
+This chapter is included for completeness only, since it  is  not  expected
+that these services will be used outside of PSION.
+
+Described here is PSION's Table Interpreter and  the  very  specialised  OS
+services used in it.
+
+
+
+      _____________________
+<a id="p18.1">18.1</a>  THE TABLE INTERPRETER
+
+The language translator and  the  scientific  functions  in  the  operating
+system are called through an interpreter.  The use of an interpreter allows
+a major saving in code size, since subroutine calls which would need 2 or 3
+bytes,  can be replaced by the single interpreted byte.  The table of bytes
+to be interpreted is compiled from relatively high-level source code  by  a
+specific  TABLE  COMPILER  which is not available outside of PSION; this is
+therefore only a brief description.
+
+The table interpreter can usefully be compared to a  microprocessor  system
+which  uses  microcode.   There,  a  machine-code  opcode  is  read and the
+microprocessor runs the appropriate microcode program for that one  opcode,
+updating  the program-counter to accommodate any opcode arguments.  In this
+analogy, the table interpreter itself corresponds  to  the  microprocessor,
+while  each byte in the table to be interpreted corresponds to an opcode or
+its required argument.
+
+Each byte of the table specifies  an  action  (or  its  parameters)  to  be
+performed  through the interpreter, so that a customised set of actions can
+be designed for some particular purpose.  There is also a set of predefined
+actions  (see  below)  which have byte values from 0 to 20, so user-defined
+actions can have values consecutively from 21 to 255.
+<u>Action 20 ends the interpretation.</u>
+
+For each action defined by the user, a normal machine-code subroutine  must
+be  written  for  calling  from the interpreter.  In the analogy above, the
+subroutine for  an  action  corresponds  to  the  microcode  program  which
+actually performs the opcode.
+
+The compiled table has a fixed format.  The first two  bytes  must  contain
+the  offset  from the beginning of the table to an array of pointers to the
+user-defined action subroutines; the pointers must be  ordered  exactly  as
+their  corresponding  user-defined  actions  (21-255).  These two bytes are
+followed by the action-specifying bytes, each of which is followed  by  its
+parameters.    The   <u>table program-counter</u>,  ITA_PCNT,  is  used  by  the
+interpreter to step through the table.  The  subroutines  for  the  actions
+must  return in the B register the number of table bytes to be stepped over
+till the next action.  For instance, if the action has 2 parameter-bytes, 3
+must be returned in B.
+
+The interpreter maintains its own stack  which  is  used  by  some  of  the
+predefined   actions.    The  stack  grows  downwards  in  memory  and  the
+stack-pointer points to the last word pushed.
+
+_______
+WARNING
+The table interpreter itself cannot be called from within  a  table.   This
+would  result  in  the  corruption  of  the  system  variables  used by the
+interpreter.  As mentioned above, OS calls the interpreter for the language
+translator  and  for the scientific functions, so that none of these may be
+used within a table.
+
+
+
+      _______________
+<a id="p18.2">18.2</a>  TABLE REGISTERS
+
+The table interpreter has a block of 32 bytes of RAM allocated to it, which
+are  referred to as table-registers.  This block is labelled ITT_REGS.  The
+values from $E0 to $FF are used to access these byte registers when  passed
+as parameters to the actions.  If a parameter's value is in this range, $E0
+is subtracted from it and the result is the offset into ITT_REGS.  In  this
+documentation,  the registers are named tabreg0, tabreg1, etc.  starting at
+ITT_REGS.
+
+Note that the  subroutine  for  a  user-defined  action  <u>can</u>  in  fact  use
+parameter-bytes  in  any way needed, whatever their values, but the service
+routines IT$GVAL and IT$RADD, and also  the  predefined  actions,  use  the
+above convention for accessing the registers.
+
+EXAMPLE:
+
+    The code to load B with the constant parameter that is directly after
+    the action-specifying byte. ITA_PCNT points to the action-specifying
+    byte currently being interpreted.
+
+        LDX     ITA_PCNT:       ; Get the table program-counter
+        LDA     B,1,X           ; Get the parameter byte
+
+If the X register has not been corrupted since entry to the subroutine,  it
+points to the current action-specifying byte already.
+
+
+
+      ______________________
+<a id="p18.3">18.3</a>  THE PREDEFINED ACTIONS
+
+The byte values 0 to 20 specify actions that are predefined in  OS.   These
+actions  provide  a  framework  on  which  to  build  a  useful, customised
+programming  language.   These  include  handling  of  control  constructs,
+table-subroutines,   assignment  to  table-registers  and  calling  regular
+machine-code subroutines.
+
+This section describes each of these actions  in  some  detail,  using  the
+following terminology and conventions.
+
+     1.  The ACTION NUMBER is the byte value specifying  the  action  in  a
+         table.
+
+     2.  The ACTION NAMES used in the examples are defined as equivalent to
+         their ACTION NUMBERS (e.g.  #define CALL_ACTION 1 ).
+
+     3.  The ACTION PARAMETERS follow  the  ACTION  NUMBER  in  the  table.
+         "P1_B" refers to the first parameter, where "_B" specifies that it
+         is a byte.  "P2_W" refers to  the  second  parameter,  where  "_W"
+         specifies that it is a word.
+
+     4.  The base of the table to be interpreted is assumed to  be  at  the
+         label TABLE_BASE.
+
+
+
+        ______
+<a id="p18.3.1">18.3.1</a>  RETURN
+
+ACTION NUMBER:          0
+ACTION PARAMETERS:      None.
+
+DESCRIPTION
+
+    This action returns from a table-subroutine in much the same way as the
+    'RTS'  instruction  returns from a machine-code subroutine.  The return
+    address is popped from the table-stack.  Table-subroutines are  invoked
+    by the predefined actions CALL or JSR.
+
+EXAMPLE:
+        .BYTE   JSR_ACTION
+        .WORD   SUBRTN1-TABLE_BASE      ; Offset to the table-subroutine
+          .
+          .
+SUBRTN1:
+          .
+          .
+        .BYTE   RETURN_ACTION
+
+
+
+        ____
+<a id="p18.3.2">18.3.2</a>  CALL
+
+ACTION NUMBER:          1
+ACTION PARAMETERS:      P1_B             - The number of parameter-bytes
+                                           for the called subroutine.
+                                           (See the warning below).
+                        P2_W             - The offset to the subroutine.
+                        Subsequent bytes- Up to 31 parameter-bytes for
+                                           the subroutine being called.
+
+DESCRIPTION
+
+    This action calls a table-subroutine offset from  TABLE_BASE  by  P2_W.
+    The number of parameter-bytes to be passed to the table-subroutine must
+    be specified by P1_B.  The table-subroutine's parameter-bytes  must  be
+    placed from action parameter-bytes 4 up to 34.
+    _______
+    WARNING
+    The value in P1_B is  stored  in  tabreg0  ($E0),  and  the  subsequent
+    parameter  bytes  to the table-subroutine are stored consecutively from
+    tabreg1 onwards.  While allowing the table-subroutine to  access  these
+    bytes, this prevents more than 31 parameter-bytes being passable to the
+    table subroutine.  Extreme care must  be  taken  when  using  the  CALL
+    action, since the registers corrupted in this way are <u>not</u> restored.
+
+    Note that if no parameters need to be passed, then the JSR action ought
+    to be used.
+
+EXAMPLE:
+
+    To call a table-subroutine 255 bytes from the start of the table,
+    passing 2 parameter-bytes.
+
+        .BYTE   CALL_ACTION
+        .BYTE   2       ; Two parameters to be passed to table-subroutine
+        .WORD   255     ; Word offset from start of table to
+                        ;   table-subroutine
+        .BYTE   6,8     ; Pass 6 and 8 to the table-subroutine
+
+    If the table sub-routine label is SUBRTN1, the following table
+    extract applies. The parameter byte-count for SUBRTN1 is placed by the
+    CALL action in tabreg0 ($E0), and the parameter-bytes themselves in
+    tabreg1 ($E1), tabreg2 ($E2), etc.
+
+        .BYTE   CALL_ACTION
+        .BYTE   3               ; 3 parameters passed to table-subroutine
+        .WORD   SUBRTN1-TABLE_BASE
+                                ; Word offset from start of table to the
+                                ;   table-subroutine
+        .BYTE   2,25,6          ; Pass 2,25 and 6 to the table-subroutine
+        .BYTE   END_ACTION      ; (to end the interpretation)
+
+SUBRTN1:
+        .BYTE   30              ; User-defined action
+        .BYTE   1               ; Parameter-byte for Action Number 30
+        .BYTE   RETURN_ACTION   ; RETURN from table-subroutine
+
+
+
+        __
+<a id="p18.3.3">18.3.3</a>  IF
+
+ACTION NUMBER:          2
+ACTION PARAMETERS:      P1_B    - Signed offset for branching.
+
+DESCRIPTION
+
+    Tests the system variable ITB_TEST.  If false, the signed value in P1_B
+    is  added to ITA_PCNT; if true, 2 is added to ITA_PCNT.  In either case
+    ITA_PCNT points to the next action which needs to be interpreted in the
+    table.
+
+EXAMPLE:
+
+    An IF/ELSE control construct.
+    If tabreg0 is equal to 2, do action number 35, otherwise do action
+    number 40.
+
+        .BYTE   EQL_ACTION
+        .BYTE   $E0,2           ; Set ITB_TEST if tabreg0 ($E0) equals 2
+IF_POS:
+        .BYTE   IF_ACTION
+        .BYTE   ELSE_POS-IF_POS
+                                ; Offset for potential branch
+        .BYTE   35              ; User-defined action
+BRANCH_POS:
+        .BYTE   BRANCH_ACTION
+        .BYTE   ENDIF_POS-BRANCH_POS
+                                ; Offset for BRANCH
+ELSE_POS:
+        .BYTE   40              ; User-defined action
+ENDIF_POS:
+
+
+
+        ______
+<a id="p18.3.4">18.3.4</a>  IF_NOT
+
+ACTION NUMBER:          3
+ACTION PARAMETERS:      P1_B    - Signed offset for branching.
+
+DESCRIPTION
+
+    Tests the system variable ITB_TEST.  If true, the signed value in  P1_B
+    is added to ITA_PCNT; if false, 2 is added to ITA_PCNT.  In either case
+    ITA_PCNT points to the next action which needs to be interpreted in the
+    table.
+
+EXAMPLE:
+
+    If tabreg1 is not equal to 2 do action number 35, otherwise branch to
+    ENDIF_POS.
+
+        .BYTE   EQL_ACTION
+        .BYTE   $E1,2           ; Set ITB_TEST if tabreg1 ($E1) equals 2
+IF_NOT_POS:
+        .BYTE   IF_NOT_ACTION
+        .BYTE   ENDIF_POS-IF_NOT_POS
+                                ; Offset for potential branch
+        .BYTE   35              ; User-defined action
+ENDIF_POS:
+
+
+
+        ____
+<a id="p18.3.5">18.3.5</a>  CASE
+
+ACTION NUMBER:          4
+ACTION PARAMETERS:      P1_B    - Selector parameter.
+                        P2_W    - Offset to case-table.
+
+DESCRIPTION
+
+    Causes  table  interpretation  to  continue  at   different   addresses
+    depending on the value in the selector parameter, P1_B.  The user needs
+    to set up a case-table with the  format  shown  below.   This  is  best
+    illustrated by the example.
+
+EXAMPLE:
+
+    Use the selector parameter tabreg1 ($E1) to branch to the required
+    position in the table. If tabreg1 equals 2 go to CASE2 to do action
+    38 and then go to END_CASE. If tabreg1 equals 5 go to CASE5 to do
+    actions 31 and 45, otherwise go to DEFAULT to do just action 45.
+
+DO_CASE:
+        .BYTE   CASE_ACTION
+        .BYTE   $E1                     ; Selector parameter is tabreg1
+        .WORD   CASE_TABLE-TABLE_BASE   ; Offset to CASE_TABLE
+CASE2:
+        .BYTE   38                      ; User-defined action
+B1:     .BYTE   BRANCH_ACTION           ; Branch out of the case construct
+        .BYTE   END_CASE-B1
+CASE5:
+        .BYTE   31                      ; Do user-defined action 31 and
+                                        ; drop through to action 45
+DEFAULT:
+        .BYTE   45
+END_CASE:
+          .
+          .
+          .
+CASE_TABLE:
+        .BYTE   2                       ; If selector equals 2 go to CASE2
+        .WORD   CASE2-TABLE_BASE
+        .BYTE   5                       ; If selector equals 5 go to CASE5
+        .WORD   CASE5-TABLE_BASE
+        .BYTE   255                     ; If selector is not 2 or 5 go to
+        .WORD   DEFAULT-TABLE_BASE      ;   DEFAULT
+
+
+
+        ______
+<a id="p18.3.6">18.3.6</a>  VECTOR
+
+ACTION NUMBER:          5
+ACTION PARAMETERS:      P1_B    - Selector parameter.
+                        P2_W    - Offset to vector-table.
+
+DESCRIPTION
+
+    Causes table interpretation to continue at different  places  depending
+    on  the  value in the selector parameter, P1_B.  The selector parameter
+    is  used  to  index  into  the  vector-table.   Each  vector   in   the
+    vector-table  is a word offset from TABLE_BASE to the next action to be
+    interpreted.  A selector equal to 2, for  example,  will  get  the  3rd
+    offset in the vector-table.
+
+EXAMPLE:
+
+    Use the selector parameter tabreg2 ($E2) to branch to the required
+    position in the table.
+
+DO_VECTOR:
+        .BYTE   VECTOR_ACTION
+        .BYTE   $E2                     ; Selector parameter is tabreg2
+        .WORD   VECTOR_TABLE-TABLE_BASE
+                                        ; Offset to VECTOR_TABLE
+ADDR0:
+        .BYTE   38                      ; User-defined action
+B1:     .BYTE   BRANCH_ACTION           ; Branch out of the case construct
+        .BYTE   END_VECTOR-B1
+ADDR1:
+        .BYTE   31                      ; Do user-defined action 31 and
+ADDR2:
+        .BYTE   45                      ; drop through to action 45
+END_VECTOR:
+          .
+          .
+          .
+VECTOR_TABLE:
+        .WORD   ADDR0-TABLE_BASE        ; Offset when selector equals 0
+        .WORD   ADDR1-TABLE_BASE        ; Offset when selector equals 1
+        .WORD   ADDR2-TABLE_BASE        ; Offset when selector equals 2
+
+
+
+        ____
+<a id="p18.3.7">18.3.7</a>  GOTO
+
+ACTION NUMBER:          6
+ACTION PARAMETERS:      P1_W    - Offset from TABLE_BASE to next action to
+                                  be interpreted.
+
+DESCRIPTION
+
+    Causes interpretation to continue at the action that is offset by  P1_W
+    from TABLE_BASE.
+
+EXAMPLE:
+
+    Go to ADDR1.
+
+        .BYTE   GOTO_ACTION
+        .WORD   ADDR1-TABLE_BASE
+          .
+          .
+ADDR1:
+
+
+
+        ______
+<a id="p18.3.8">18.3.8</a>  BRANCH
+
+ACTION NUMBER:          7
+ACTION PARAMETERS:      P1_B    - Signed offset for branching.
+
+DESCRIPTION
+
+    Causes interpretation to branch to the action that is  offset  by  P1_B
+    from  the  current  action.  This is used for short branches forward or
+    backward.
+
+EXAMPLE:
+
+    Branch to ADDR1.
+
+DO_BRANCH:
+        .BYTE   BRANCH_ACTION
+        .BYTE   ADDR1-DO_BRANCH
+          .
+          .
+ADDR1:
+
+
+
+        ___
+<a id="p18.3.9">18.3.9</a>  EQL
+
+ACTION NUMBER:          8
+ACTION PARAMETERS:      P1_B - 1st operand.
+                        P2_B - 2nd operand.
+
+DESCRIPTION
+
+    Compares P1_B with P2_B, setting ITB_TEST if equal, otherwise  clearing
+    it.  Either operand may be a register or a constant.
+
+EXAMPLE:
+
+        .BYTE   EQL_ACTION
+        .BYTE   $E0,$E3         ; Set ITB_TEST if tabreg0 equals tabreg3
+IF_POS:
+        .BYTE   IF_ACTION       ; Test ITB_TEST and branch if set
+        .BYTE   ENDIF_POS-IF_POS
+                                ; Offset for potential branch
+        .BYTE   35              ; User-defined action
+ENDIF_POS:
+
+
+
+         ___
+<a id="p18.3.10">18.3.10</a>  NEQ
+
+ACTION NUMBER:          9
+ACTION PARAMETERS:      P1_B - 1st operand.
+                        P2_B - 2nd operand.
+
+DESCRIPTION
+
+    Compares P1_B with P2_B, clearing ITB_TEST if equal, otherwise  setting
+    it.  Either operand may be a register or a constant.
+
+EXAMPLE:
+
+        .BYTE   NEQ_ACTION      ; Set ITB_TEST if tabreg0 not equal to 2
+        .BYTE   $E0,2
+IF_POS:
+        .BYTE   IF_ACTION       ; Branch if ITB_TEST set
+        .BYTE   ENDIF_POS-IF_POS
+                                ; Offset for potential branch
+        .BYTE   35              ; User-defined action
+ENDIF_POS:
+
+
+
+         ______
+<a id="p18.3.11">18.3.11</a>  ASSIGN
+
+ACTION NUMBER:          10
+ACTION PARAMETERS:      P1_B - Register to be assigned to.
+                        P2_B - Operand to assign to the register.
+
+DESCRIPTION
+
+    Assigns P2_B, which may be a  table-register  or  a  constant,  to  the
+    table-register specified by P1_B.
+
+EXAMPLE:
+
+        Assign the value in tabreg4 to tabreg1.
+
+        .BYTE   ASSIGN_ACTION
+        .BYTE   $E1,$E4
+
+
+
+         ____
+<a id="p18.3.12">18.3.12</a>  ADD2
+
+ACTION NUMBER:          11
+ACTION PARAMETERS:      P1_B - Table-register operand to be added to.
+                        P2_B - Operand to be added.
+
+DESCRIPTION
+
+    Adds P2_B, which  may  be  a  table-register  or  a  constant,  to  the
+    table-register specified by P1_B.
+
+EXAMPLE:
+
+    Add 6 to tabreg5.
+
+        .BYTE   ADD2_ACTION
+        .BYTE   $E5,6
+
+
+
+         ____
+<a id="p18.3.13">18.3.13</a>  SUB2
+
+ACTION NUMBER:          12
+ACTION PARAMETERS:      P1_B    - Table-register operand from which to
+                                  subtract.
+                        P2_B    - Operand to be subtracted.
+
+DESCRIPTION
+
+    Subtracts P2_B, which may be a table-register or a constant,  from  the
+    table-register specified by P1_B.
+
+EXAMPLE:
+
+    Subtract 6 from tabreg5.
+
+        .BYTE   SUB2_ACTION
+        .BYTE   $E5,6
+
+
+
+         ____
+<a id="p18.3.14">18.3.14</a>  PUSH
+
+ACTION NUMBER:          13
+ACTION PARAMETERS:      P1_W    - Offset to address in table to
+                                  be pushed onto the table stack.
+
+DESCRIPTION
+
+    Pushes an address onto the table-stack.  The address pushed  is  offset
+    from TABLE_BASE by the word in P1_W.
+
+EXAMPLE:
+
+    Push the address of LABEL1 onto the table-stack.
+
+        .BYTE   PUSH_ACTION
+        .WORD   LABEL1-TABLE_BASE
+          .
+          .
+LABEL1:
+
+
+
+         _______
+<a id="p18.3.15">18.3.15</a>  CALL_MC
+
+ACTION NUMBER:          14
+ACTION PARAMETERS:      P1_W    - Address of machine-code subroutine
+                                  to be called.
+
+DESCRIPTION
+
+    Calls the machine-code subroutine at the address in P1_W.  The value in
+    tabreg0 ($E0) is passed to the subroutine in the machine-register B.
+
+EXAMPLE:
+
+    Call MC_ROUTINE passing 6.
+
+        .BYTE   ASSIGN_ACTION
+        .BYTE   $E0,6                   ; Assign 6 to tabreg0
+        .BYTE   CALL_MC_ACTION
+        .WORD   MC_ROUTINE
+
+
+
+         ___
+<a id="p18.3.16">18.3.16</a>  POP
+
+ACTION NUMBER:          15
+ACTION PARAMETERS:      None.
+
+DESCRIPTION
+
+    Pops a word from the table-stack by incrementing ITA_SPTR  by  2.   The
+    value popped is then lost.
+
+
+
+         ___
+<a id="p18.3.17">18.3.17</a>  JSR
+
+ACTION NUMBER:          16
+ACTION PARAMETERS:      P1_W    - Offset from TABLE_BASE to
+                                  the table-subroutine.
+
+DESCRIPTION
+
+    Calls a table-subroutine with no parameters.  The  table-subroutine  is
+    offset from the base of the table by P1_W.
+
+EXAMPLE:
+        .BYTE   JSR_ACTION
+        .WORD   SUBRTN1-TABLE_BASE
+          .
+          .
+SUBRTN1:
+          .
+          .
+        .BYTE   RETURN_ACTION
+
+
+
+         _____
+<a id="p18.3.18">18.3.18</a>  RANGE
+
+ACTION NUMBER:          17
+ACTION PARAMETERS:      P1_B - Value to be tested.
+                        P2_B - Lower limit.
+                        P3_B - Upper limit.
+
+DESCRIPTION
+
+    Checks that the value in P1_B is in  the  inclusive  range  with  lower
+    limit  in  P2_B  and  upper  limit in P3_B.  Any of these values may be
+    table-registers or constants.  If the value is  in  range  ITB_TEST  is
+    set, otherwise it is cleared.
+
+EXAMPLE:
+
+    Do user-defined action 35 only if tabreg1 is in ASCII range '0' to '9'.
+
+        .BYTE   RANGE_ACTION
+        .BYTE   $E1,A/0/,A/9/   ; ('0' &lt;= tabreg1 &lt;= '9')?
+B1:     .BYTE   IF_ACTION       ; Test ITB_TEST and branch if false
+        .BYTE   ENDIF_POS-B1    ; Offset for branch
+        .BYTE   35              ; User-defined action
+ENDIF_POS:
+
+
+
+         _____
+<a id="p18.3.19">18.3.19</a>  LOADB
+
+ACTION NUMBER:          18
+ACTION PARAMETERS:      P1_B - Table-register to be loaded.
+                        P2_W - Address of byte to be stored.
+
+DESCRIPTION
+
+    Load the table-register specified by P1_B, with the byte at the address
+    in P2_W.
+
+EXAMPLE:
+
+    Load tabreg1 with the byte at ITB_TEST.
+
+        .BYTE   LOADB_ACTION
+        .BYTE   $E1
+        .WORD   ITB_TEST
+
+
+
+         ______
+<a id="p18.3.20">18.3.20</a>  STOREB
+
+ACTION NUMBER:          19
+ACTION PARAMETERS:      P1_B - Operand to be stored.
+                        P2_W - Address to be loaded.
+
+DESCRIPTION
+
+    Store the byte in  P1_B  at  the  address  in  P2_W.   P1_B  may  be  a
+    table-register or a constant.
+
+EXAMPLE:
+
+    Store the byte in tabreg1 in the variable USER_FLAG.
+
+        .BYTE   STOREB_ACTION
+        .BYTE   $E1
+        .WORD   USER_FLAG
+
+
+
+         ___
+<a id="p18.3.21">18.3.21</a>  END
+
+ACTION NUMBER:          20
+ACTION PARAMETERS:      None.
+
+DESCRIPTION
+
+    Terminates the interpretation and causes the OS service routine IT$STRT
+    to return with the Z-flag set (useful for signaling a non-error exit).
+
+
+
+      _______________
+<a id="p18.4">18.4</a>  SYSTEM SERVICES
+
+The OS service routines for this  chapter  include  the  table  interpreter
+itself,  as well as several that are useful when writing a subroutine for a
+user-defined action.  This section should be read after  the  rest  of  the
+chapter.
+
+
+
+        _______
+<a id="p18.4.1">18.4.1</a>  IT$GVAL
+
+VECTOR NUMBER:          066
+INPUT PARAMETERS:       B register - Offset to ACTION PARAMETER.
+OUTPUT VALUES:          B register - Value of ACTION PARAMETER.
+REGISTERS PRESERVED:    A, X
+
+DESCRIPTION
+
+    Get the value of the ACTION PARAMETER  byte  offset  by  B  bytes  from
+    ITA_PCNT,  into B.  If the value specifies a table-register (i.e.  is in
+    range $E0 to $FF) get the value in that register into B instead.
+
+EXAMPLE:
+
+    Get value offset by 3 bytes from ITA_PCNT into B.
+
+        LDA     B,#3
+        OS      IT$GVAL
+
+
+
+        _______
+<a id="p18.4.2">18.4.2</a>  IT$RADD
+
+VECTOR NUMBER:          067
+INPUT PARAMETERS:       B register - Offset to ACTION PARAMETER specifying
+                                     a register.
+OUTPUT VALUES:          X register - Address of the table-register.
+REGISTERS PRESERVED:    A,B
+
+DESCRIPTION
+
+    Sets X to point to the table-register specified B bytes after ITA_PCNT.
+
+EXAMPLE:
+
+    Get address of table-register 2 bytes after ITA_PCNT.
+
+        LDA     B,#2
+        OS      IT$RADD
+
+
+
+        _______
+<a id="p18.4.3">18.4.3</a>  IT$TADD
+
+VECTOR NUMBER:          069
+INPUT PARAMETERS:       B register - Offset to ACTION PARAMETER.
+OUTPUT VALUES:          D register - Word that is offset by B from
+                                     ITA_PCNT.
+REGISTERS PRESERVED:    X.
+
+DESCRIPTION
+
+    Sets D to word value at B bytes after ITA_PCNT.  This routine is useful
+    in  OS  since  the  table-compiler  compiles all labels in a table as a
+    word-offset from the beginning of the table, for relocatability.   This
+    value  must  then  be  added to the address of the base of the table to
+    obtain the address of the label.
+
+EXAMPLE:
+
+    Get the address of the action specified 4 bytes after the current
+    ACTION NUMBER.
+
+        LDA     B,#4
+        OS      IT$TADD
+        ADDD    ITA_BASE:
+
+
+
+        _______
+<a id="p18.4.4">18.4.4</a>  IT$STRT
+
+VECTOR NUMBER:          068
+INPUT PARAMETERS:       D register - Base address of the table to be
+                                     interpreted.
+OUTPUT VALUES:          B register - Clear if END action performed last.
+                        Z-flag     - Set if END action performed last.
+
+DESCRIPTION
+
+    This is the table interpreter itself, interpreting the table  of  bytes
+    starting at D.  The first 2 bytes at D are the offset from the start of
+    the  table  to  the  array  of  pointers  to  the  user-defined  action
+    subroutines.   The  absolute address of this array is saved in ITA_UVC.
+    The table program-counter ITA_PCNT points to  the  current  byte  being
+    interpreted,  initially  pointing  to  the third byte.  On entry to the
+    subroutine for a user-defined action, X  also  contains  the  value  in
+    ITA_PCNT.   The  table  is interpreted until the END action (with value
+    20) is fetched, upon which IT$STRT returns with the B register  cleared
+    and the Z-flag set.
+    An alternative method for ending interpretation, for exceptional  cases
+    such  as  error  handling,  is  to  perform  a  user-defined  action as
+    illustrated by the example below.
+
+    _______
+    WARNING
+    IT$STRT must not be called recursively (i.e.  by any  subroutine  for  a
+    user-defined action).
+
+EXAMPLE:
+
+    Interpret the table at TABLE_BASE. Note that although this is a
+    trivial use of the table interpreter, it usefully illustrates the
+    structure of a self-contained table.
+    Errors are handled by performing the user-defined action
+    ERROR_USER_ACTION, value 21, which terminates interpretation with
+    the non-zero error code in B and Z-flag clear.
+
+; The user-defined ACTION NUMBERS:-
+#define ERROR_USER_ACTION 21    ; Action subroutine is ERROR_ACT
+#define ISDIGIT_USER_ACTION 22  ; Action subroutine is ISDIGIT_ACT
+
+; The Assembler Code to call the interpreter:-
+CALL_INTERPRETER:
+        LDD     #TABLE_BASE
+        OS      IT$STRT
+        BNE     ERROR           ; IT$STRT returns Z-flag cleared when
+                                ;   ERROR_USER_ACTION performed, with
+                                ;   the error code in B
+        RTS
+
+; The table to be interpreted:-
+TABLE_BASE::
+        .WORD   JUMP_ADDRS-TABLE_BASE   ; Offset to array of pointers
+                                        ;   to subroutines for the user-
+                                        ;   defined actions
+        .BYTE   ISDIGIT_USER_ACTION     ; Is value in tabreg1 a digit?
+        .BYTE   $E1                     ;   (sets ITB_TEST if it is)
+IFNPOS: .BYTE   IF_NOT_ACTION           ; Predefined action : do action
+                                        ;   ERROR_USER_ACTION if
+                                        ;   ITB_TEST is 0 (false)
+        .BYTE   ENDIFN-IFNPOS           ; Signed offset to ENDIFN
+        .BYTE   ERROR_USER_ACTION       ; End interpretation with
+        .BYTE   1                       ;   error-code 1 in B and
+                                        ;   Z-flag clear
+ENDIFN:
+        .BYTE   END_ACTION              ; Predefined action : end the
+                                        ;   interpretation with B clear
+                                        ;   and Z-flag set
+
+
+; The array of pointers to subroutines for the 2 user-defined actions:-
+JUMP_ADDRS:
+        .WORD   ERROR_ACT       ; For ACTION NUMBER 21
+        .WORD   ISDIGIT_ACT     ; For ACTION NUMBER 22
+
+; Subroutine for the user-defined action to end table-interpretation for
+; error-handling, with an error code passed as a parameter-byte to the
+; action:-
+ERROR_ACT:
+        LDA     B,1,X           ; Get the 1st parameter-byte into B
+                                ;   setting Z-flag if B=0, else reset it
+        PULX                    ; Pull the return address (points back into
+                                ;   the interpreter code, IT$STRT)
+        RTS                     ; Return to the caller of IT$STRT with B
+                                ;   and Z-flag conditioned appropriately
+
+; Subroutine for the user-defined action to test whether the parameter-byte
+; is an ASCII coded digit. Sets ITB_TEST if a digit:-
+ISDIGIT_ACT:
+        LDA     B,#1
+        STA     B,ITB_TEST      ; Assume it is a digit
+        OS      IT$GVAL         ; Get the parameter-byte into B
+        CMP     B,#^A/0/        ; Set carry if less than '0'
+        BCS     1$
+        ADD     B,#$C6          ; Add (-'9'-1) setting carry if not a digit
+        BCC     2$
+1$:     DEC     ITB_TEST        ; Not a digit
+2$:     LDA     B,#2            ; Add 2 to ITA_PCNT, stepping over the
+                                ;   ACTION NUMBER and the parameter-byte
+        RTS
+
+
+
+      ______________
+<a id="p18.5">18.5</a>  VARIABLE USAGE
+
+Described below are the variables used  by  the  table  interpreter  system
+services.
+
+ITA_UVC  - Pointer to the array of addresses of the subroutines for the
+ ($234B)    user-defined actions. This variable is set up on entry to the
+            interpreter.
+
+ITT_REGS - Block of 32 8-bit table-registers. Used extensively by the
+ ($234D)    predefined actions. See section <a href="#p18.2">18.2</a>.
+
+ITT_STAK - Table interpreter's stack used for table-subroutine calls and
+ ($236D)    for saving temporary data. See the predefined actions CALL,
+            JSR, PUSH and POP.
+
+ITA_SPTR - Table interpreter's stack-pointer pointing into the table
+  ($DB)     interpreter's stack, ITT_STAK. The stack grows downwards in
+            memory and the stack-pointer points to the last word pushed
+            (i.e. ITA_SPTR is decremented before a word is pushed).
+
+ITA_PCNT - Table interpreter's program-counter. ITA_PCNT points to the
+  ($D7)     ACTION NUMBER currently being interpreted. On entry to a
+            user-defined action subroutine, the X register contains this
+            same value.
+
+ITA_BASE - Pointer to the base of the table being interpreted. This is the
+  ($D9)     same address passed as a parameter to IT$STRT, the interpreter
+            itself.
+
+ITB_TEST - Flag set when a test is true. User-defined actions may use
+  ($DD)     ITB_TEST, but note that it is affected by the predefined
+            actions EQL, NEQ, RANGE and it is tested by the actions IF and
+            IF_NOT.
+
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech17.htm">Ch. 17</a></li>
+<li class=navactive>Ch. 18</li>
+<li><a href="tech19.htm">Ch. 19</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

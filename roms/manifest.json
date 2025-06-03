@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "roms": [
+    {
+      "id": "space-invaders",
+      "label": "Space Invaders",
+      "platforms": [
+        "midway-8080-arcade"
+      ],
+      "files": [
+        {
+          "path": "invaders/invaders1.h.bin",
+          "offset": "0x0000"
+        },
+        {
+          "path": "invaders/invaders2.g.bin",
+          "offset": "0x0800"
+        },
+        {
+          "path": "invaders/invaders3.f.bin",
+          "offset": "0x1000"
+        },
+        {
+          "path": "invaders/invaders4.e.bin",
+          "offset": "0x1800"
+        }
+      ]
+    },
+    {
+      "id": "atari2600-space-invaders",
+      "label": "Atari 2600 Space Invaders",
+      "platforms": [
+        "atari2600"
+      ],
+      "files": [
+        {
+          "path": "atari 2600/Space Invaders.bin",
+          "offset": "0x0000",
+          "target": "cartridge"
+        }
+      ]
+    },
+    {
+      "id": "atari2600-pitfall",
+      "label": "Atari 2600 Pitfall",
+      "platforms": [
+        "atari2600"
+      ],
+      "files": [
+        {
+          "path": "atari 2600/Pitfall.bin",
+          "offset": "0x0000",
+          "target": "cartridge"
+        }
+      ]
+    },
+    {
+      "id": "atari2600-stargate",
+      "label": "Atari 2600 Stargate",
+      "platforms": [
+        "atari2600"
+      ],
+      "files": [
+        {
+          "path": "atari 2600/Stargate.bin",
+          "offset": "0x0000",
+          "target": "cartridge",
+          "mapper": "F8SC"
+        }
+      ]
+    },
+    {
+      "id": "psion-organiser-ii-cm-2.6",
+      "label": "Psion Organiser II CM OS 2.6",
+      "platforms": [
+        "psion-organiser-ii-xp"
+      ],
+      "files": [
+        {
+          "path": "psion-organiser-ii/26-cm.rom",
+          "offset": "0x8000"
+        }
+      ]
+    },
+    {
+      "id": "psion-organiser-ii-xp-2.6",
+      "label": "Psion Organiser II XP OS 2.6",
+      "platforms": [
+        "psion-organiser-ii-xp"
+      ],
+      "files": [
+        {
+          "path": "psion-organiser-ii/26-xp.rom",
+          "offset": "0x8000"
+        }
+      ]
+    },
+    {
+      "id": "psion-organiser-ii-xp-3.1",
+      "label": "Psion Organiser II XP OS 3.1",
+      "platforms": [
+        "psion-organiser-ii-xp"
+      ],
+      "files": [
+        {
+          "path": "psion-organiser-ii/31-xp.rom",
+          "offset": "0x8000"
+        }
+      ]
+    },
+    {
+      "id": "psion-organiser-ii-lz-4.6",
+      "label": "Psion Organiser II LZ OS 4.6",
+      "platforms": [
+        "psion-organiser-ii"
+      ],
+      "files": [
+        {
+          "path": "psion-organiser-ii/46-lz.rom",
+          "offset": "0x0000",
+          "target": "rom"
+        }
+      ]
+    },
+    {
+      "id": "sinclair-zx80-4k-basic",
+      "label": "Sinclair ZX80 4K BASIC ROM",
+      "platforms": [
+        "sinclair-zx80"
+      ],
+      "files": [
+        {
+          "path": "sinclair-zx80/zx80.rom",
+          "offset": "0x0000"
+        }
+      ]
+    },
+    {
+      "id": "commodore64-64c-basic-kernal",
+      "label": "Commodore 64C BASIC + KERNAL 251913-01",
+      "platforms": [
+        "commodore64"
+      ],
+      "files": [
+        {
+          "path": "commodore64/64c.251913-01.bin",
+          "offset": "0x0000",
+          "target": "system"
+        }
+      ]
+    },
+    {
+      "id": "commodore64-basic-901227-02-kernal",
+      "label": "Commodore 64 BASIC + KERNAL 901227-02",
+      "platforms": [
+        "commodore64"
+      ],
+      "files": [
+        {
+          "path": "commodore64/64c.251913-01.bin",
+          "offset": "0x0000",
+          "target": "basic"
+        },
+        {
+          "path": "commodore64/kernal.901227-02.bin",
+          "offset": "0x0000",
+          "target": "kernal"
+        }
+      ]
+    }
+  ]
+}

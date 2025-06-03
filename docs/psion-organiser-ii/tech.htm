@@ -1,0 +1,747 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li>Technical Reference Manual</li>
+</ol>
+
+<PRE>
+                    ___________________________________
+                    PSION ORGANISER II TECHNICAL MANUAL
+
+
+
+
+            (c) Copyright Psion Ltd 1986.  All rights reserved.
+            This  Technical Manual and the programs referred to
+            therein are copyrighted works of Psion Ltd, London,
+            England.    Reproduction   in  whole  or  in  part,
+            including  utilization  in  machines   capable   of
+            reproduction  or retrieval, without express written
+            permission of Psion Ltd,  is  prohibited.   Reverse
+            engineering is also prohibited.
+
+
+            Psion  Ltd  makes  no   representation   that   the
+            interconnections  of  its  products  in  the manner
+            described herein will not infringe on  existing  or
+            future  patent  rights,  nor  do  the  description
+            contained herein imply the granting of  license  to
+            make,   use,   or  sell  equipment  constructed  in
+            accordance with these descriptions.
+
+            The information in  this  document  is  subject  to
+            change without notice.
+
+
+                                   CONTENT
+
+
+
+<a href="tech01.htm">CHAPTER 1       INTRODUCTION</a>
+
+
+<a href="tech02.htm">CHAPTER 2       SYSTEM BOARD</a>
+
+        <a href="tech02.htm#p2.1">2.1     GENERAL</a>
+        <a href="tech02.htm#p2.2">2.2     CIRCUIT DESCRIPTION</a>
+        <a href="tech02.htm#p2.3">2.3     MICROPROCESSOR</a>
+        <a href="tech02.htm#p2.3.1">2.3.1     OPERATING MODES</a>
+        <a href="tech02.htm#p2.3.2">2.3.2     MEMORY_MAP</a>
+        <a href="tech02.htm#p2.3.3">2.3.3     PORT 5</a>
+        <a href="tech02.htm#p2.3.4">2.3.4     PORTS 2 AND 6</a>
+        <a href="tech02.htm#p2.3">2.4     MEMORY DEVICES AND OPTIONS</a>
+        <a href="tech02.htm#p2.4.1">2.4.1     PROM</a>
+        <a href="tech02.htm#p2.4.2">2.4.2     RAM</a>
+        <a href="tech02.htm#p2.4.3">2.4.3     MEMORY DECODING AND LINKS</a>
+        <a href="tech02.htm#p2.4.4">2.4.4     OPTIONS FOR CM, XP AND LA</a>
+        <a href="tech02.htm#p2.5">2.5     MEMORY MAPPED I/O</a>
+        <a href="tech02.htm#p2.5.1">2.5.1     ADDRESS ASSIGNMENT</a>
+        <a href="tech02.htm#p2.5.2">2.5.2     PULSE SIGNAL</a>
+        <a href="tech02.htm#p2.5.3">2.5.3     ALARM SIGNAL</a>
+        <a href="tech02.htm#p2.5.4">2.5.4     NMI</a>
+        <a href="tech02.htm#p2.5.5">2.5.5     COUNTER</a>
+        <a href="tech02.htm#p2.5.6">2.5.6     SWITCH OFF</a>
+        <a href="tech02.htm#p2.6">2.6     CLOCK AND KEYBOARD</a>
+        <a href="tech02.htm#p2.6.1">2.6.1     DIVIDER CHAIN</a>
+        <a href="tech02.htm#p2.6.2">2.6.2     KEEPING TIME</a>
+        <a href="tech02.htm#p2.6.3">2.6.3     THE KEYBOARD</a>
+        <a href="tech02.htm#p2.7">2.7     LCD DISPLAY</a>
+
+
+<a href="tech03.htm">CHAPTER 3       POWER SUPPLY BOARD</a>
+
+        <a href="tech03.htm#p3.1">3.1     GENERAL</a>
+        <a href="tech03.htm#p3.2">3.2     POWER SUPPLY REQUIREMENTS</a>
+        <a href="tech03.htm#p3.3">3.3     SUPPLY RAILS</a>
+        <a href="tech03.htm#p3.4">3.4     STANDBY REGULATOR</a>
+        <a href="tech03.htm#p3.5">3.5     VCC1/VCC2 REGULATOR</a>
+        <a href="tech03.htm#p3.6">3.6     SVCC REGULATOR</a>
+        <a href="tech03.htm#p3.7">3.7     V_LCD</a>
+        <a href="tech03.htm#p3.8">3.8     VOLTAGE PUMP</a>
+        <a href="tech03.htm#p3.9">3.9     SVPP REGULATOR</a>
+        <a href="tech03.htm#p3.10">3.10    REMOTE SWITCH ON</a>
+        <a href="tech03.htm#p3.11">3.11    BUZZER</a>
+
+
+<a href="tech04.htm">CHAPTER 4       TOP SLOT BOARD</a>
+
+        <a href="tech04.htm#p4.1">4.1     GENERAL</a>
+        <a href="tech04.htm#p4.2">4.2     SLOT CONTROL BUS</a>
+        <a href="tech04.htm#p4.3">4.3     POWER RAILS</a>
+        <a href="tech04.htm#p4.4">4.4     DATA BUS (PROCESSOR PORT 2)</a>
+        <a href="tech04.htm#p4.5">4.5     CONTROL LINES (PROCESSOR PORT 6)</a>
+        <a href="tech04.htm#p4.6">4.6     AC_B INPUT</a>
+
+
+<a href="tech05.htm">CHAPTER 5       OPERATING SYSTEM</a>
+
+        <a href="tech05.htm#p5.1">5.1     SYSTEM INTERFACE</a>
+        <a href="tech05.htm#p5.1.1">5.1.1     CALLING SYSTEM SERVICES</a>
+        <a href="tech05.htm#p5.1.2">5.1.2     REGISTER PRESERVATION</a>
+        <a href="tech05.htm#p5.1.3">5.1.3     ERROR HANDLING</a>
+        <a href="tech05.htm#p5.1.4">5.1.4     THE OS MACRO</a>
+        <a href="tech05.htm#p5.1.5">5.1.5     MEMORY USAGE</a>
+        <a href="tech05.htm#p5.1.6">5.1.6     SYSTEM CONSTANTS AND MACROS</a>
+        <a href="tech05.htm#p5.1.7">5.1.7     ERROR NUMBERS</a>
+        <a href="tech05.htm#p5.1.8">5.1.8     VECTOR NUMBERS</a>
+        <a href="tech05.htm#p5.2">5.2     SYSTEM VERSIONS</a>
+        <a href="tech05.htm#p5.2.1">5.2.1     CM/OS</a>
+        <a href="tech05.htm#p5.2.2">5.2.2     XP/OS AND XP2/OS</a>
+        <a href="tech05.htm#p5.2.3">5.2.3     LA/OS AND LA2/OS</a>
+        <a href="tech05.htm#p5.3">5.3     POWER UP</a>
+        <a href="tech05.htm#p5.3.1">5.3.1     COLD START</a>
+        <a href="tech05.htm#p5.3.2">5.3.2     WARM START</a>
+        <a href="tech05.htm#p5.4">5.4     POWER DOWN</a>
+        <a href="tech05.htm#p5.5">5.5     INTERRUPTS</a>
+        <a href="tech05.htm#p5.5.1">5.5.1     NON-MASKABLE INTERRUPTS</a>
+        <a href="tech05.htm#p5.5.2">5.5.2     TIMER 1 COMPARE INTERRUPT</a>
+        <a href="tech05.htm#p5.5.3">5.5.3     SOFTWARE INTERRUPT</a>
+        <a href="tech05.htm#p5.5.4">5.5.4     TRAP INTERRUPT</a>
+        <a href="tech05.htm#p5.6">5.6     VECTORS</a>
+        <a href="tech05.htm#p5.6.1">5.6.1     HARDWARE VECTORS</a>
+        <a href="tech05.htm#p5.6.2">5.6.2     SOFTWARE VECTORS</a>
+        <a href="tech05.htm#p5.7">5.7     RELEASE NOTES</a>
+        <a href="tech05.htm#p5.7.1">5.7.1     VERSION 2.3 AND EARLIER</a>
+        <a href="tech05.htm#p5.7.2">5.7.2     RELEASE 2.4</a>
+        <a href="tech05.htm#p5.7.3">5.7.3     RELEASE 2.6</a>
+        <a href="tech05.htm#p5.7.4">5.7.4     RELEASE 3.1</a>
+        <a href="tech05.htm#p5.8">5.8     SYSTEM SERVICES</a>
+        <a href="tech05.htm#p5.8.1">5.8.1     BT$NMDN</a>
+        <a href="tech05.htm#p5.8.2">5.8.2     BT$NMEN</a>
+        <a href="tech05.htm#p5.8.3">5.8.3     BT$NOF</a>
+        <a href="tech05.htm#p5.8.4">5.8.4     BT$NON</a>
+        <a href="tech05.htm#p5.8.5">5.8.5     BT$PPRG</a>
+        <a href="tech05.htm#p5.8.6">5.8.6     BT$SWOF</a>
+
+
+<a href="tech06.htm">CHAPTER 6       MEMORY USAGE</a>
+
+        <a href="tech06.htm#p6.1">6.1     INTRODUCTION</a>
+        <a href="tech06.htm#p6.2">6.2     MEMORY MAP</a>
+        <a href="tech06.htm#p6.3">6.3     RAM MEMORY</a>
+        <a href="tech06.htm#p6.3.1">6.3.1     ZERO PAGE</a>
+        <a href="tech06.htm#p6.3.2">6.3.2     NON-ZERO PAGE</a>
+        <a href="tech06.htm#p6.4">6.4     NON-RAM MEMORY MAP</a>
+        <a href="tech06.htm#p6.4.1">6.4.1     INTERNAL REGISTERS</a>
+        <a href="tech06.htm#p6.4.2">6.4.2     MEMORY MAPPED I/O</a>
+        <a href="tech06.htm#p6.5">6.5     MEMORY USAGE</a>
+        <a href="tech06.htm#p6.5.1">6.5.1     OPERATING SYSTEM</a>
+        <a href="tech06.htm#p6.5.1.1">6.5.1.1     NAMING CONVENTION</a>
+        <a href="tech06.htm#p6.5.1.2">6.5.1.2     ZERO PAGE</a>
+        <a href="tech06.htm#p6.5.1.3">6.5.1.3     NON-ZERO PAGE</a>
+        <a href="tech06.htm#p6.5.1.4">6.5.1.4     BUFFERS</a>
+        <a href="tech06.htm#p6.5.1.5">6.5.1.5     TIMING</a>
+        <a href="tech06.htm#p6.5.1.6">6.5.1.6     I/O DRIVER SPACE</a>
+        <a href="tech06.htm#p6.5.1.7">6.5.1.7     COLD BOOT</a>
+        <a href="tech06.htm#p6.5.2">6.5.2     FREE MEMORY</a>
+        <a href="tech06.htm#p6.5.2.1">6.5.2.1     ALLOCATOR</a>
+        <a href="tech06.htm#p6.5.2.2">6.5.2.2     LANGUAGE</a>
+        <a href="tech06.htm#p6.5.2.3">6.5.2.3     PERMANENT MEMORY</a>
+        <a href="tech06.htm#p6.6">6.6     SYSTEM SERVICES</a>
+        <a href="tech06.htm#p6.6.1">6.6.1     AL$FREE</a>
+        <a href="tech06.htm#p6.6.2">6.6.2     AL$GRAB</a>
+        <a href="tech06.htm#p6.6.3">6.6.3     AL$GROW</a>
+        <a href="tech06.htm#p6.6.4">6.6.4     AL$REPL</a>
+        <a href="tech06.htm#p6.6.5">6.6.5     AL$SHNK</a>
+        <a href="tech06.htm#p6.6.6">6.6.6     AL$SIZE</a>
+        <a href="tech06.htm#p6.6.7">6.6.7     AL$ZERO</a>
+
+
+<a href="tech07.htm">CHAPTER 7       KEYBOARD</a>
+
+        <a href="tech07.htm#p7.1">7.1     OPERATING THE KEYBOARD</a>
+        <a href="tech07.htm#p7.2">7.2     KEYBOARD SCANNING</a>
+        <a href="tech07.htm#p7.2.1">7.2.1     THE ON/CLEAR KEY</a>
+        <a href="tech07.htm#p7.2.2">7.2.2     THE KEY MATRIX</a>
+        <a href="tech07.htm#p7.2.3">7.2.3     KEY SCANNING</a>
+        <a href="tech07.htm#p7.3">7.3     KEYBOARD INTERRUPTS</a>
+        <a href="tech07.htm#p7.3.1">7.3.1     INITIALISING</a>
+        <a href="tech07.htm#p7.3.2">7.3.2     POLLING</a>
+        <a href="tech07.htm#p7.3.3">7.3.3     TRANSLATING</a>
+        <a href="tech07.htm#p7.3.4">7.3.4     BUFFERING</a>
+        <a href="tech07.htm#p7.3.5">7.3.5     KEY CLICK</a>
+        <a href="tech07.htm#p7.3.6">7.3.6     ALARM CHECKING</a>
+        <a href="tech07.htm#p7.3.7">7.3.7     FRAME-COUNTER</a>
+        <a href="tech07.htm#p7.3.8">7.3.8     DISPLAY TIMING</a>
+        <a href="tech07.htm#p7.4">7.4     TESTING FOR KEYS</a>
+        <a href="tech07.htm#p7.4.1">7.4.1     KEYTEST AND KEYGET</a>
+        <a href="tech07.htm#p7.4.2">7.4.2     PACK SWITCH OFF</a>
+        <a href="tech07.htm#p7.4.3">7.4.3     LOW BATTERY TEST</a>
+        <a href="tech07.htm#p7.4.4">7.4.4     MACHINE SWITCH OFF</a>
+        <a href="tech07.htm#p7.5">7.5     KEYBOARD VECTORS AND VARIABLES</a>
+        <a href="tech07.htm#p7.5.1">7.5.1     KBB_STAT</a>
+        <a href="tech07.htm#p7.5.2">7.5.2     BTA_POLL</a>
+        <a href="tech07.htm#p7.5.3">7.5.3     BTA_TRAN</a>
+        <a href="tech07.htm#p7.5.4">7.5.4     BTA_TABL</a>
+        <a href="tech07.htm#p7.5.5">7.5.5     KBB_SHFK</a>
+        <a href="tech07.htm#p7.5.6">7.5.6     KBB_CAPK</a>
+        <a href="tech07.htm#p7.5.7">7.5.7     KBB_NUMK</a>
+        <a href="tech07.htm#p7.5.8">7.5.8     KBW_TDEL</a>
+        <a href="tech07.htm#p7.5.9">7.5.9     KBB_DLAY</a>
+        <a href="tech07.htm#p7.5.10">7.5.10    KBB_REPT</a>
+        <a href="tech07.htm#p7.5.11">7.5.11    KBB_CLIK</a>
+        <a href="tech07.htm#p7.5.12">7.5.12    KBB_PKOF</a>
+        <a href="tech07.htm#p7.6">7.6     SYSTEM SERVICES</a>
+        <a href="tech07.htm#p7.6.1">7.6.1     KB$INIT</a>
+        <a href="tech07.htm#p7.6.2">7.6.2     KB$TEST</a>
+        <a href="tech07.htm#p7.6.3">7.6.3     KB$GETK</a>
+        <a href="tech07.htm#p7.6.4">7.6.4     KB$BREK</a>
+        <a href="tech07.htm#p7.6.5">7.6.5     KB$FLSH</a>
+        <a href="tech07.htm#p7.6.6">7.6.6     KB$UGET</a>
+        <a href="tech07.htm#p7.6.7">7.6.7     KB$STAT</a>
+        <a href="tech07.htm#p7.7">7.7     EXAMPLE</a>
+        <a href="tech07.htm#p7.7.1">7.7.1     FULL ASCII SET FROM KEYBOARD</a>
+
+
+<a href="tech08.htm">CHAPTER 8       DISPLAY</a>
+
+        <a href="tech08.htm#p8.1">8.1     HARDWARE</a>
+        <a href="tech08.htm#p8.2">8.2     SOFTWARE</a>
+        <a href="tech08.htm#p8.2.1">8.2.1     EXAMPLE</a>
+        <a href="tech08.htm#p8.2.2">8.2.2     VARIABLE USAGE</a>
+        <a href="tech08.htm#p8.3">8.3     SYSTEM SERVICES</a>
+        <a href="tech08.htm#p8.3.1">8.3.1     DP$STAT</a>
+        <a href="tech08.htm#p8.3.2">8.3.2     DP$VIEW</a>
+        <a href="tech08.htm#p8.3.3">8.3.3     DP$PRNT</a>
+        <a href="tech08.htm#p8.3.4">8.3.4     DP$EMIT</a>
+        <a href="tech08.htm#p8.3.5">8.3.5     DP$SAVE</a>
+        <a href="tech08.htm#p8.3.6">8.3.6     DP$REST</a>
+        <a href="tech08.htm#p8.3.7">8.3.7     DP$WRDY</a>
+
+
+<a href="tech09.htm">CHAPTER 9       DATAPACKS</a>
+
+        <a href="tech09.htm#p9.1">9.1     NAMING CONVENTIONS</a>
+        <a href="tech09.htm#p9.2">9.2     HARDWARE</a>
+        <a href="tech09.htm#p9.2.1">9.2.1     EPROM (Eraseable Programmable Read Only Memory)  9-2</a>
+        <a href="tech09.htm#p9.2.1.1">9.2.1.1     Reading from EPROM</a>
+        <a href="tech09.htm#p9.2.1.2">9.2.1.2     Writing to EPROM</a>
+        <a href="tech09.htm#p9.2.2">9.2.2     COUNTER</a>
+        <a href="tech09.htm#p9.2.2.1">9.2.2.1     Linearly Addressed Datapacks</a>
+        <a href="tech09.htm#p9.2.2.2">9.2.2.2     Page Counted Datapacks</a>
+        <a href="tech09.htm#p9.2.2.3">9.2.2.3     Segmented Datapacks</a>
+        <a href="tech09.htm#p9.2.3">9.2.3     RAMPACKS</a>
+        <a href="tech09.htm#p9.2.4">9.2.4     CONNECTOR</a>
+        <a href="tech09.htm#p9.2.5">9.2.5     8K AND 16K DATAPACKS</a>
+        <a href="tech09.htm#p9.2.6">9.2.6     32K DATAPACKS</a>
+        <a href="tech09.htm#p9.2.7">9.2.7     64K DATAPACKS</a>
+        <a href="tech09.htm#p9.2.8">9.2.8     128K DATAPACKS</a>
+        <a href="tech09.htm#p9.2.9">9.2.9     32k, 64k AND 128k RAMPACKS</a>
+        <a href="tech09.htm#p9.3">9.3     ORGANISER INTERFACE</a>
+        <a href="tech09.htm#p9.3.1">9.3.1     ORGANISER SIDE SLOT CONNECTOR</a>
+        <a href="tech09.htm#p9.3.2">9.3.2     PROCESSOR INTERFACE</a>
+        <a href="tech09.htm#p9.3.2.1">9.3.2.1     Block Diagram of the Processor Interface</a>
+        <a href="tech09.htm#p9.3.2.2">9.3.2.2     Powering up the Slots</a>
+        <a href="tech09.htm#p9.3.2.3">9.3.2.3     Selecting a Datapack Slot</a>
+        <a href="tech09.htm#p9.3.2.4">9.3.2.4     Reading from a Datapack Slot</a>
+        <a href="tech09.htm#p9.3.2.5">9.3.2.5     Hardware ID Byte</a>
+        <a href="tech09.htm#p9.3.2.6">9.3.2.6     Setting the Program Voltage (SVPP)</a>
+        <a href="tech09.htm#p9.3.2.7">9.3.2.7     Writing to a Datapack</a>
+        <a href="tech09.htm#p9.3.3">9.3.3     EXAMPLE</a>
+        <a href="tech09.htm#p9.4">9.4     SOFTWARE</a>
+        <a href="tech09.htm#p9.4.1">9.4.1     SUMMARY OF OPERATING SYSTEM SERVICES</a>
+        <a href="tech09.htm#p9.4.2">9.4.2     VARIABLE USAGE</a>
+        <a href="tech09.htm#p9.4.3">9.4.3     PACK ID STRING</a>
+        <a href="tech09.htm#p9.4.4">9.4.4     DEVICE A: INTERNAL RAM PACK</a>
+        <a href="tech09.htm#p9.5">9.5     SYSTEM SERVICES</a>
+        <a href="tech09.htm#p9.5.1">9.5.1     PK$SETP</a>
+        <a href="tech09.htm#p9.5.2">9.5.2     PK$SAVE</a>
+        <a href="tech09.htm#p9.5.3">9.5.3     PK$READ</a>
+        <a href="tech09.htm#p9.5.4">9.5.4     PK$RBYT</a>
+        <a href="tech09.htm#p9.5.5">9.5.5     PK$RWRD</a>
+        <a href="tech09.htm#p9.5.6">9.5.6     PK$SKIP</a>
+        <a href="tech09.htm#p9.5.7">9.5.7     PK$QADD</a>
+        <a href="tech09.htm#p9.5.8">9.5.8     PK$SADD</a>
+        <a href="tech09.htm#p9.5.9">9.5.9     PK$PKOF</a>
+        <a href="tech09.htm#p9.5.10">9.5.10    PACK ERRORS</a>
+        <a href="tech09.htm#p9.5.11">9.5.11    EXAMPLE</a>
+
+
+<a href="tech10.htm">CHAPTER 10      SYSTEM TIMING</a>
+
+        <a href="tech10.htm#p10.1">10.1    REAL TIME CLOCK</a>
+        <a href="tech10.htm#p10.1.1">10.1.1    KEEPING TIME WITH NMI ON</a>
+        <a href="tech10.htm#p10.1.2">10.1.2    KEEPING TIME WITH NMI OFF</a>
+        <a href="tech10.htm#p10.1.3">10.1.3    AUTO-SWITCH-OFF TIME OUT</a>
+        <a href="tech10.htm#p10.2">10.2    KEYBOARD INTERRUPT TIMERS</a>
+        <a href="tech10.htm#p10.2.1">10.2.1    TMW_FRAM</a>
+        <a href="tech10.htm#p10.2.2">10.2.2    DPW_REDY</a>
+        <a href="tech10.htm#p10.3">10.3    SYSTEM SERVICES</a>
+        <a href="tech10.htm#p10.3.1">10.3.1    TM$DAYV</a>
+        <a href="tech10.htm#p10.3.2">10.3.2    TM$TGET</a>
+        <a href="tech10.htm#p10.3.3">10.3.3    TM$UPDT</a>
+        <a href="tech10.htm#p10.3.4">10.3.4    TM$WAIT</a>
+
+
+<a href="tech11.htm">CHAPTER 11      EXTERNAL INTERFACING</a>
+
+        <a href="tech11.htm#p11.1">11.1    SOFTWARE INTERFACING</a>
+        <a href="tech11.htm#p11.1.1">11.1.1    BOOTABLE PACK DESCRIPTION</a>
+        <a href="tech11.htm#p11.1.1.1">11.1.1.1    DATAPACK_CONTROL_BYTE</a>
+        <a href="tech11.htm#p11.1.1.2">11.1.1.2    DATAPACK_SIZE_BYTE</a>
+        <a href="tech11.htm#p11.1.1.3">11.1.1.3    DEVICE_OR_CODE_BYTE</a>
+        <a href="tech11.htm#p11.1.1.4">11.1.1.4    DEVICE_NUMBER_BYTE</a>
+        <a href="tech11.htm#p11.1.1.5">11.1.1.5    DEVICE_VERSION_BYTE</a>
+        <a href="tech11.htm#p11.1.1.6">11.1.1.6    DEVICE_PRIORITY_BYTE</a>
+        <a href="tech11.htm#p11.1.1.7">11.1.1.7    DEVICE_CODE_ADDRESS_WORD</a>
+        <a href="tech11.htm#p11.1.2">11.1.2    RELOCATABLE OBJECT CODE DESCRIPTION</a>
+        <a href="tech11.htm#p11.1.3">11.1.3    DEVICE CODE DESCRIPTION</a>
+        <a href="tech11.htm#p11.1.4">11.1.4    DEVICE VECTORS</a>
+        <a href="tech11.htm#p11.1.4.1">11.1.4.1    VECTOR SERVICE 0 - INSTALL VECTOR</a>
+        <a href="tech11.htm#p11.1.4.2">11.1.4.2    VECTOR SERVICE 1 - REMOVE VECTOR</a>
+        <a href="tech11.htm#p11.1.4.3">11.1.4.3    VECTOR SERVICE 2 - LANGUAGE VECTOR</a>
+        <a href="tech11.htm#p11.1.5">11.1.5    BOOTING</a>
+        <a href="tech11.htm#p11.2">11.2    HARDWARE INTERFACES</a>
+        <a href="tech11.htm#p11.2.1">11.2.1    BUS SIGNALS</a>
+        <a href="tech11.htm#p11.2.1.1">11.2.1.1    SSS_B</a>
+        <a href="tech11.htm#p11.2.1.2">11.2.1.2    SOE_B</a>
+        <a href="tech11.htm#p11.2.1.3">11.2.1.3    SMR</a>
+        <a href="tech11.htm#p11.2.1.4">11.2.1.4    SCLK</a>
+        <a href="tech11.htm#p11.2.1.5">11.2.1.5    SVCC</a>
+        <a href="tech11.htm#p11.2.1.6">11.2.1.6    SGND</a>
+        <a href="tech11.htm#p11.2.1.7">11.2.1.7    SD0-SD7</a>
+        <a href="tech11.htm#p11.2.2">11.2.2    SIGNAL TRUTH TABLE</a>
+        <a href="tech11.htm#p11.2.2.1">11.2.2.1    STATE 0</a>
+        <a href="tech11.htm#p11.2.2.2">11.2.2.2    STATE 1</a>
+        <a href="tech11.htm#p11.2.2.3">11.2.2.3    STATE 2</a>
+        <a href="tech11.htm#p11.2.2.4">11.2.2.4    STATE 3</a>
+        <a href="tech11.htm#p11.2.2.5">11.2.2.5    STATE 4</a>
+        <a href="tech11.htm#p11.2.2.6">11.2.2.6    STATE 5</a>
+        <a href="tech11.htm#p11.2.3">11.2.3    EXAMPLE</a>
+        <a href="tech11.htm#p11.3">11.3    SYSTEM SERVICES</a>
+        <a href="tech11.htm#p11.3.1">11.3.1    DV$BOOT</a>
+        <a href="tech11.htm#p11.3.2">11.3.2    DV$LOAD</a>
+        <a href="tech11.htm#p11.3.3">11.3.3    DV$VECT</a>
+        <a href="tech11.htm#p11.3.4">11.3.4    DV$LKUP</a>
+        <a href="tech11.htm#p11.3.5">11.3.5    DV$CLER</a>
+        <a href="tech11.htm#p11.3.6">11.3.6    EXAMPLE</a>
+
+
+<a href="tech12.htm">CHAPTER 12      FILING SYSTEM</a>
+
+        <a href="tech12.htm#p12.1">12.1         FILES AND RECORDS</a>
+        <a href="tech12.htm#p12.1.1">12.1.1    RECORDS</a>
+        <a href="tech12.htm#p12.1.1.1">12.1.1.1    SHORT RECORDS</a>
+        <a href="tech12.htm#p12.1.1.2">12.1.1.2    LONG RECORDS</a>
+        <a href="tech12.htm#p12.1.1.3">12.1.1.3    DELETED RECORDS</a>
+        <a href="tech12.htm#p12.1.2">12.1.2    FILES</a>
+        <a href="tech12.htm#p12.1.2.1">12.1.2.1    FIND, SAVE AND "MAIN"</a>
+        <a href="tech12.htm#p12.1.3">12.1.3    BLOCK FILES</a>
+        <a href="tech12.htm#p12.1.3.1">12.1.3.1    OPL PROCEDURES, SAVED DIARIES</a>
+        <a href="tech12.htm#p12.1.4">12.1.4    SUMMARY OF RECORD STRUCTURE</a>
+        <a href="tech12.htm#p12.1.5">12.1.5    ERROR HANDLING</a>
+        <a href="tech12.htm#p12.1.6">12.1.6    SUMMARY OF RECORD TYPES</a>
+        <a href="tech12.htm#p12.1.7">12.1.7    FILE SYSTEM VARIABLES</a>
+        <a href="tech12.htm#p12.1.8">12.1.8    ORGANISER I COMPATIBILITY</a>
+        <a href="tech12.htm#p12.2">12.2    SYSTEM SERVICES</a>
+        <a href="tech12.htm#p12.2.1">12.2.1    FL$BACK</a>
+        <a href="tech12.htm#p12.2.2">12.2.2    FL$BCAT</a>
+        <a href="tech12.htm#p12.2.3">12.2.3    FL$BDEL</a>
+        <a href="tech12.htm#p12.2.4">12.2.4    FL$BOPN</a>
+        <a href="tech12.htm#p12.2.5">12.2.5    FL$BSAV</a>
+        <a href="tech12.htm#p12.2.6">12.2.6    FL$CATL</a>
+        <a href="tech12.htm#p12.2.7">12.2.7    FL$COPY</a>
+        <a href="tech12.htm#p12.2.8">12.2.8    FL$CRET</a>
+        <a href="tech12.htm#p12.2.9">12.2.9    FL$DELN</a>
+        <a href="tech12.htm#p12.2.10">12.2.10   FL$ERAS</a>
+        <a href="tech12.htm#p12.2.11">12.2.11   FL$FFND</a>
+        <a href="tech12.htm#p12.2.12">12.2.12   FL$FIND</a>
+        <a href="tech12.htm#p12.2.13">12.2.13   FL$FREC</a>
+        <a href="tech12.htm#p12.2.14">12.2.14   FL$NEXT</a>
+        <a href="tech12.htm#p12.2.15">12.2.15   FL$OPEN</a>
+        <a href="tech12.htm#p12.2.16">12.2.16   FL$PARS</a>
+        <a href="tech12.htm#p12.2.17">12.2.17   FL$READ</a>
+        <a href="tech12.htm#p12.2.18">12.2.18   FL$RECT</a>
+        <a href="tech12.htm#p12.2.19">12.2.19   FL$RENM</a>
+        <a href="tech12.htm#p12.2.20">12.2.20   FL$RSET</a>
+        <a href="tech12.htm#p12.2.21">12.2.21   FL$SETP</a>
+        <a href="tech12.htm#p12.2.22">12.2.22   FL$SIZE</a>
+        <a href="tech12.htm#p12.2.23">12.2.23   FL$WRIT</a>
+        <a href="tech12.htm#p12.2.24">12.2.24   TL$CPYX</a>
+
+
+<a href="tech13.htm">CHAPTER 13      UTILITIES</a>
+
+        <a href="tech13.htm#p13.1">13.1    BUFFER HANDLING SYSTEM SERVICES</a>
+        <a href="tech13.htm#p13.1.1">13.1.1    UT$CPYB</a>
+        <a href="tech13.htm#p13.1.2">13.1.2    UT$ICPB</a>
+        <a href="tech13.htm#p13.1.3">13.1.3    UT$FILL</a>
+        <a href="tech13.htm#p13.1.4">13.1.4    UT$ISBF</a>
+        <a href="tech13.htm#p13.1.5">13.1.5    UT$SPLT</a>
+        <a href="tech13.htm#p13.1.6">13.1.6    UT$UTOB</a>
+        <a href="tech13.htm#p13.1.7">13.1.7    UT$XTOB</a>
+        <a href="tech13.htm#p13.2">13.2    DISPLAY HANDLING SYSTEM SERVICES</a>
+        <a href="tech13.htm#p13.2.1">13.2.1    UT$DISP</a>
+        <a href="tech13.htm#p13.2.2">13.2.2    UT$DDSP</a>
+        <a href="tech13.htm#p13.3">13.3    INTEGER ARITHMETIC SYSTEM SERVICES</a>
+        <a href="tech13.htm#p13.3.1">13.3.1    UT$SDIV</a>
+        <a href="tech13.htm#p13.3.2">13.3.2    UT$SMUL</a>
+        <a href="tech13.htm#p13.3.3">13.3.3    UT$UDIV</a>
+        <a href="tech13.htm#p13.3.4">13.3.4    UT$UMUL</a>
+        <a href="tech13.htm#p13.4">13.4    MISCELLANEOUS SYSTEM SERVICES</a>
+        <a href="tech13.htm#p13.4.1">13.4.1    UT$ENTR</a>
+        <a href="tech13.htm#p13.4.2">13.4.2    UT$LEAV</a>
+        <a href="tech13.htm#p13.4.3">13.4.3    UT$XCAT</a>
+        <a href="tech13.htm#p13.4.4">13.4.4    UT$YSNO</a>
+
+
+<a href="tech14.htm">CHAPTER 14      EDITOR</a>
+
+        <a href="tech14.htm#p14.1">14.1    LINE-EDITOR SYSTEM SERVICES</a>
+        <a href="tech14.htm#p14.1.1">14.1.1    ED$EPOS</a>
+        <a href="tech14.htm#p14.1.2">14.1.2    ED$EDIT</a>
+        <a href="tech14.htm#p14.1.3">14.1.3    ED$VIEW</a>
+        <a href="tech14.htm#p14.2">14.2    LANGUAGE EDITOR SYSTEM SERVICES</a>
+        <a href="tech14.htm#p14.3">14.3    LG$RLED</a>
+        <a href="tech14.htm#p14.4">14.4    LG$NEWP</a>
+        <a href="tech14.htm#p14.5">14.5    TL$XXMD</a>
+
+
+<a href="tech15.htm">CHAPTER 15      MATHS FUNCTIONS</a>
+
+        <a href="tech15.htm#p15.1">15.1    FLOATING-POINT NUMBERS</a>
+        <a href="tech15.htm#p15.2">15.2    FLOATING-POINT ARITHMETIC</a>
+        <a href="tech15.htm#p15.2.1">15.2.1    MT$FADD</a>
+        <a href="tech15.htm#p15.2.2">15.2.2    MT$FSUB</a>
+        <a href="tech15.htm#p15.2.3">15.2.3    MT$FNGT</a>
+        <a href="tech15.htm#p15.2.4">15.2.4    MT$FMUL</a>
+        <a href="tech15.htm#p15.2.5">15.2.5    MT$FDIV</a>
+        <a href="tech15.htm#p15.3">15.3    CONVERTING NUMERIC TEXT TO FLOATING POINT</a>
+        <a href="tech15.htm#p15.3.1">15.3.1    MT$BTOF</a>
+        <a href="tech15.htm#p15.4">15.4    CONVERTING FLOATING-POINT TO TEXT STRING</a>
+        <a href="tech15.htm#p15.4.1">15.4.1    MT$FBDC</a>
+        <a href="tech15.htm#p15.4.2">15.4.2    MT$FBEX</a>
+        <a href="tech15.htm#p15.4.3">15.4.3    MT$FBIN</a>
+        <a href="tech15.htm#p15.4.4">15.4.4    MT$FBGN</a>
+        <a href="tech15.htm#p15.5">15.5    THE SCIENTIFIC FUNCTIONS</a>
+        <a href="tech15.htm#p15.5.1">15.5.1    FN$ATAN</a>
+        <a href="tech15.htm#p15.5.2">15.5.2    FN$COS</a>
+        <a href="tech15.htm#p15.5.3">15.5.3    FN$EXP</a>
+        <a href="tech15.htm#p15.5.4">15.5.4    FN$LN</a>
+        <a href="tech15.htm#p15.5.5">15.5.5    FN$LOG</a>
+        <a href="tech15.htm#p15.5.6">15.5.6    FN$POWR</a>
+        <a href="tech15.htm#p15.5.7">15.5.7    FN$RND</a>
+        <a href="tech15.htm#p15.5.8">15.5.8    FN$SIN</a>
+        <a href="tech15.htm#p15.5.9">15.5.9    FN$SQRT</a>
+        <a href="tech15.htm#p15.5.10">15.5.10   FN$TAN</a>
+
+
+<a href="tech16.htm">CHAPTER 16      MENUS</a>
+
+        <a href="tech16.htm#p16.1">16.1    SYSTEM SERVICES</a>
+        <a href="tech16.htm#p16.1.1">16.1.1    MN$DISP</a>
+        <a href="tech16.htm#p16.2">16.2    TOP LEVEL MENU</a>
+        <a href="tech16.htm#p16.2.1">16.2.1    TL$ADDI</a>
+        <a href="tech16.htm#p16.2.2">16.2.2    TL$DELI</a>
+
+
+<a href="tech17.htm">CHAPTER 17      LANGUAGE</a>
+
+        <a href="tech17.htm#p17.1">17.1    INTRODUCTION</a>
+        <a href="tech17.htm#p17.2">17.2    DEFINITIONS</a>
+        <a href="tech17.htm#p17.2.1">17.2.1    VARIABLES</a>
+        <a href="tech17.htm#p17.2.2">17.2.2    PROCEDURES</a>
+        <a href="tech17.htm#p17.2.3">17.2.3    PARAMETERS</a>
+        <a href="tech17.htm#p17.2.4">17.2.4    ADDRESSES</a>
+        <a href="tech17.htm#p17.2.5">17.2.5    INTEGERS</a>
+        <a href="tech17.htm#p17.2.6">17.2.6    FLOATING POINT</a>
+        <a href="tech17.htm#p17.2.7">17.2.7    STRINGS</a>
+        <a href="tech17.htm#p17.2.8">17.2.8    ARRAYS</a>
+        <a href="tech17.htm#p17.2.9">17.2.9    TYPE CONVERSION</a>
+        <a href="tech17.htm#p17.2.10">17.2.10   RECORDS AND FIELDS</a>
+        <a href="tech17.htm#p17.2.11">17.2.11   VARIABLE SCOPE</a>
+        <a href="tech17.htm#p17.2.12">17.2.12   EXTERNALS</a>
+        <a href="tech17.htm#p17.2.13">17.2.13   LANGUAGE POINTERS</a>
+        <a href="tech17.htm#p17.2.14">17.2.14   ADDRESSING MODES</a>
+        <a href="tech17.htm#p17.2.15">17.2.15   TOP LOOP</a>
+        <a href="tech17.htm#p17.3">17.3    OPERANDS</a>
+        <a href="tech17.htm#p17.4">17.4    OPERATORS</a>
+        <a href="tech17.htm#p17.4.1">17.4.1    ERRORS, CALLS AND PARAMETERS</a>
+        <a href="tech17.htm#p17.4.2">17.4.2    LOGICAL AND ARITHMETIC COMPARE OPERATORS</a>
+        <a href="tech17.htm#p17.5">17.5    COMMAND OPERATORS</a>
+        <a href="tech17.htm#p17.5.1">17.5.1    QCO_AT</a>
+        <a href="tech17.htm#p17.5.2">17.5.2    QCO_BEEP</a>
+        <a href="tech17.htm#p17.5.3">17.5.3    QCO_BREAK</a>
+        <a href="tech17.htm#p17.5.4">17.5.4    QCO_CLS</a>
+        <a href="tech17.htm#p17.5.5">17.5.5    QCO_CURSOR</a>
+        <a href="tech17.htm#p17.5.6">17.5.6    QCO_ESCAPE</a>
+        <a href="tech17.htm#p17.5.7">17.5.7    QCO_GOTO</a>
+        <a href="tech17.htm#p17.5.8">17.5.8    QCO_OFF</a>
+        <a href="tech17.htm#p17.5.9">17.5.9    QCO_ONERR</a>
+        <a href="tech17.htm#p17.5.10">17.5.10   QCO_PAUSE</a>
+        <a href="tech17.htm#p17.5.11">17.5.11   QCO_POKEB</a>
+        <a href="tech17.htm#p17.5.12">17.5.12   QCO_POKEW</a>
+        <a href="tech17.htm#p17.5.13">17.5.13   QCO_RAISE</a>
+        <a href="tech17.htm#p17.5.14">17.5.14   QCO_RANDOMIZE</a>
+        <a href="tech17.htm#p17.5.15">17.5.15   QCO_SPECIAL</a>
+        <a href="tech17.htm#p17.5.16">17.5.16   QCO_STOP</a>
+        <a href="tech17.htm#p17.5.17">17.5.17   QCO_TRAP</a>
+        <a href="tech17.htm#p17.6">17.6    FILE OPERATORS</a>
+        <a href="tech17.htm#p17.6.1">17.6.1    QCO_APPEND</a>
+        <a href="tech17.htm#p17.6.2">17.6.2    QCO_CLOSE</a>
+        <a href="tech17.htm#p17.6.3">17.6.3    QCO_COPY</a>
+        <a href="tech17.htm#p17.6.4">17.6.4    QCO_CREATE</a>
+        <a href="tech17.htm#p17.6.5">17.6.5    QCO_DELETE</a>
+        <a href="tech17.htm#p17.6.6">17.6.6    QCO_ERASE</a>
+        <a href="tech17.htm#p17.6.7">17.6.7    QCO_FIRST</a>
+        <a href="tech17.htm#p17.6.8">17.6.8    QCO_LAST</a>
+        <a href="tech17.htm#p17.6.9">17.6.9    QCO_NEXT</a>
+        <a href="tech17.htm#p17.6.10">17.6.10   QCO_BACK</a>
+        <a href="tech17.htm#p17.6.11">17.6.11   QCO_OPEN</a>
+        <a href="tech17.htm#p17.6.12">17.6.12   QCO_POSITION</a>
+        <a href="tech17.htm#p17.6.13">17.6.13   QCO_RENAME</a>
+        <a href="tech17.htm#p17.6.14">17.6.14   QCO_UPDATE</a>
+        <a href="tech17.htm#p17.6.15">17.6.15   QCO_USE</a>
+        <a href="tech17.htm#p17.7">17.7    OTHER OPERATORS</a>
+        <a href="tech17.htm#p17.7.1">17.7.1    QCO_KSTAT</a>
+        <a href="tech17.htm#p17.7.2">17.7.2    QCO_EDIT</a>
+        <a href="tech17.htm#p17.7.3">17.7.3    QCO_INPUT_INT</a>
+        <a href="tech17.htm#p17.7.4">17.7.4    QCO_INPUT_NUM</a>
+        <a href="tech17.htm#p17.7.5">17.7.5    QCO_INPUT_STR</a>
+        <a href="tech17.htm#p17.7.6">17.7.6    QCO_PRINT_INT</a>
+        <a href="tech17.htm#p17.7.7">17.7.7    QCO_PRINT_NUM</a>
+        <a href="tech17.htm#p17.7.8">17.7.8    QCO_PRINT_STR</a>
+        <a href="tech17.htm#p17.7.9">17.7.9    QCO_PRINT_SP</a>
+        <a href="tech17.htm#p17.7.10">17.7.10   QCO_PRINT_CR</a>
+        <a href="tech17.htm#p17.7.11">17.7.11   QCO_LPRINT_INT</a>
+        <a href="tech17.htm#p17.7.12">17.7.12   QCO_LPRINT_NUM</a>
+        <a href="tech17.htm#p17.7.13">17.7.13   QCO_LPRINT_STR</a>
+        <a href="tech17.htm#p17.7.14">17.7.14   QCO_LPRINT_SP</a>
+        <a href="tech17.htm#p17.7.15">17.7.15   QCO_LPRINT_CR</a>
+        <a href="tech17.htm#p17.7.16">17.7.16   QCO_RETURN</a>
+        <a href="tech17.htm#p17.7.17">17.7.17   QCO_RETURN_NOUGHT</a>
+        <a href="tech17.htm#p17.7.18">17.7.18   QCO_RETURN_ZERO</a>
+        <a href="tech17.htm#p17.7.19">17.7.19   QCO_RETURN_NULL</a>
+        <a href="tech17.htm#p17.7.20">17.7.20   QCO_PROC</a>
+        <a href="tech17.htm#p17.7.21">17.7.21   QCO_BRA_FALSE</a>
+        <a href="tech17.htm#p17.7.22">17.7.22   QCO_ASS_INT</a>
+        <a href="tech17.htm#p17.7.23">17.7.23   QCO_ASS_NUM</a>
+        <a href="tech17.htm#p17.7.24">17.7.24   QCO_ASS_STR</a>
+        <a href="tech17.htm#p17.7.25">17.7.25   QCO_DROP_BYTE</a>
+        <a href="tech17.htm#p17.7.26">17.7.26   QCO_DROP_WORD</a>
+        <a href="tech17.htm#p17.7.27">17.7.27   QCO_DROP_NUM</a>
+        <a href="tech17.htm#p17.7.28">17.7.28   QCO_DROP_STR</a>
+        <a href="tech17.htm#p17.7.29">17.7.29   QCO_INT_TO_NUM</a>
+        <a href="tech17.htm#p17.7.30">17.7.30   QCO_NUM_TO_INT</a>
+        <a href="tech17.htm#p17.7.31">17.7.31   QCO_END_FIELDS</a>
+        <a href="tech17.htm#p17.7.32">17.7.32   QCO_RUN_ASSEM</a>
+        <a href="tech17.htm#p17.8">17.8    INTEGER FUNCTIONS</a>
+        <a href="tech17.htm#p17.8.1">17.8.1    RTF_ADDR</a>
+        <a href="tech17.htm#p17.8.2">17.8.2    RTF_ASC</a>
+        <a href="tech17.htm#p17.8.3">17.8.3    RTF_DAY</a>
+        <a href="tech17.htm#p17.8.4">17.8.4    RTF_DISP</a>
+        <a href="tech17.htm#p17.8.5">17.8.5    RTF_ERR</a>
+        <a href="tech17.htm#p17.8.6">17.8.6    RTF_FIND</a>
+        <a href="tech17.htm#p17.8.7">17.8.7    RTF_FREE</a>
+        <a href="tech17.htm#p17.8.8">17.8.8    RTF_GET</a>
+        <a href="tech17.htm#p17.8.9">17.8.9    RTF_HOUR</a>
+        <a href="tech17.htm#p17.8.10">17.8.10   RTF_IABS</a>
+        <a href="tech17.htm#p17.8.11">17.8.11   RTF_INT</a>
+        <a href="tech17.htm#p17.8.12">17.8.12   RTF_KEY</a>
+        <a href="tech17.htm#p17.8.13">17.8.13   RTF_LEN</a>
+        <a href="tech17.htm#p17.8.14">17.8.14   RTF_LOC</a>
+        <a href="tech17.htm#p17.8.15">17.8.15   RTF_MENU</a>
+        <a href="tech17.htm#p17.8.16">17.8.16   RTF_MINUTE</a>
+        <a href="tech17.htm#p17.8.17">17.8.17   RTF_MONTH</a>
+        <a href="tech17.htm#p17.8.18">17.8.18   RTF_PEEKB</a>
+        <a href="tech17.htm#p17.8.19">17.8.19   RTF_PEEKW</a>
+        <a href="tech17.htm#p17.8.20">17.8.20   RTF_RECSIZE</a>
+        <a href="tech17.htm#p17.8.21">17.8.21   RTF_SECOND</a>
+        <a href="tech17.htm#p17.8.22">17.8.22   RTF_IUSR</a>
+        <a href="tech17.htm#p17.8.23">17.8.23   RTF_SADDR</a>
+        <a href="tech17.htm#p17.8.24">17.8.24   RTF_VIEW</a>
+        <a href="tech17.htm#p17.8.25">17.8.25   RTF_YEAR</a>
+        <a href="tech17.htm#p17.8.26">17.8.26   RTF_COUNT</a>
+        <a href="tech17.htm#p17.8.27">17.8.27   RTF_EOF</a>
+        <a href="tech17.htm#p17.8.28">17.8.28   RTF_EXIST</a>
+        <a href="tech17.htm#p17.8.29">17.8.29   RTF_POS</a>
+        <a href="tech17.htm#p17.9">17.9    FLOATING POINT FUNCTIONS</a>
+        <a href="tech17.htm#p17.9.1">17.9.1    RTF_ABS</a>
+        <a href="tech17.htm#p17.9.2">17.9.2    RTF_ATAN</a>
+        <a href="tech17.htm#p17.9.3">17.9.3    RTF_COS</a>
+        <a href="tech17.htm#p17.9.4">17.9.4    RTF_DEG</a>
+        <a href="tech17.htm#p17.9.5">17.9.5    RTF_EXP</a>
+        <a href="tech17.htm#p17.9.6">17.9.6    RTF_FLT</a>
+        <a href="tech17.htm#p17.9.7">17.9.7    RTF_INTF</a>
+        <a href="tech17.htm#p17.9.8">17.9.8    RTF_LN</a>
+        <a href="tech17.htm#p17.9.9">17.9.9    RTF_LOG</a>
+        <a href="tech17.htm#p17.9.10">17.9.10   RTF_PI</a>
+        <a href="tech17.htm#p17.9.11">17.9.11   RTF_RAD</a>
+        <a href="tech17.htm#p17.9.12">17.9.12   RTF_RND</a>
+        <a href="tech17.htm#p17.9.13">17.9.13   RTF_SIN</a>
+        <a href="tech17.htm#p17.9.14">17.9.14   RTF_SQR</a>
+        <a href="tech17.htm#p17.9.15">17.9.15   RTF_TAN</a>
+        <a href="tech17.htm#p17.9.16">17.9.16   RTF_VAL</a>
+        <a href="tech17.htm#p17.9.17">17.9.17   RTF_SPACE</a>
+        <a href="tech17.htm#p17.10">17.10   STRING FUNCTIONS</a>
+        <a href="tech17.htm#p17.10.1">17.10.1   RTF_DIR</a>
+        <a href="tech17.htm#p17.10.2">17.10.2   RTF_CHR</a>
+        <a href="tech17.htm#p17.10.3">17.10.3   RTF_DATIM</a>
+        <a href="tech17.htm#p17.10.4">17.10.4   RTF_SERR</a>
+        <a href="tech17.htm#p17.10.5">17.10.5   RTF_FIX</a>
+        <a href="tech17.htm#p17.10.6">17.10.6   RTF_GEN</a>
+        <a href="tech17.htm#p17.10.7">17.10.7   RTF_SGET</a>
+        <a href="tech17.htm#p17.10.8">17.10.8   RTF_HEX</a>
+        <a href="tech17.htm#p17.10.9">17.10.9   RTF_SKEY</a>
+        <a href="tech17.htm#p17.10.10">17.10.10  RTF_LEFT</a>
+        <a href="tech17.htm#p17.10.11">17.10.11  RTF_LOWER</a>
+        <a href="tech17.htm#p17.10.12">17.10.12  RTF_MID</a>
+        <a href="tech17.htm#p17.10.13">17.10.13  RTF_NUM</a>
+        <a href="tech17.htm#p17.10.14">17.10.14  RTF_RIGHT</a>
+        <a href="tech17.htm#p17.10.15">17.10.15  RTF_REPT</a>
+        <a href="tech17.htm#p17.10.16">17.10.16  RTF_SCI</a>
+        <a href="tech17.htm#p17.10.17">17.10.17  RTF_UPPER</a>
+        <a href="tech17.htm#p17.10.18">17.10.18  RTF_SUSR</a>
+        <a href="tech17.htm#p17.11">17.11   FILES</a>
+        <a href="tech17.htm#p17.11.1">17.11.1   CREATING</a>
+        <a href="tech17.htm#p17.11.2">17.11.2   OPENING</a>
+        <a href="tech17.htm#p17.11.3">17.11.3   LOGICAL FILE NAMES</a>
+        <a href="tech17.htm#p17.11.4">17.11.4   USING FILES</a>
+        <a href="tech17.htm#p17.12">17.12   PROCEDURE CALLS</a>
+        <a href="tech17.htm#p17.12.1">17.12.1   STANDARD PROCEDURES</a>
+        <a href="tech17.htm#p17.12.2">17.12.2   LANGUAGE EXTENSIONS</a>
+        <a href="tech17.htm#p17.13">17.13   WRITING OPL</a>
+        <a href="tech17.htm#p17.13.1">17.13.1   COMPACT Q CODE</a>
+        <a href="tech17.htm#p17.13.2">17.13.2   COMPACT ON RUN TIME</a>
+        <a href="tech17.htm#p17.13.3">17.13.3   FAST CODE</a>
+        <a href="tech17.htm#p17.13.3.1">17.13.3.1   PROCEDURES</a>
+        <a href="tech17.htm#p17.13.3.2">17.13.3.2   FILES</a>
+        <a href="tech17.htm#p17.13.4">17.13.4   CODE STYLE</a>
+        <a href="tech17.htm#p17.14">17.14   TRANSLATOR</a>
+        <a href="tech17.htm#p17.15">17.15   SYSTEM SERVICES INTERFACE</a>
+        <a href="tech17.htm#p17.15.1">17.15.1   RM$RUNP</a>
+        <a href="tech17.htm#p17.15.2">17.15.2   LN$STRT</a>
+        <a href="tech17.htm#p17.16">17.16   MACHINE CODE INTERFACE</a>
+        <a href="tech17.htm#p17.17">17.17   EXCEPTION HANDLING</a>
+        <a href="tech17.htm#p17.17.1">17.17.1   ERROR HANDLING</a>
+        <a href="tech17.htm#p17.17.2">17.17.2   OUT OF MEMORY</a>
+        <a href="tech17.htm#p17.17.3">17.17.3   LOW BATTERY</a>
+        <a href="tech17.htm#p17.17.4">17.17.4   ON/CLEAR KEY</a>
+        <a href="tech17.htm#p17.17.5">17.17.5   WARNING</a>
+        <a href="tech17.htm#p17.18">17.18   INDEX OF OPERANDS</a>
+        <a href="tech17.htm#p17.19">17.19   INDEX OF OPERATORS</a>
+        <a href="tech17.htm#p17.20">17.20   INDEX OF FUNCTIONS</a>
+        <a href="tech17.htm#p17.21">17.21   EXAMPLES</a>
+        <a href="tech17.htm#p17.21.1">17.21.1   EXAMPLE 1</a>
+        <a href="tech17.htm#p17.21.2">17.21.2   EXAMPLE 2</a>
+        <a href="tech17.htm#p17.21.3">17.21.3   EXAMPLE 3</a>
+        <a href="tech17.htm#p17.21.4">17.21.4   EXAMPLE 4</a>
+        <a href="tech17.htm#p17.21.5">17.21.5   EXAMPLE 5</a>
+
+
+<a href="tech18.htm">CHAPTER 18      TABLE INTERPRETER</a>
+
+        <a href="tech18.htm#p18.1">18.1    THE TABLE INTERPRETER</a>
+        <a href="tech18.htm#p18.2">18.2    TABLE REGISTERS</a>
+        <a href="tech18.htm#p18.3">18.3    THE PREDEFINED ACTIONS</a>
+        <a href="tech18.htm#p18.3.1">18.3.1    RETURN</a>
+        <a href="tech18.htm#p18.3.2">18.3.2    CALL</a>
+        <a href="tech18.htm#p18.3.3">18.3.3    IF</a>
+        <a href="tech18.htm#p18.3.4">18.3.4    IF_NOT</a>
+        <a href="tech18.htm#p18.3.5">18.3.5    CASE</a>
+        <a href="tech18.htm#p18.3.6">18.3.6    VECTOR</a>
+        <a href="tech18.htm#p18.3.7">18.3.7    GOTO</a>
+        <a href="tech18.htm#p18.3.8">18.3.8    BRANCH</a>
+        <a href="tech18.htm#p18.3.9">18.3.9    EQL</a>
+        <a href="tech18.htm#p18.3.10">18.3.10   NEQ</a>
+        <a href="tech18.htm#p18.3.11">18.3.11   ASSIGN</a>
+        <a href="tech18.htm#p18.3.12">18.3.12   ADD2</a>
+        <a href="tech18.htm#p18.3.13">18.3.13   SUB2</a>
+        <a href="tech18.htm#p18.3.14">18.3.14   PUSH</a>
+        <a href="tech18.htm#p18.3.15">18.3.15   CALL_MC</a>
+        <a href="tech18.htm#p18.3.16">18.3.16   POP</a>
+        <a href="tech18.htm#p18.3.17">18.3.17   JSR</a>
+        <a href="tech18.htm#p18.3.18">18.3.18   RANGE</a>
+        <a href="tech18.htm#p18.3.19">18.3.19   LOADB</a>
+        <a href="tech18.htm#p18.3.20">18.3.20   STOREB</a>
+        <a href="tech18.htm#p18.3.21">18.3.21   END</a>
+        <a href="tech18.htm#p18.4">18.4    SYSTEM SERVICES</a>
+        <a href="tech18.htm#p18.4.1">18.4.1    IT$GVAL</a>
+        <a href="tech18.htm#p18.4.2">18.4.2    IT$RADD</a>
+        <a href="tech18.htm#p18.4.3">18.4.3    IT$TADD</a>
+        <a href="tech18.htm#p18.4.4">18.4.4    IT$STRT</a>
+        <a href="tech18.htm#p18.5">18.5    VARIABLE USAGE</a>
+
+
+<a href="tech19.htm">CHAPTER 19      DIARY</a>
+
+        <a href="tech19.htm#p19.1">19.1    DIARY FORMAT</a>
+        <a href="tech19.htm#p19.2">19.2    ALARM TABLE FORMAT</a>
+        <a href="tech19.htm#p19.3">19.3    ALARM CHECKING INTERRUPTS</a>
+        <a href="tech19.htm#p19.4">19.4    WAKING UP FOR AN ALARM</a>
+
+
+<a href="tech20.htm">CHAPTER 20      BUZZER</a>
+
+        <a href="tech20.htm#p20.0.1">20.0.1    BZ$ALRM</a>
+        <a href="tech20.htm#p20.0.1.1">20.0.1.1    BZ$BELL</a>
+        <a href="tech20.htm#p20.0.1.1.1">20.0.1.1.1    BZ$TONE</a>
+
+
+<a href="tech21.htm">CHAPTER 21      ERROR HANDLING</a>
+
+        <a href="tech21.htm#p21.0.1">21.0.1    ER$LKUP</a>
+        <a href="tech21.htm#p21.0.1.1">21.0.1.1    ER$MESS</a>
+
+<a href="techidx.htm">INDEX</a>
+
+
+</pre>
+
+<div class=nav><ul>
+<li><a href="techidx.htm">Index</a></li>
+<li class=navactive>Contents</li>
+<li><a href="tech01.htm">Ch. 1</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

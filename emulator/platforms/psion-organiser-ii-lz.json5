@@ -1,0 +1,179 @@
+{
+  name: "Psion Organiser II LZ",
+  storage: { platform: "psion-organiser-ii-lz", rom: "psion-organiser-ii-lz-4.6" },
+  runOnStart: true,
+  cpu: {
+    module: "./cpu/hd6303.js",
+    initialPc: 49152,
+    initialSp: 24575,
+    resetVectorAddress: 65534,
+    maxInstructionsPerFrame: 5000
+  },
+  controls: {
+    inputs: [
+      { id: "onClear", label: "ON/CLEAR", pulse: true },
+      { id: "mode", label: "MODE", pulse: true },
+      { id: "exe", label: "EXE", pulse: true }
+    ],
+    pulseInputs: ["onClear", "mode", "exe"],
+    pulseDurations: { onClear: 260, mode: 180, exe: 180 },
+    inputHotkeys: { onClear: "Backspace", mode: "Escape", exe: "Enter" },
+    textInputMap: {
+      "\n": "exe",
+      "+": "+",
+      "-": "-",
+      "*": "*",
+      "/": "/",
+      ".": ".",
+      ",": ",",
+      "=": "=",
+      "(": "(",
+      ")": ")",
+      ":": ":",
+      ";": ";",
+      "'": "'",
+      "\"": "\""
+    },
+    keyboardGroups: ["letters", "numbers", "arrows", "special"]
+  },
+  memory: {
+    mmu: "./memory/mmu/z80.js",
+    initialBytes: [
+      { address: "0x0040", data: ["0x7E"], label: "UTB_7E JMP opcode for RAM vector UTW_S0" }
+    ],
+    devices: [
+      {
+        type: "io",
+        index: 0,
+        label: "Keyboard Port 5",
+        module: "./memory/io/psion-keyboard.js",
+        role: "port5",
+        start: 21,
+        size: 1,
+        writable: true
+      },
+      {
+        type: "ram",
+        index: 0,
+        label: "Display Ready Countdown",
+        module: "./memory/io/psion-countdown-word.js",
+        start: 109,
+        size: 2,
+        writable: true
+      },
+      {
+        type: "io",
+        index: 0,
+        label: "LCD Controller",
+        module: "./memory/io/psion-lcd.js",
+        start: 384,
+        size: 64,
+        writable: true
+      },
+      {
+        type: "io",
+        index: 0,
+        label: "Keyboard Counter Reset",
+        module: "./memory/io/psion-keyboard.js",
+        role: "counterReset",
+        start: 768,
+        size: 32,
+        writable: true
+      },
+      {
+        type: "io",
+        index: 0,
+        label: "Keyboard Counter Clock",
+        module: "./memory/io/psion-keyboard.js",
+        role: "counterClock",
+        start: 832,
+        size: 32,
+        writable: true
+      },
+      {
+        type: "io",
+        index: 0,
+        label: "LZ Bank Reset",
+        module: "./memory/io/psion-lz-bank-switch.js",
+        role: "reset",
+        start: 864,
+        size: 32,
+        writable: true
+      },
+      {
+        type: "io",
+        index: 0,
+        label: "LZ Next RAM Bank",
+        module: "./memory/io/psion-lz-bank-switch.js",
+        role: "nextRam",
+        start: 928,
+        size: 32,
+        writable: true
+      },
+      {
+        type: "io",
+        index: 0,
+        label: "LZ Next ROM Bank",
+        module: "./memory/io/psion-lz-bank-switch.js",
+        role: "nextRom",
+        start: 992,
+        size: 32,
+        writable: true
+      },
+      {
+        type: "ram",
+        index: 0,
+        label: "LZ Banked Memory",
+        module: "./memory/psion-lz-memory.js",
+        start: 0,
+        size: 65536,
+        romSize: 65536,
+        fixedRomOffset: 16384,
+        romBankOffsets: [0, 32768, 49152],
+        ramSize: 32768,
+        fixedRamSize: 16384,
+        ramBankCount: 1,
+        writable: true
+      }
+    ],
+    segments: [
+      { type: "io", label: "HD6303 Registers", start: 0, size: 32, writable: true },
+      { type: "ram", label: "Zero Page System RAM", start: 64, size: 160, writable: true },
+      { type: "ram", label: "Transient Application Area", start: 224, size: 32, writable: true },
+      { type: "io", label: "Hardware Addresses", start: 256, size: 768, writable: true },
+      { type: "ram", label: "Fixed RAM", start: 0, size: 16384, writable: true },
+      { type: "ram", label: "Banked RAM Window", start: 16384, size: 16384, writable: true },
+      { type: "rom", label: "Banked ROM Window", start: 32768, size: 16384, writable: false },
+      { type: "rom", label: "Fixed ROM", start: 49152, size: 16384, writable: false }
+    ],
+    map: { start: 0, size: 65536, columns: 256, rows: 256, bytesPerCell: 1, valueMode: "max", samplesPerCell: 16 }
+  },
+  roms: [
+    { path: "/roms/psion-organiser-ii/46-lz.rom", offset: 0, target: "rom", label: "Psion Organiser II LZ OS 4.6" }
+  ],
+  video: { module: "./video/psion-lcd.js", driver: "psion-lcd", width: 200, height: 64, columns: 20, rows: 4, fps: 20 },
+  websocket: {
+    enabled: true,
+    autoConnect: false,
+    endpoints: [
+      {
+        id: "debug",
+        label: "Debug API",
+        url: "ws://127.0.0.1:8765/debug",
+        autoConnect: false,
+        channels: ["commands", "events", "rules"]
+      },
+      {
+        id: "events",
+        label: "Event Sink",
+        url: "ws://127.0.0.1:8765/events",
+        autoConnect: false,
+        channels: ["events", "rules"]
+      }
+    ]
+  },
+  debugger: {
+    disassembly: { beforeLines: 10, afterLines: 12 }
+  },
+  romLoading: { defaultOffset: "0x0000" }
+}

@@ -1,0 +1,225 @@
+{
+  name: "Sinclair ZX80",
+  cpu: {
+    module: "./cpu/z80.js",
+    alu: "./cpu/alu/z80.js",
+    registers: "./cpu/registers/z80.js",
+    control: "./cpu/control/z80.js",
+    decoder: "./cpu/decoder/z80.js",
+    initialPc: 0,
+    initialSp: 65535,
+    interruptOnHalt: true,
+    haltInterruptVector: 56,
+    maxInstructionsPerFrame: 20000
+  },
+  controls: {
+    inputs: [
+      { id: "enter", label: "Enter", pulse: true },
+      { id: "shift", label: "Shift" },
+      { id: "space", label: "Space" },
+      { id: "rubout", label: "Rubout", pulse: true },
+      { id: "break", label: "Break", pulse: true }
+    ],
+    advancedInputs: [
+      { id: "colon", label: ":", pulse: true },
+      { id: "semicolon", label: ";", pulse: true },
+      { id: "question", label: "?", pulse: true },
+      { id: "slash", label: "/", pulse: true },
+      { id: "mosaicA", label: "Mosaic A", pulse: true },
+      { id: "mosaicS", label: "Mosaic S", pulse: true },
+      { id: "mosaicD", label: "Mosaic D", pulse: true },
+      { id: "mosaicF", label: "Mosaic F", pulse: true },
+      { id: "mosaicG", label: "Mosaic G", pulse: true },
+      { id: "mosaicQ", label: "Mosaic Q", pulse: true },
+      { id: "mosaicW", label: "Mosaic W", pulse: true },
+      { id: "mosaicE", label: "Mosaic E", pulse: true },
+      { id: "mosaicR", label: "Mosaic R", pulse: true },
+      { id: "mosaicT", label: "Mosaic T", pulse: true },
+      { id: "not", label: "NOT", pulse: true },
+      { id: "and", label: "AND", pulse: true },
+      { id: "then", label: "THEN", pulse: true },
+      { id: "to", label: "TO", pulse: true },
+      { id: "cursorLeft", label: "Cursor Left", pulse: true },
+      { id: "home", label: "Home", pulse: true },
+      { id: "cursorRight", label: "Cursor Right", pulse: true },
+      { id: "cursorUp", label: "Cursor Up", pulse: true },
+      { id: "cursorDown", label: "Cursor Down", pulse: true },
+      { id: "asterisk", label: "*", pulse: true },
+      { id: "rightParen", label: ")", pulse: true },
+      { id: "leftParen", label: "(", pulse: true },
+      { id: "dollar", label: "$", pulse: true },
+      { id: "quote", label: "\"", pulse: true },
+      { id: "edit", label: "Edit", pulse: true },
+      { id: "equals", label: "=", pulse: true },
+      { id: "plus", label: "+", pulse: true },
+      { id: "minus", label: "-", pulse: true },
+      { id: "power", label: "**", pulse: true },
+      { id: "currency", label: "Currency", pulse: true },
+      { id: "comma", label: ",", pulse: true },
+      { id: "greaterThan", label: ">", pulse: true },
+      { id: "lessThan", label: "<", pulse: true },
+      { id: "or", label: "OR", pulse: true }
+    ],
+    inputHotkeys: { enter: "Enter", shift: "ShiftLeft", space: "Space", rubout: "Backspace", break: "Escape", shiftRight: "ShiftRight" },
+    keyboardGroups: ["letters", "numbers", "arrows", "special"],
+    pulseInputs: ["enter", "rubout", "break"],
+    pulseDurations: { default: 160, enter: 160, rubout: 160, break: 160 },
+    keyboardInputMode: "queued",
+    queuedKeyboardPressMs: 160,
+    queuedKeyboardGapMs: 90,
+    keyboardReleaseDelayMs: 160,
+    textInputMap: {
+      "0": "0",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      a: "a",
+      b: "b",
+      c: "c",
+      d: "d",
+      e: "e",
+      f: "f",
+      g: "g",
+      h: "h",
+      i: "i",
+      j: "j",
+      k: "k",
+      l: "l",
+      m: "m",
+      n: "n",
+      o: "o",
+      p: "p",
+      q: "q",
+      r: "r",
+      s: "s",
+      t: "t",
+      u: "u",
+      v: "v",
+      w: "w",
+      x: "x",
+      y: "y",
+      z: "z",
+      " ": "space",
+      "\n": "enter",
+      Enter: "enter",
+      Backspace: "rubout",
+      Escape: "break",
+      ".": ".",
+      ":": ":",
+      ";": ";",
+      "?": "?",
+      "/": "/",
+      "*": "*",
+      ")": ")",
+      "(": "(",
+      "$": "$",
+      "\"": "quote",
+      "'": "quote",
+      "=": "=",
+      "+": "+",
+      "-": "-",
+      ",": ",",
+      ">": ">",
+      "<": "<"
+    }
+  },
+  memory: {
+    mmu: "./memory/mmu/z80.js",
+    devices: [
+      {
+        type: "flat",
+        index: 0,
+        label: "64K Address Space",
+        module: "./memory/flat.js",
+        start: 0,
+        size: 65536,
+        writable: true
+      }
+    ],
+    segments: [
+      { type: "rom", label: "ROM", start: 0, size: 4096, writable: false },
+      { type: "ram", label: "System RAM", start: 16384, size: 16384, writable: true },
+      { type: "video", label: "Display File", start: 16424, size: 6144, writable: true },
+      { type: "ram", label: "Expansion RAM", start: 32768, size: 32768, writable: true }
+    ],
+    map: {
+      start: 0,
+      size: 65536,
+      columns: 256,
+      rows: 256,
+      bytesPerCell: 1,
+      valueMode: "max",
+      samplesPerCell: 16,
+      colors: {
+        rom: { zero: [24, 24, 20], active: [255, 210, 80] },
+        ram: { zero: [0, 20, 38], active: [45, 140, 255] },
+        video: { zero: [0, 50, 20], active: [32, 255, 90] },
+        unmapped: { zero: [0, 0, 0], active: [255, 40, 40] },
+        pc: [80, 255, 120],
+        sp: [90, 170, 255]
+      }
+    },
+    fetchAliases: [
+      {
+        label: "Upper 32K display file echo",
+        start: 32768,
+        end: 65535,
+        targetStart: 0,
+        defaultOpcode: 0,
+        preserveOpcodes: [118]
+      }
+    ]
+  },
+  roms: [
+    { path: "/roms/sinclair-zx80/zx80.rom", offset: 0, label: "Sinclair ZX80 4K BASIC ROM" }
+  ],
+  video: {
+    module: "./video/sinclair-zx80-display-file.js?v=20260706-zx80-plus-render",
+    driver: "sinclair-zx80-display-file",
+    width: 256,
+    height: 192,
+    fps: 50
+  },
+  websocket: {
+    enabled: true,
+    autoConnect: false,
+    endpoints: [
+      {
+        id: "debug",
+        label: "Debug API",
+        url: "ws://127.0.0.1:8765/debug",
+        autoConnect: false,
+        channels: ["commands", "events", "rules"]
+      },
+      {
+        id: "events",
+        label: "Event Sink",
+        url: "ws://127.0.0.1:8765/events",
+        autoConnect: false,
+        channels: ["events", "rules"]
+      }
+    ]
+  },
+  debugger: {
+    disassembly: { beforeLines: 10, afterLines: 12 }
+  },
+  io: {
+    devices: [
+      {
+        type: "keyboard",
+        id: "keyboard",
+        label: "ZX80 Keyboard Matrix",
+        module: "./memory/io/sinclair-zx80-keyboard.js",
+        portStart: 0,
+        size: 65536,
+        absolutePorts: true
+      }
+    ]
+  }
+}

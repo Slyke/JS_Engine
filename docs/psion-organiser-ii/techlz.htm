@@ -1,0 +1,4312 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<TITLE>LZ/LZ64 Technical Reference Manual - Jaap's Psion Organiser II Page</TITLE>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "techlz.htm", "name": "LZ Technical Manual" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li>LZ Technical Manual</li>
+</ol>
+
+<PRE>
+ORGANISER II MODEL LZ /LZ64 TECHNICAL MANUAL, VERSION 1.0   (LZTECH.DOC)
+
+
+(c) Copyright Psion Ltd 1989. All rights reserved. This Technical
+Manual and the programs referred to herein are copyrighted works of
+Psion PLC, London, England. Reproduction in whole or in part, including
+utilization in machines capable of reproduction or retrieval, without
+express permission of Psion PLC, is prohibited. Reverse engineering
+is also prohibited.
+
+The information in this document is subject to change without notice.
+
+CONTENTS
+
+<a href="#ch1">CHAPTER 1</a>
+
+ <a href="#ch1">INTRODUCTION</a>
+
+    <a href="#ch1-1">Document Structure</a>
+    <a href="#ch1-2">New System Variables</a>
+    <a href="#ch1-3">New System Services</a>
+
+<a href="#ch2">CHAPTER 2</a>
+
+    <a href="#ch2">HARDWARE</a>
+
+    <a href="#ch2-1">Rom</a>
+    <a href="#ch2-2">Ram</a>
+    <a href="#ch2-3">Display</a>
+
+<a href="#ch3">CHAPTER 3</a>
+
+    <a href="#ch3">IDENTIFICATION BYTES</a>
+
+    <a href="#ch3-1">Language-byte</a>
+    <a href="#ch3-2">Model-byte</a>
+    <a href="#ch3-3">Model-byte-2</a>
+    <a href="#ch3-4">Version Number</a>
+    <a href="#ch3-5">Identifying The LZ</a>
+
+<a href="#ch4">CHAPTER 4</a>
+
+    <a href="#ch4">WRITING APPLICATIONS</a>
+
+    <a href="#ch4-1">Opl Applications</a>
+    <a href="#ch4-2">Compatibility</a>
+    <a href="#ch4-3">Running On 2 And 4 Line Machines</a>
+    <a href="#ch4-4">New Commands And Functions</a>
+    <a href="#ch4-5">Machine-code Applications</a>
+    <a href="#ch4-6">Running On 2 And 4 Line Machines</a>
+
+<a href="#ch5">CHAPTER 5</a>
+
+    <a href="#ch5">DISPLAY MODES</a>
+
+    <a href="#ch5-1">2-line Compatibility</a>
+
+    <a href="#ch5-2">System Variables</a>
+        <a href="#ch5-3">DPB_MODE</a>
+        <a href="#ch5-4">DPA_SCRN</a>
+        <a href="#ch5-5">DPB_NLIN</a>
+        <a href="#ch5-6">DPB_WIDE</a>
+        <a href="#ch5-7">DPB_BORD</a>
+
+    <a href="#ch5-8">System Services</a>
+        <a href="#ch5-9">DP$MSET</a>
+        <a href="#ch5-10">DP$PVEW</a>
+
+<a href="#ch6">CHAPTER 6</a>
+
+    <a href="#ch6">UDG CHARACTERS</a>
+
+    <a href="#ch6-1">Use Of UDGs</a>
+
+    <a href="#ch6-2">System Services</a>
+        <a href="#ch6-3">DP$UDG</a>
+
+<a href="#ch7">CHAPTER 7</a>
+
+    <a href="#ch7">THE UDG CLOCK</a>
+
+    <a href="#ch7-1">Use of UDGs</a>
+    <a href="#ch7-2">Starting And Stopping The Clock</a>
+    <a href="#ch7-3">Updating The Clock</a>
+
+    <a href="#ch7-4">System Variables</a>
+        <a href="#ch7-5">DPB_CLOK</a>
+        <a href="#ch7-6">DPB_CRED</a>
+
+    <a href="#ch7-7">System Services</a>
+        <a href="#ch7-8">DP$CSET</a>
+        <a href="#ch7-9">DP$CPRN</a>
+
+<a href="#ch8">CHAPTER 8</a>
+
+    <a href="#ch8">MENUS</a>
+
+    <a href="#ch8-1">System Variables</a>
+        <a href="#ch8-2">MNB_CPTZ</a>
+
+    <a href="#ch8-3">System Services</a>
+        <a href="#ch8-4">MN$XDSP</a>
+        <a href="#ch8-5">MN$1DSP</a>
+        <a href="#ch8-6">MN$TITL</a>
+
+    <a href="#ch8-7">Top Level Menu</a>
+
+<a href="#ch9">CHAPTER 9</a>
+
+    <a href="#ch9">DIARY AND MONTH</a>
+
+    <a href="#ch9-1">System Variables</a>
+        <a href="#ch9-2">DIB_1SLT</a>
+        <a href="#ch9-3">DIB_AP</a>
+
+    <a href="#ch9-4">System Services</a>
+        <a href="#ch9-5">DI$ENTR</a>
+
+<a href="#ch10">CHAPTER 10</a>
+
+    <a href="#ch10">CALCULATOR</a>
+
+    <a href="#ch10-1">System Services</a>
+        <a href="#ch10-2">CA$ENTR</a>
+
+<a href="#ch11">CHAPTER 11</a>
+
+    <a href="#ch11">SYSTEM TIME</a>
+
+    <a href="#ch11-1">System Variables</a>
+        <a href="#ch11-2">TMB_24F</a>
+
+    <a href="#ch11-3">System Services</a>
+        <a href="#ch11-4">TI$ENTR</a>
+        <a href="#ch11-5">TM$NDYS</a>
+        <a href="#ch11-6">TM$WEEK</a>
+        <a href="#ch11-7">TM$DNAM</a>
+        <a href="#ch11-8">TM$MNAM</a>
+        <a href="#ch11-9">TM$TSET</a>
+
+<a href="#ch12">CHAPTER 12</a>
+
+    <a href="#ch12">NOTEPAD</a>
+
+    <a href="#ch12-1">Notepad Structure</a>
+
+    <a href="#ch12-2">System Variables</a>
+        <a href="#ch12-3">NTB_FLGS</a>
+        <a href="#ch12-4">NTB_PSSW</a>
+        <a href="#ch12-5">NTW_CLIN</a>
+        <a href="#ch12-6">NTB_CPOS</a>
+
+    <a href="#ch12-7">System Services</a>
+        <a href="#ch12-8">NT$ENTR</a>
+
+<a href="#ch13">CHAPTER 13</a>
+
+    <a href="#ch13">WORLD</a>
+
+    <a href="#ch13-1">System Services</a>
+        <a href="#ch13-2">WL$ENTR</a>
+
+<a href="#ch14">CHAPTER 14</a>
+
+    <a href="#ch14">ALARM</a>
+
+    <a href="#ch14-1">System Variables</a>
+        <a href="#ch14-2">AMB_WRKD</a>
+
+    <a href="#ch14-3">System Services</a>
+        <a href="#ch14-4">AM$ENTR</a>
+
+<a href="#ch15">CHAPTER 15</a>
+
+    <a href="#ch15">PROG</a>
+
+    <a href="#ch15-1">System Services</a>
+        <a href="#ch15-2">LG$ENTR</a>
+
+<a href="#ch16">CHAPTER 16</a>
+
+    <a href="#ch16">XFILES</a>
+
+    <a href="#ch16-1">System Services</a>
+        <a href="#ch16-2">XF$ENTR</a>
+        <a href="#ch16-3">XF$SORT</a>
+
+<a href="#ch17">CHAPTER 17</a>
+
+    <a href="#ch17">UTILS</a>
+
+    <a href="#ch17-1">System Services</a>
+        <a href="#ch17-2">XT$ENTR</a>
+        <a href="#ch17-3">XT$BAR</a>
+        <a href="#ch17-4">XT$DIRM</a>
+
+<a href="#ch18">CHAPTER 18</a>
+
+    <a href="#ch18">SWITCHING OFF</a>
+
+    <a href="#ch18-1">System Services</a>
+        <a href="#ch18-2">BT$TOFF</a>
+
+<a href="#ch19">CHAPTER 19</a>
+
+    <a href="#ch19">GENERAL UTILITIES</a>
+
+    <a href="#ch19-1">System Services</a>
+        <a href="#ch19-2">UT$CMPB</a>
+        <a href="#ch19-3">UT$WILD</a>
+        <a href="#ch19-4">UT$SORT</a>
+
+<a href="#ch20">CHAPTER 20</a>
+
+    <a href="#ch20">LIST FUNCTIONS</a>
+
+    <a href="#ch20-1">System Services</a>
+        <a href="#ch20-2">FN$SUM</a>
+        <a href="#ch20-3">FN$MEAN</a>
+        <a href="#ch20-4">FN$VAR</a>
+        <a href="#ch20-5">FN$STD</a>
+        <a href="#ch20-6">FN$MIN</a>
+        <a href="#ch20-7">FN$MAX</a>
+
+<a href="#ch21">CHAPTER 21</a>
+
+    <a href="#ch21">TRIG FUNCTIONS </a>
+
+    <a href="#ch21-1">System Services</a>
+        <a href="#ch21-2">FN$ASIN</a>
+        <a href="#ch21-3">FN$ACOS</a>
+
+<a href="#ch22">CHAPTER 22</a>
+
+    <a href="#ch22">EDITOR</a>
+
+    <a href="#ch22-1">System Services</a>
+        <a href="#ch22-2">LG$EDIT</a>
+        <a href="#ch22-3">TL$ZZMD</a>
+
+<a href="#ch23">CHAPTER 23</a>
+
+    <a href="#ch23">ERROR PRINTING</a>
+
+    <a href="#ch23-1">System Services</a>
+        <a href="#ch23-2">ER$PRNT</a>
+
+<a href="#ch24">CHAPTER 24</a>
+
+    <a href="#ch24">FILE HANDLING</a>
+
+    <a href="#ch24-1">System Services</a>
+        <a href="#ch24-2">FL$WPAR</a>
+        <a href="#ch24-3">FL$WCAT</a>
+        <a href="#ch24-4">FL$NCAT</a>
+        <a href="#ch24-5">FL$WCPY</a>
+        <a href="#ch24-6">FL$WDEL</a>
+        <a href="#ch24-7">FL$WFND</a>
+        <a href="#ch24-8">FL$FDEL</a>
+        <a href="#ch24-9">FL$GETX</a>
+        <a href="#ch24-10">FL$VALX</a>
+
+<a href="#ch25">CHAPTER 25</a>
+
+    <a href="#ch25">OPL TRANSLATOR</a>
+
+    <a href="#ch25-1">System Services</a>
+        <a href="#ch25-2">LN$XSTT</a>
+
+<a href="#ch26">CHAPTER 26</a>
+
+    <a href="#ch26">KEYBOARD</a>
+
+    <a href="#ch26-1">Shift Exe</a>
+    <a href="#ch26-2">Shift Space</a>
+    <a href="#ch26-3">Shift Right-arrow</a>
+
+    <a href="#ch26-4">System Variables</a>
+        <a href="#ch26-5">KBB_SPEC</a>
+
+    <a href="#ch26-6">System Services</a>
+        <a href="#ch26-7">KB$CONK</a>
+
+<a href="#ch27">CHAPTER 27</a>
+
+    <a href="#ch27">FOREIGN LANGUAGES</a>
+
+    <a href="#ch27-1">Language Selection On Cold Start</a>
+    <a href="#ch27-2">Changing Language</a>
+
+    <a href="#ch27-3">System Variables</a>
+        <a href="#ch27-4">BTB_LANG</a>
+        <a href="#ch27-5">XTB_COLD</a>
+
+    <a href="#ch27-6">System Services</a>
+        <a href="#ch27-7">TL$LSET</a>
+
+<a href="#ch28">CHAPTER 28</a>
+
+    <a href="#ch28">PASSWORDS</a>
+
+<a href="#ch29">CHAPTER 29</a>
+
+    <a href="#ch29">LZ64 RAM USAGE</a>
+
+<a href="#ch30">CHAPTER 30</a>
+
+<a href="#ch30">EXTENSIONS TO EXSISTING SYSTEM SERVICES</a>
+
+    <a href="#ch30-1">DP$EMIT</a>
+    <a href="#ch30-2">DP$VIEW</a>
+    <a href="#ch30-3">MN$DISP</a>
+    <a href="#ch30-4">ER$MESS</a>
+    <a href="#ch30-5">LN$STRT</a>
+    <a href="#ch30-6">UT$DISP</a>
+    <a href="#ch30-7">TL$LSET</a>
+    <a href="#ch30-8">TM$DAYV</a>
+    <a href="#ch30-9">DP$SAVE AND DP$REST</a>
+    <a href="#ch30-10">DV$BOOT</a>
+    <a href="#ch30-11">RM$RUNP</a>
+    <a href="#ch30-12">ED$EDIT / ED$EPOS</a>
+
+<a href="#ch31">CHAPTER 31</a>
+
+    <a href="#ch31">ADDITIONAL RECORD TYPES</a>
+
+<a href="#ch32">CHAPTER 32</a>
+
+    <a href="#ch32">RELEASE NOTES</a>
+
+    <a href="#ch32-1">Version 4.2</a>
+    <a href="#ch32-2">Version 4.3</a>
+    <a href="#ch32-3">Version 4.4</a>
+
+<a href="#indx">Index Of New System Services</a>
+
+
+*******************************************************************************
+<a id="ch1">CHAPTER 1</a>    Introduction
+*******************************************************************************
+
+The LZ and LZ64 are the new Organiser II models which have a 4 line
+by 20 character screen, are multi-lingual and offer many new facilities.
+
+The operating system in the LZ(64) is fully back-compatible with the
+standard Organiser II operating system but has many extensions. All
+system variables are at the same addresses as on the standard Organiser
+and all system services will work exactly as they did before. Some
+system services have been extended to use the 4-line screen and there
+are 51 new services together with new system variables.
+
+*******************************************************************************
+<a id="ch1-1"></a>Document Structure
+
+This document describes the LZ's extensions in detail and is intended
+as a supplement to the main &quot;Organiser II Technical Manual&quot;.
+
+All new system services and variables are described in detail in the
+appropriate section.
+
+An index of all new system services is provided at the end.
+
+*******************************************************************************
+<a id="ch1-2"></a>New System Variables
+
+The new system variables cannot be accessed on 2-line machines with
+the exception of the following variables which have been allocated
+space which was reserved and will always be zero on 2-line machines:
+
+    DPB_MODE     $2184 - display mode
+    KBB_SPEC     $2185 - special key flags
+    BTB_LANG     $2186 - language byte
+
+*******************************************************************************
+<a id="ch1-3"></a>New System Services
+
+The new system services have vector numbers from 129 to 179 inclusive.
+They can only be used on LZ machines, if they are called on a 2-line
+Organiser it will cause the machine to crash.  The user must use the
+ROM identification bytes to check which machine the software is running
+on.
+
+Entry points to the top-level applications have been included as system
+services named as XX$ENTR where XX is the name of the application
+(e.g. DI$ENTR provides access to the diary functions).  Most of these
+types of system service take a &quot;function number&quot; in the B register
+to identify which function of the application to run.  For example
+in DI$ENTR, B takes the following values:
+
+    0 - initialise the diary.
+    1 - enter the DIARY application.
+    2 - search the diary (called from UTILS SEARCH).
+    3 - enter the MONTH application.
+
+Note that there is no checking of the B registers values, so ONLY
+these values of B can be used or the machine will crash.
+
+This is the correct way into the top-level applications from machine
+code - do not search the main menu for the application and its address,
+as its name changes in multi-lingual versions.
+
+*******************************************************************************
+<a id="ch2">CHAPTER 2</a>    Hardware
+*******************************************************************************
+
+The hardware is basically the same as standard organiser II with the
+following differences.
+
+*******************************************************************************
+<a id="ch2-1"></a>Rom
+
+Both the LZ and LZ64 have 64k of ROM.  The ROM from $8000 to $BFFF
+is bank-switched in 3 banks of 16k and the ROM from $C000 to $FFFF
+is fixed. (see appendix C of the LZ(64) programming manual). The bank-switching
+is carried out by accessing the following addresses (reading or writing):
+
+    $360    - Reset ROM/RAM to bank 0
+    $3E0    - Select next ROM bank
+
+Note that the operating system may switch ROM banks when any system
+service is called and during interrupts.
+
+*******************************************************************************
+<a id="ch2-2"></a>Ram
+
+The model LZ has 32k of RAM and the LZ64 has 64k. The RAM from $4000
+to $7FFF is bank switched in 3 banks of 16k and the RAM below $4000
+is fixed. (see appendix C of the LZ(64) programming manual). The bank-switching
+is carried out by accessing the following addresses (reading or writing):
+
+    $360    - Reset ROM/RAM to bank 0
+    $3A0    - Select next RAM bank
+
+
+See <a href="#ch29">chapter 29</a>, LZ64 RAM USAGE for details of the use of the &quot;extra&quot;
+32k of RAM.
+
+*******************************************************************************
+<a id="ch2-3"></a>Display
+
+The display on the LZ and LZ64 uses the same LCD drivers as on the
+standard Organiser but is arranged as 4 lines by 20 characters.  The
+control lines at addresses $180 and $181 still work in the same way
+but note the arrangement of the LCD addresses (0-79) mapped onto the
+screen:
+
+     0  1  2  3  8  9 10 11 12 13 14 15 24 25 26 27 28 29 30 31
+
+    40 41 42 43 48 49 50 51 52 53 54 55 64 65 66 67 68 69 70 71
+
+     4  5  6  7 16 17 18 19 20 21 22 23 32 33 34 35 36 37 38 39
+
+    44 45 46 47 56 57 58 59 60 61 62 63 72 73 74 75 76 77 78 79
+
+The system service DP$EMIT maps each character printed to its correct
+position but any applications which write directly to the LCD must
+take account of the mapping.
+
+The character set has been changed to accommodate foreign characters.
+The characters from 0 to 127 remain the same except for character
+92 which is changed to a &quot;\&quot; character.  Most characters from 128
+to 255 have changed but some are left for compatibility, e.g. character
+254 is left as a space to use as a blank &quot;non-space&quot; character.
+
+To further maintain compatibility, the system service DP$EMIT will
+translate any characters from $80 to $A0 inclusive into a space character
+if the machine is running in &quot;2-line compatibility mode&quot;.
+
+As on the standard Organiser II there are 8 UDGS available, but note
+that there is a new system service, DP$UDG, to define and read UDG's
+correctly.
+
+*******************************************************************************
+<a id="ch3">CHAPTER 3</a>    Identification Bytes
+*******************************************************************************
+
+There are 3 identification bytes which up to now have uniquely defined
+each Organiser model.  They occupy the following addresses:
+
+        $FFE7    - Language(s)-byte
+        $FFE8    - Model-byte
+        $FFE9    - Version number
+
+The model-byte now contains a flag which, if set, means &quot;look at model-byte-2&quot;
+which occupies the following address:
+
+        $FFCB    - Model-byte-2
+
+The above 4 bytes together will now uniquely identify all Organiser
+models.
+
+*******************************************************************************
+<a id="ch3-1"></a>Language-byte
+
+ADDRESS:    $FFE7
+VALUES:    $00    - English
+           $01    - French
+           $02    - German
+           $80    - Eleven languages (English default)
+           $81    - English, French, German (English default)
+
+This was introduced in version 3.6 of the Organiser O.S.
+
+Bit 7 of this byte set, indicates that the machine is multi-lingual.
+The value of the remaining seven bits then gives either the language
+or selection of languages implemented.
+
+Further values will be added as new language variants are introduced.
+
+Applications should look at the RAM language byte BTB_LANG to detect
+which language any machine is running in (see <a href="#ch27">chapter 27</a>, foreign
+languages).
+
+*******************************************************************************
+<a id="ch3-2"></a>Model-byte
+
+ADDRESS:    $FFE8
+VALUES:    See below.
+
+The base model type and the special model type are held together in
+the model byte.
+
+The base model type is held in the bottom 3 bits of this byte and
+the special model type is a single bit set in the remaining 5 bits.
+
+The base model type is for identifying the ROM/RAM configuration AND
+the Operating System. NOTE:- The ROM/RAM configuration alone does
+not determine the base model type.
+
+BASE MODEL TYPE:-
+
+    VALUE    MODEL    RAM SIZE    PROM SIZE
+    0        CM       8K          32K
+    1        XP(16)   16K         32K
+    2        XP       32K         32K
+    5        LP       64K         64K
+    6        LZ       32K         64K
+    7    - Expand to MODEL-BYTE-2
+
+
+SPECIAL MODEL TYPE:-
+
+Bits 7 to 4 indicate special models.
+Bit 3 indicates - Expand to MODEL-BYTE-2.
+
+If the base model type is 7, the base model will be given by the bottom
+3 bits of MODEL-BYTE-2. If the special model type has bit 3 set, the
+special model will be given by the top 5 bits of MODEL-BYTE-2. Note
+that these two features are totally independent.
+
+*******************************************************************************
+<a id="ch3-3"></a>Model-byte-2
+
+ADDRESS:    $FFCB
+VALUES:    See below.
+
+This byte is split in the same way as the MODEL-BYTE with top 5 bits
+for special flags and the bottom 3 bits for base model types.
+
+Bit 7 set signifies LZ functionality.
+Bit 6 set indicates foreign character LCD as appose to original LCD.
+Bits 5,4 and 3 are reserved for extra special types.
+Bottom 3 bits are reserved for future base model types.
+
+*******************************************************************************
+<a id="ch3-4"></a>Version Number
+
+ADDRESS:    $FFE9
+
+The LZ version number was initially released at version 4.2, stored
+as $42 (66 decimal). See also <a href="#ch31">chapter 31</a>, release notes.
+
+*******************************************************************************
+<a id="ch3-5"></a>Identifying The LZ
+
+It is important that machine-code applications software that uses
+the features of the LZ operating system detects which machine it is
+running on, otherwise it will crash when run on 2-line machines.
+
+The LZ can be identified in either of two ways:
+
+    1) If the variable DPB_MODE is set to 1, the machine is an LZ.
+        However, if DPB_MODE is 0, the machine may be a 2-line machine
+        or an LZ running in 2-line mode, see <a href="#ch5">chapter 5</a>,display modes.
+
+    2) The MODEL-BYTE and MODEL-BYTE-2 can be examined.
+        If bit 3 of $FFE8 is set and bit 7 of $FFCB is set the machine has
+        an LZ operating system.  If bit 6 of $FFCB is set, the LCD is the
+        foreign character LCD.
+
+Hence the LZ has the following id bytes:-
+
+        $FFE8:    $0E
+        $FFCB:    $C0
+
+and the LZ64 has the following id bytes:-
+
+        $FFE8:    $0D
+        $FFCB:    $C0
+
+*******************************************************************************
+<a id="ch4">CHAPTER 4</a>    Writing Applications
+*******************************************************************************
+<a id="ch4-1"></a>Opl Applications
+
+OPL has been extended on the LZ. Some existing commands and functions
+have been extended to use the 4 lines (e.g. AT 20,4, VIEW(4,A$) etc)
+and some new commands and functions have been added.
+
+The LZ is fully back-compatible with 2-line Organisers, so any existing
+OPL programs will run exactly the same on the LZ as they do on the
+CM or XP but will use 2 lines in the centre of the screen with a border
+around.  This section describes how OPL applications can be written
+which will run on both types of machine and will make use all 4 lines
+when run on an LZ.
+
+<a id="ch4-2"></a>***** Compatibility *****
+
+When OPL programs which have been translated on a 2-line Organiser
+(CM, XP, etc) are run either from the TOP-LEVEL menu or under PROG
+the machine is automatically put into &quot;2-line compatibility mode&quot;
+(See <a href="#ch5">chapter 5</a>, display modes).
+
+The mode in which the OPL program runs is determined by the FIRST
+OPL PROCEDURE RUN.  Any subsequent OPL procedures which are loaded
+will run in the same mode.
+
+The OPL OBJECT CODE generated when translated on an LZ contains a
+STOP code followed by a SINE code at the front of the procedure. Thus
+the object code of all 4-line procedures will be two bytes longer
+than the same procedure translated on a 2-line machine.  The STOP/SINE
+configuration is used for 2 reasons:-
+
+    1) The combination will identify the procedure as 4-line since it
+       can never be generated on a 2-line Organiser.
+
+    2) When run on a 2-line machine, the procedure will cause OPL to
+       stop running, i.e. terminate the OPL program.
+
+Note that LZ machines can translate procedures as though they were
+translated on a 2-line Organiser using the &quot;XTRAN&quot; option in the PROG
+EDITOR menu.
+
+It follows from this that 2-line code can run in 4-line mode providing
+the initial procedure is 4-line, but 4-line code can never run in
+2-line mode.
+
+<a id="ch4-3"></a>***** Running On 2 And 4 Line Machines *****
+
+To create an OPL application which will run on both types of machine
+and make use of all 4 lines when run on an LZ, use the following method:
+
+    1) The main procedure should be translated in 2-line mode and
+       should contain the following code:
+
+    LOCAL M%(2)
+    M%(1)=$3F82 :REM OS DP$MSET
+    M%(2)=$3900 :REM RTS
+    IF PEEKB($FFE8) AND 8)=8 AND (PEEKB($FFCB) AND $80)=$80
+      USR(ADDR(M%()),256) :REM switch to 4-line mode if LZ
+    ENDIF
+
+    This code will switch to 4-line mode if it is run on an LZ but will
+    do nothing if run on a 2-line machine.
+
+    2) Code which can be used on both 2 and 4 line machines (generally
+       code that does not print to the screen or use LZ only features)
+       should be put in subroutines and translated in 2-line mode.
+
+    3) Code to print to the 2 line screen should be put in one procedure
+       and code to print to the 4 line screen in another - translated
+       in 2-line mode and 4-line mode respectively.
+
+    4) The main code must read DPB_MODE (address $2184) to decide which
+       OPL procedures to call to print in the correct mode.
+
+For example the following program will print &quot;HELLO&quot; on the 2nd line
+of a 2-line machine and on the 4th line of an LZ. It consists of the
+following modules:
+
+        MODULE        TRANSLATE MODE
+
+        MAIN          2-LINE
+        HELLO2        2-LINE
+        HELLO4        4-LINE
+
+
+    MAIN:
+    LOCAL M%(2)
+    M%(1)=$3F82 :REM OS DP$MSET
+    M%(2)=$3900 :REM RTS
+    IF PEEKB($FFE8) AND 8)=8 AND (PEEKB($FFCB) AND $80)=$80
+      USR(ADDR(M%()),256) :REM switch to 4-line mode if LZ
+    ENDIF
+    IF PEEKB($2184)
+      HELLO4: :REM call &quot;HELLO4&quot; if 4-line mode
+    ELSE
+      HELLO2: :REM else call &quot;HELLO2&quot;
+    ENDIF
+    GET
+
+
+    HELLO4:
+    AT 1,4 :PRINT &quot;HELLO&quot;
+
+
+    HELLO2:
+    AT 1,2 :PRINT &quot;HELLO&quot;
+
+
+<a id="ch4-4"></a>***** New Commands And Functions *****
+
+The OPL commands and functions which have been added on the LZ and
+are not available on the CM or XP are as follows:
+
+    OFF x% - Turns the Organiser off for a limited time only.
+    UDG - Defines a display character (user-defined graphic).
+
+    COPYW - Copies any type of file with wild card matching.
+    DELETEW - Deletes any type of file with wild card matching.
+
+    CLOCK - Displays the &quot;UDG CLOCK&quot;.
+    MENUN - Displays the different types of menu.
+
+    DIRW$ - Returns name of any type of file with wild card matching.
+    FINDW - Like FIND but allows the use of wild cards.
+
+    ACOS - Returns the arc cosine of a number.
+    ASIN - Returns the arc sine of a number.
+
+    MAX - Returns the greatest item in a list.
+    MIN - Returns the smallest item in a list.
+    MEAN - Returns the mean of items in a list.
+    STD - Returns the standard deviation of items in a list.
+    SUM - Returns the sum of items in a list.
+    VAR - Returns the variance of items in a list.
+
+    DAYS - Returns the number of days since 01/01/1900
+    DAYNAME$ - Converts 1 - 7 to the day of the week.
+    DOW - Returns the day a date falls on as a number 1 - 7.
+    MONTH$ - Converts 1 - 12 to the month.
+    WEEK - Returns the week number a date falls in.
+
+Note that XTRAN will give an error if used to translate any of
+the above commands.
+
+*******************************************************************************
+<a id="ch4-5"></a>Machine-code Applications
+
+Devices are booted on cold start before asking for a language and
+again afterwards when the language has been selected to enable the
+device to switch languages. This feature can be disabled (see <a href="#ch27">chapter
+27</a>, foreign languages).
+
+<a id="ch4-6"></a>***** Running On 2 And 4 Line Machines *****
+
+All current machine code applications will run on the LZ as they
+stand but will automatically be put into &quot;2-line compatibility mode&quot;
+as soon as anything is printed to the screen.
+
+There are 3 methods by which machine code applications can be run:
+
+    1) Booting (running install and remove vectors).
+    2) OPL Language extensions (running lang vector).
+    3) From the top-level menu.
+
+Whichever method is used, the LZ will switch to 2-line mode before
+anything is printed and will switch back to 4-line mode when returning.
+
+The device itself must put the machine into 4-line mode if required,
+by calling system service DP$MSET.
+
+Machine code applications which print to the screen should use the
+following method to implement 2-line and LZ compatible software. Whenever
+the application is entered, from either of the above 3 methods, the
+following should be carried out:
+
+    1) Before calling any system services, check the value of DPB_MODE.
+       If DPB_MODE = 0, take no further action and run in 2-line mode.
+
+    2) If DPB_MODE = 1, call DP$MSET prevent the operating system switching
+       to 2-line mode.
+
+Note that machine code applications can simply check DPB_MODE rather
+than looking at the ROM id bytes because the mode will not change
+until anything is printed to the screen. However, OPL applications
+will have already been put into 2-line mode by the time they are running,
+so they must check the ROM id.
+
+For example the following procedure will print &quot;HELLO&quot; on the 2nd
+line of a 2-line machine and on the 4th line of an LZ:
+
+    LDA    A,DPB_MODE
+    BEQ    1$        ;branch to run in 2-line mode
+    OS    DP$MSET        ;set to 4-line mode A=1
+    OS    UT$DISP
+    .BYTE    12,23        ;clear screen and goto 4th line
+    .ASCIZ    &quot;HELLO&quot;
+    RTS
+
+1$:    OS    UT$DISP
+    .BYTE    12,10        ;clear screen and goto 2nd line
+    .ASCIZ    &quot;HELLO&quot;
+    RTS
+
+*******************************************************************************
+<a id="ch5">CHAPTER 5</a>    Display Modes
+*******************************************************************************
+
+<a id="ch5-1"></a>2-line Compatibility
+********************
+
+The LZ maintains compatibility with 2-line Organisers by emulating
+the 2 line screen.
+
+Thus, there are two modes of operation:
+
+    1) 4-line mode.
+    2) 2-line compatibility mode.
+
+To simplify the writing of 2-line/4-line applications, variables are
+provided for the address of the screen, the mode, the number of lines
+and the width of the screen which are valid in either mode.
+
+The system service DP$MSET is provided to switch between modes.
+
+Note also that existing bootable applications are automatically put
+into 2-line mode if they print to the screen (see <a href="#ch4-5">chapter 4</a>).
+
+In 2-line compatibility mode all existing applications should work
+exactly as though they are running on a 2-line Organiser.  The same
+screen buffer (DPT_TLIN) is used when in this mode.
+
+*******************************************************************************
+<a id="ch5-2"></a>System Variables
+
+The following system variables control the display mode and the border
+character.
+
+<a id="ch5-3"></a>***** DPB_MODE *****
+
+ADDRESS:    $2184
+VALUES:    0 for 2-line mode.
+        1 for 4-line mode.
+
+DPB_MODE shows the display mode that is currently in operation. It
+is set by the operating system service DP$MSET. It can be read at
+any time but should not be written to directly (DP$MSET must be used).
+
+<a id="ch5-4"></a>***** DPA_SCRN *****
+
+ADDRESS:    $2090
+VALUES:    DPT_TLIN in 2-line mode.
+        DPT_4LIN in 4-line mode.
+
+DPA_SCRN contains the address of the current screen buffer. It is
+set by the operating system service DP$MSET. When in 2-line mode,
+it contains the address of DPT_TLIN - the 2-line screen buffer at
+the same memory location as on 2-line Organisers (for compatibility)
+When in 4-line mode it contains the address of DPT_4LIN - the new
+80 character 4-line screen buffer. It can be read at any time but
+should not be written to directly (DP$MSET must be used).
+
+<a id="ch5-5"></a>***** DPB_NLIN *****
+
+ADDRESS:    $2092
+VALUES:    2 in 2-line mode.
+        4 in 4-line mode.
+
+DPB_NLIN contains the number of screen lines in the current display
+mode. It is set by the operating system service DP$MSET. It can be
+read at any time but should not be written to directly (DP$MSET must
+be used).
+
+<a id="ch5-6"></a>***** DPB_WIDE *****
+
+ADDRESS:    $2093
+VALUES:    16 in 2-line mode.
+        20 in 4-line mode.
+
+DPT_WIDE contains the screen width in the current display mode. It
+is set by the operating system service DP$MSET. It can be read at
+any time but should not be written to directly (DP$MSET must be used).
+
+<a id="ch5-7"></a>***** DPB_BORD *****
+
+ADDRESS:    $2099
+VALUES:    0 - $FF
+DEFAULT:    $F5
+
+DPB_BORD contains the character used for the border when in 2-line
+compatibility mode.  It is initialised on 'cold-start' and in RESET
+to $F5 (a chequered square). It can be read or written to at any time.
+
+*******************************************************************************
+<a id="ch5-8"></a>System Services
+
+<a id="ch5-9"></a>***** DP$MSET *****
+
+VECTOR NUMBER.    130
+INPUT PARAMETERS:    A register - mode required: 0 for 2-line,
+1 for 4-line mode.
+                Bit 7 set specifies leave clock alone.
+OUTPUT VALUES:    A register - previous mode.
+PRESERVES:    B,X registers.
+
+
+DESCRIPTION
+
+Sets the Operating System into 2 or 4 line mode.
+
+The following is always carried out:-
+
+1) If the top bit of the A register is clear, the UDG CLOCK is switched off.
+2) The variable DPB_MCHK is cleared.
+3) END if the mode requested is the same as the current mode.
+4) The screen is initialised for the mode selected:-
+
+    2-line:    clear 16 character by 2 line window with border.
+    4-line:    clear entire 4-line screen.
+
+5) The variables DPA_SCRN, DPB_NLIN, DPB_WIDE are initialised.
+
+EXAMPLE
+
+Machine-code applications for 2 and 4 line machines can use the following
+code:-
+
+        LDA     A,DPB_MODE
+        BEQ     1$               ;branch to run in 2-line mode
+        OS      DP$MSET          ;set to 4-line mode A=1
+
+        ;PUT 4-LINE CODE HERE
+
+        RTS
+
+1$:     ;PUT 2-LINE CODE HERE
+
+        RTS
+
+ERRORS
+        None.
+
+BUGS
+        None.
+
+
+<a id="ch5-10"></a>***** DP$PVEW *****
+
+VECTOR NUMBER:    163
+INPUT PARAMETERS:    A register - Bit 7 set for routine to exit
+on arrow keys.
+            B register - Length of string to view.
+            X register - Address of string to view.
+            UTW_S0  - Time delay before scrolling begins.
+OUTPUT VALUES:    None.
+
+
+DESCRIPTION
+
+A partial view routine. Works exactly like DP$VIEW but at the current
+cursor position given by DPB_CPOS.  Any characters before the cursor
+will not scroll but the string at X will be displayed scrolling on
+the remainder of the line.
+
+
+EXAMPLE
+
+This routine is used, for example, in CALC on the LZ.
+
+
+ERRORS
+        None.
+
+BUGS
+        None.
+
+*******************************************************************************
+<a id="ch6">CHAPTER 6</a>    UDG Characters
+*******************************************************************************
+
+<a id="ch6-1"></a>Use Of UDGs
+***********
+
+The LZ uses the same display drivers as the 2-line Organiser, hence
+there are still only 8 UDGs available.  They can be defined in the
+same way as on the 2-line Organiser but a new system service DP$UDG
+has been provided to simplify the operation.  There is also the OPL
+extension &quot;UDG&quot; which will define UDG characters.
+
+In the LZ, UDGs are used for the following:-
+
+  *  Icons - UDG 0
+  *  The UDG clock - UDGs 1,3,4,5,6,7
+  *  The underscore characters used in the title lines - UDG 2
+  *  The dotted lines - UDG 2
+  *  The diary &quot;week at a view&quot; - ALL 8 UDGs.
+  *  The bar graph in &quot;Info&quot; - ALL 8 UDGs.
+
+Note that the UDG CLOCK uses UDG 1 for the am/pm indicator, so when
+24-hour mode is set, UDG 1 will not be used.
+
+Note also that the 'high' and 'low' dotted lines both use UDG 2 and
+therefore cannot appear on the screen at the same time as the title
+line.
+
+Applications can use all 8 UDGs since they are always re-defined by
+the operating system before use.
+
+*******************************************************************************
+<a id="ch6-2"></a>System Services
+
+<a id="ch6-3"></a>***** DP$UDG *****
+
+VECTOR NUMBER.    133
+INPUT PARAMETERS:    A register - 0 for 8 byte pattern, 1 for 5
+bytes.
+                Bit 7 set to READ (8 bytes always).
+            B register - The UDG to define (0 - 7).
+            X register - points to the 8 or 5 byte pattern.
+OUTPUT VALUES:    None.
+
+
+DESCRIPTION
+
+Defines or reads a UDG.
+If the top bit of A is clear - Defines UDG B with the pattern at X.
+UDGs are 5 pixels wide by 8 pixels high. If the A reg is 0, the first
+byte at X is the top line of the UDG and bits 4 to 0 define the pattern
+from left to right. To allow UDGs to be stored in 5 bytes instead
+of 8 the A reg should be set to 1.  Then the first byte at X defines
+the left hand edge of the udg with bit 7 as the top pixel.
+
+If top bit of A is set - Reads UDG B into buffer at X (using 8 bytes
+always).
+
+
+Note that interrupts are disabled in DP$UDG.
+
+
+EXAMPLE
+
+1) Defines UDG 0 as the underlined bell icon.
+
+
+        CLR     B
+        CLR     A               ;use 8 bytes
+        LDX     #UDG
+        OS      DP$UDG
+        RTS
+
+
+UDG:    .BYTE   $04,$0E,$0E,$1F,$1F,$04,$00,$1F
+
+2) Define the same UDG in 5 bytes.
+
+        CLR     B
+        LDA     A,#1            ;use 5 bytes
+        LDX     #UDG
+        OS      DP$UDG
+        RTS
+
+
+UDG:    .BYTE   $19,$79,$fd,$79,$19
+
+
+ERRORS
+    None.
+
+*******************************************************************************
+<a id="ch7">CHAPTER 7</a>    The UDG Clock
+*******************************************************************************
+
+<a id="ch7-1"></a>Use of UDGs
+***********
+
+The UDG clock uses UDGs 1,3,4,5,6,7 in the following manner.
+
+EXAMPLE TIMES:
+        _  9  :  3  0  a
+        1  2  :  4  5  p
+        1  2  _  4  5  p
+
+UDG USED:        3  4  5  6  7  1
+
+The flashing colon is achieved by redefining UDG 5 every 1/2 second
+in the keyboard interrupt.
+
+*******************************************************************************
+<a id="ch7-2"></a>Starting And Stopping The Clock
+
+The system service DP$CSET, can print the clock anywhere on the screen
+and will initialise the updating of the clock every 1/2 second.
+
+DP$CSET can also stop the clock by preventing the updating but the
+UDGs will remain on the screen until they are overwritten by printing.
+
+*******************************************************************************
+<a id="ch7-3"></a>Updating The Clock
+
+The clock is updated in the keyboard interrupt routine by calling
+DP$CPRN. Every 1/2 second UDG 5 is re-defined to achieve the flashing
+colon and every time the minutes change, all UDGs used for the clock
+are re-defined.
+
+Occasionally, the clock will stop flashing, e.g. when printing. This
+is because the keyboard interrupts have been disabled momentarily.
+The clock will not, of course, lose any time since it always gets
+the time from the system clock.
+
+*******************************************************************************
+<a id="ch7-4"></a>System Variables
+
+The following system variables control the UDG clock.
+
+<a id="ch7-5"></a>***** DPB_CLOK *****
+
+ADDRESS:    $2095
+VALUES:    0 - 74, bit 7 set or clr.
+
+
+DPB_CLOK stores the position of the left most character of the 6 character
+UDG clock.  If bit 7 is set the clock will not be updated (i.e. it is
+off). It is set by the operating system service DP$CSET. It can be
+read at any time but should not be written to directly (DP$CSET must
+be used).
+
+<a id="ch7-6"></a>***** DPB_CRED *****
+
+ADDRESS:    $2096
+VALUES:    0 - 9, bit 7 set or clr.
+
+
+DPB_CRED is the &quot;clock ready&quot; flag, it is used to time the 1/2 second
+flashing of the colon. It counts down from 9 to 0 and the top bit
+is toggled for the flashing colon.  If bit 7 is set, the &quot;:&quot; is printed,
+otherwise just an underline character.
+
+*******************************************************************************
+<a id="ch7-7"></a>System Services
+
+<a id="ch7-8"></a>***** DP$CSET *****
+
+VECTOR NUMBER:    131
+INPUT PARAMETERS:    B register - position of clock on screen.
+                Bit 7 set to switch clock off.
+OUTPUT VALUES:    B register - previous clock position and status.
+
+
+DESCRIPTION
+
+Sets the clock-display status.
+
+The B register specifies where on the screen the clock will appear
+as a position 0 to 74 (max 26 in 2 line mode). If the top bit of B
+is set, no clock will be displayed. The clock is printed when DP$CSET
+is called and is updated in the keyboard interrupt. The interrupt
+just re-defines the UDGs and does not write to the screen.
+
+The current screen status (cursor position etc) is always preserved.
+
+Note that 5 UDGs (chars 3 to 7) are used to print the underlined clock
+and 6 if in 12 hour mode - UDG 1 is used for am/pm indicator and will
+overwrite any UDGs previously defined.
+
+The clock is always right justified in a field of 6 characters (a
+UDG &quot;_&quot; is used to justify).
+
+EXAMPLE
+
+Print a title line with the clock in the top right-hand corner. UDG
+0 has been defined as an icon, UDG 1 as an underscore character.
+
+
+    LDX    #TOP_TITLE
+    PSHX
+    OS    UT$DISP
+    .BYTE    12
+    .ASCIZ    &quot;%s&quot;        ;print top-line
+    LDA    B,#15        ;UDG clock in top-right hand corner
+    OS    DP$CSET        ;set to clock mode
+    PSH    B
+    OS    KB$GETK        ;wait for key (clock will be updated)
+    PUL    B
+    OS    DP$CSET        ;restore clock status
+    RTS
+
+TOP_TITLE:
+    .byte    20
+    .byte    0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+
+
+ERRORS
+    None.
+
+<a id="ch7-9"></a>***** DP$CPRN *****
+
+VECTOR NUMBER:    132
+INPUT PARAMETERS:    A register - 0 to define UDG 5 only.
+OUTPUT VALUES:    None.
+PRESERVES:    All scratch registers (UTW_S0 - UTW_S5).
+
+
+DESCRIPTION
+
+Re-defines the UDGs used for the clock as the current system time.
+If the A register is 0, just UDG 5 is defined (the flashing colon).
+Defines UDG 5 as &quot;:&quot; if the top bit of DPB_CRED is set, otherwise
+defines UDG 5 as &quot;_&quot;.
+
+The screen status (cursor position etc) is always preserved.
+
+EXAMPLE
+
+
+    OS    DP$CPRN
+    RTS
+
+
+ERRORS
+    None.
+
+*******************************************************************************
+<a id="ch8">CHAPTER 8</a>    Menus
+*******************************************************************************
+
+The structure of menus is the same in the LZ operating system as in
+the XP, however they can now be displayed on the screen in a variety
+of ways using the system services below.
+
+All menus (except 1 line menus) are now aligned in 3 columns. However
+if there is any item greater than 6 characters long, 2 columns will
+be used.  Aligning in columns uses more space in RTT_BF where the
+menu is constructed, so to maintain compatibility, if an aligned menu
+will not fit, the menu reverts back to a single spaced menu automatically.
+
+All menu items appear on the screen capitalized (but not in 2-line
+mode - for compatibility) but this can be over-ridden by writing to
+MNB_CPTZ.
+
+*******************************************************************************
+<a id="ch8-1"></a>System Variables
+
+<a id="ch8-2"></a>***** MNB_CPTZ *****
+
+ADDRESS:    $209C
+VALUES:    0 or 1.
+DEFAULT:    0.
+
+
+If this byte is set to 1, the entries in the menu will not be capitalized,
+i.e. they will appear as they are stored.  Once set, ALL menus will
+appear as they are stored until the machine is reset or the byte restored
+to 0. This flag is used by the operating system in the FORMAT menu
+&quot;PACK B: PACK C:&quot;.
+
+*******************************************************************************
+<a id="ch8-3"></a>System Services
+
+<a id="ch8-4"></a>***** MN$XDSP *****
+
+VECTOR NUMBER:    134
+INPUT PARAMETERS:    D register - Terminating bit-mask.
+            X register - Address of menu-list.
+OUTPUT VALUES:    A register - Flag to indicate the type of contents
+in the X register.
+                If A=0, X has the address of the routine
+                    associated with the item selected,
+                else,  X points to the name of the selected
+                    item in the menu-list.
+            X register - Depends on value of A register.
+            B register - Terminating key press.
+            UTW_S0   - Number of the menu item selected (0 for first item).
+
+DESCRIPTION
+
+Exactly the same as MN$DISP except that text already on the screen
+is treated as a title with the menu underneath (starting on the next
+clear line).  If more the 3 lines of text are on the screen, the text
+will be truncated, and the last line used for the menu.
+
+Note that in 4-line mode, menus are now aligned in three columns unless
+there are items longer than 6 characters in which case it switches
+to 2 columns.
+
+EXAMPLE
+
+Displays a title on the top line with the menu underneath.
+
+    OS    UT$CDSP
+    .ASCIZ    &quot;==== MAIN MENU =====&quot;
+    LDX    #MENU_LIST        ; Point to the menu-list
+    LDD    #$1000            ; Terminate on EXE only
+    OS    MN$XDSP            ; Call the service
+    RTS
+
+MENU_LIST:
+    .ASCIC    &quot;FIND&quot;
+    .WORD    TL_FIND
+    .ASCIC    &quot;SAVE&quot;
+    .WORD    TL_SAVE
+
+    ...etc...
+
+    .BYTE    0
+
+
+ERRORS
+    ER_RT_ME - menu error.
+
+BUGS
+
+If the D register is passed as 0 then the routine will never exit
+as there will be no valid terminating character. Also note that this
+routine puts the keyboard state into alpha shift.
+
+
+<a id="ch8-5"></a>***** MN$1DSP *****
+
+VECTOR NUMBER:    135
+INPUT PARAMETERS:    D register - Terminating bit-mask.
+            X register - Address of menu-list.
+OUTPUT VALUES:    A register - Flag to indicate the type of contents
+in the X register.
+                If A=0, X has the address of the routine
+                    associated with the item selected,
+                else,  X points to the name of the selected
+                    item in the menu-list.
+            X register - Depends on value of A register.
+            B register - Terminating key press.
+            UTW_S0  - Number of the menu item selected (0 for first item).
+
+
+DESCRIPTION
+
+Exactly the same as MN$DISP except that the menu is displayed in one
+line only and scrolls horizontally. The remaining 3 lines of the screen
+are left intact. The line which the menu is displayed will be the
+line containing the cursor in its current position, DPB_CPOS.
+
+It is suggested that the following DP$EMIT control codes be used to
+position the cursor:-
+
+24 - prints .... on 2nd line and puts cursor on top line.
+25 - prints .... on 3rd line and puts cursor on bottom line.
+
+Note that DPB_CPOS should not be poked directly.
+
+EXAMPLE
+
+Displays a menu on the top-line only, scrolling horizontally.
+
+
+    OS    UT$DISP
+    .BYTE    24,0        ;position cursor on top line
+    LDX    #MENU_LIST    ;point to the menu-list
+    LDD    #$1000        ;terminate on EXE only
+    OS    MN$1DSP        ;call the service
+    RTS
+
+MENU_LIST:
+    .ASCIC    &quot;FIND&quot;
+    .WORD    TL_FIND
+    .ASCIC    &quot;SAVE&quot;
+    .WORD    TL_SAVE
+
+    ...etc...
+
+    .BYTE    0
+
+
+ERRORS
+    ER_RT_ME - menu error.
+
+BUGS
+
+If the D register is passed as 0 then the routine will never exit
+as there will be no valid terminating character. Also note that this
+routine puts the keyboard state into alpha shift.
+
+<a id="ch8-6"></a>***** MN$TITL *****
+
+VECTOR NUMBER:    136
+INPUT PARAMETERS:    D register - Terminating bit-mask.
+            X register - Address of menu-list.
+OUTPUT VALUES:    A register - Flag to indicate the type of contents
+in the X register.
+                If A=0, X has the address of the routine
+                    associated with the item selected,
+                else,  X points to the name of the selected
+                    item in the menu-list.
+            X register - Depends on value of A register.
+            B register - Terminating key press.
+            UTW_S0  - Number of the menu item selected (0 for first item).
+
+
+DESCRIPTION
+
+Exactly the same as MN$DISP except that the top line is used to display
+an icon on the left and a running digital clock on the right.
+
+UDG 0 is always displayed in the top left hand corner of the display.
+
+EXAMPLE
+
+Displays a menu like the top-level menu.
+
+
+    CLR    A
+    CLR    B            ;define udg 0
+    LDX    #MAIN_ICON
+    OS    DP$UDG
+    LDX    #MENU_LIST        ;Point to the menu-list
+    LDD    #$1000            ;Terminate on EXE only
+    OS    MN$TITL            ;Call the service
+    RTS
+
+MAIN_ICON:
+    .BYTE    $0F,$09,$0F,$0F,$0F,$0F,$00,$0F
+
+MENU_LIST:
+    .ASCIC    &quot;FIND&quot;
+    .WORD    TL_FIND
+    .ASCIC    &quot;SAVE&quot;
+    .WORD    TL_SAVE
+
+    ...etc...
+
+    .BYTE    0
+
+
+ERRORS
+    ER_RT_ME - menu error.
+
+BUGS
+
+If the D register is passed as 0 then the routine will never exit
+as there will be no valid terminating character. Also note that this
+routine puts the keyboard state into alpha shift.
+
+*******************************************************************************
+<a id="ch8-7"></a>Top Level Menu
+
+The top level menu works exactly the same as in the standard Organiser
+but has been extended to allow the names of &quot;Notes&quot; and &quot;Files&quot; to
+be inserted as well as the names of &quot;Opl&quot; procedures.
+
+This is done by using 0001 and 0002 as the execution addresses for
+Notes and Files respectively (0000 is still for Opl).
+
+Programs which search the top-level menu for items such as TIME, so
+that they can call the time application will still work on the LZ,
+however this practice is not recommended as the LZ is multi-lingual.
+For convenience, the LZ provides system services as entry points for
+all top-level functions (see <a href="#ch1">chapter 1</a>, Introduction).
+
+*******************************************************************************
+<a id="ch9">CHAPTER 9</a>    Diary And Month
+*******************************************************************************
+
+The LZ diary is stored in the same cell and in almost exactly the
+same format as the CM/XP diary. The only change is that an extra byte
+is added at the end of each entry, to specify the duration of the
+entry (in quarter hours). The length byte also takes this duration
+byte into account, so it now contains the length of the entry plus
+one.
+
+EXAMPLE
+
+    Mon  8 May 1989 Wk19
+     6:00a &lt;Free&gt;
+     5:15p ABCDEF
+     5:45p &lt;Free&gt;
+
+
+If an alarm is set for 15 minutes early, the bytes are:
+
+    $07    length of &quot;ABCDEF&quot; plus one
+    $59    year 1989
+    $04    month MAY
+    $07    day 8
+    $11    hour 17
+    $0F    minutes 15
+    $10    alarm 15 minutes early
+    6 bytes &quot;ABCDEF&quot;
+    $02    duration 30 minutes
+
+and then, the next entry or 0 for end-of-diary.
+
+Notice that, as before, year month and day &quot;start&quot; from 0. An &quot;alarm&quot;
+byte of 0 means &quot;no alarm&quot;; otherwise it is the number of minutes
+to ring early, plus one.
+
+Because the length byte &quot;includes&quot; the extra duration byte, you can
+use the same code to scan through the diary as on the CM/XP, although
+your programs must then handle the duration byte specially. The length
+byte therefore can have values from 2 to 65. Note that Psion's &quot;Diary
+Link&quot; product (versions 1.0 or 1.1) should NOT be used on models LZ/LZ64,
+because it knows nothing of duration bytes. If you do use it to load
+a diary from a PC, curious things may happen when you enter the diary,
+such as entries disappearing or having impossible times.
+
+Other Changes
+
+Times are displayed in 12 or 24 hour format, as specified by the user
+when setting the system time.
+
+As well as chronological order being required, and no two entries
+having the same time, it is also essential that they do not overlap
+because of their durations. They may, however, meet exactly. No entry
+must pass midnight (p.m.) owing to its duration.
+
+The time must be in the year range 1900-2155 with minutes 0, 15, 30
+or 45. Note that all dates still &quot;wrap around&quot;, from 2155 to 1900
+and vice versa.
+
+The maximum length of a &quot;Find String&quot; in the &quot;Find&quot; option is 30,
+not 32.
+
+The diary is no longer saved (using the &quot;Save&quot; option) as a block
+file of type $82, but instead as an ordinary data file. Each entry
+is saved as a separate record - the previous example would be:
+
+    1989050817150216
+    ABCDEF
+
+The first field specifies the date of the entry (1989, 05, 08, for
+8th May 1989), the time (17 15, for 5:15pm), the duration (02) and
+the alarm byte (16, for 15 minutes before - again, 00 would mean &quot;no
+alarm&quot;). The second field is the text of the entry. The order of things
+in the first field, and the use of zeroes where necessary to keep
+things the same length (e.g. &quot;02&quot; for a duration of 2) make the file
+easy to sort in OPL, or otherwise. Note, though, that the &quot;Restore&quot;
+option in the diary will restore entries in any order from a file.
+The &quot;Xrestore&quot; option can be used to load a CM/XP diary from a pak,
+in which case each entry is given a duration of 2 (=30 minutes). Note
+that because a saved record can be edited or even created by a user,
+the year, month and day sections start from 1, not 0 - e.g., the 1st
+of the month is saved as &quot;01&quot;, not &quot;00&quot;.
+
+You can not as yet interchange diaries with Sidekick on a PC, as versions
+1.1 and below of Diary Link should not be used with the LZ/LZ64.
+
+The UDGs used by the diary are:
+
+    high week view arrow: 0
+    low week view arrow: 1
+    bell symbol in day page: 3
+    four week view boxes: 4-7
+
+*******************************************************************************
+<a id="ch9-1"></a>System Variables
+
+Four bytes used in the &quot;Setup&quot; option in the diary are available outside
+the diary.
+
+<a id="ch9-2"></a>***** DIB_1SLT *****
+
+ADDRESS:    $20A9
+VALUES:    1 - 96, see below
+
+This is the address of three bytes which store the boundaries between
+the four WEEK VIEW &quot;slots&quot;. They are stored in quarter-hours, so e.g.
+a value of 4 would mean 1:00am.
+
+The three bytes, though contiguous, can be referenced by the separate
+names DIB_1SLT, DIB_2SLT and DIB_3SLT. This diagram shows how a day
+is divided into 4 slots IN THE WEEK VIEW:
+
+    0 (midnight a.m.)        Slot 1 starts
+    DIB_1SLT        Slot 1 ends/slot 2 starts
+    DIB_2SLT        Slot 2 ends/slot 3 starts
+    DIB_3SLT        Slot 3 ends/slot 4 starts
+    96 (midnight p.m.)        Slot 4 ends
+
+The maximum value for any of the three is 96 (midnight pm). DIB_1SLT
+must be 1 or higher; DIB_2SLT must be higher than DIB_1SLT, and DIB_3SLT
+higher than DIB_2SLT, with the exception that if DIB_3SLT is set to
+96, it is then legal to set DIB_2SLT to 96 (and then, DIB_1SLT could
+be set to 96 also). Setting the start time of a slot to 96 disables
+that slot, and the flashing arrow in the week view will not move down
+onto that slot.
+
+<a id="ch9-3"></a>***** DIB_AP *****
+
+ADDRESS:    $20AC
+VALUES:    0 or non-zero.
+
+
+If this byte is not zero, alarm prompts are enabled in the diary and
+whenever the user types an entry and set its time so that its date/
+start time is greater than the current system time, an &quot;Alarm? Y/N&quot;
+prompt is given. If this byte is set to zero, the prompt will not
+be given. This feature is provided for users who rarely or never use
+alarms in the diary, and who don't want to have to type &quot;N&quot; after
+each entry.
+
+*******************************************************************************
+<a id="ch9-4"></a>System Services
+
+<a id="ch9-5"></a>***** DI$ENTR *****
+
+VECTOR NUMBER:    167
+INPUT PARAMETERS:    B register - Function number; 0, 1, 2 or 3.
+
+
+DESCRIPTION
+
+This is the correct way into the diary from machine code - do not
+search the main menu for &quot;Diary&quot; and its address, as its name changes
+in multi-lingual versions.
+
+All four functions begin by enabling SHIFT-EXE, clearing the diary's
+paste buffer, setting the time in the diary to the system time and
+defining the diary UDGs. They all end by disabling the SHIFT-EXE key.
+
+The following functions are available:
+
+Function 0 - Initialise diary. This is called on cold booting
+the LZ. It clears
+the diary (shrinks the cell to 1 byte length and writes a 0 in it)
+and sets the &quot;Setup&quot; bytes to their default values (DIB_1SLT=48, DIB_2SLT=56,
+DIB_3SLT=72, DIB_AP=non-zero).
+
+Function 1 - Call the diary as from the
+top-level menu option &quot;Diary&quot;. This
+enters the week view initially.
+
+Function 2 - Search current diary for a given string.
+This is called by the
+&quot;Search&quot; option on the &quot;Utils&quot; menu. The find string should be in
+RTT_FF. If an entry matches it will be printed on the bottom 2 lines
+of the screen, and the user can press MODE to enter the diary in page
+mode at this entry, EXE to search for the next match, or ON/CLEAR
+to abort the search.
+
+Output Values:    C set: The search went past end of diary.
+            C clear, B=0: ON/CLR pressed, search aborted.
+            C clear, B=1: MODE pressed, diary entered, then left.
+
+Function 3 - Display the monthly calendar, as
+from the top-level menu option
+&quot;Month&quot;. This will have the same menu available as in the week view,
+and you can enter the day page with EXE.
+
+ERRORS
+    None.
+
+*******************************************************************************
+<a id="ch10">CHAPTER 10</a>    Calculator
+*******************************************************************************
+
+The calculator in the LZ works in the same way as the standard Organiser
+calculator but note the following:-
+
+  *  If an OPL procedure is called from CALC, the screen is not
+cleared automatically (as it is when run from PROG).
+
+  *  If an OPL procedure is called from CALC, it is always run
+in 4-line mode even if it was translated as a 2-line procedure.
+
+*******************************************************************************
+<a id="ch10-1"></a>System Services
+
+One system service is provided for calling the calculator, but note
+that it must not be called from within an OPL procedure unless all
+variables used by OPL are preserved.
+
+<a id="ch10-2"></a>***** CA$ENTR *****
+
+VECTOR NUMBER:    160
+INPUT PARAMETERS:    None.
+OUTPUT VALUES:    None.
+
+
+DESCRIPTION
+
+Provides an entry point to the calculator exactly like selecting CALC
+in the top-level menu.
+
+Note that it must not be called from within an OPL procedure, since
+OPL is not re-entrant unless all its variables are preserved.
+
+EXAMPLE
+
+    OS    CA$ENTR        ;Call the calculator
+    RTS
+
+ERRORS
+    None.
+
+*******************************************************************************
+<a id="ch11">CHAPTER 11</a>    System Time
+********************************************************************************
+
+The system time on the LZ is stored in the same 6 bytes as on the
+standard Organiser however the range of values for TMB_YEAR has been
+extended to 0 - 255 for the years 1900 - 2155 respectively.
+
+The time stored always represents G.M.T., so the world times and daylight-saving
+are calculated as offsets from this.
+
+A system variable is provided for setting 12/24 hour clock and daylight-saving
+flags and a system service is provided as an entry point for TIME.
+
+*******************************************************************************
+<a id="ch11-1"></a>System Variables
+
+<a id="ch11-2"></a>***** TMB_24F *****
+
+ADDRESS:    $20A6
+VALUES:    Bits 7 and 0 only are used.
+        All other bits are reserved.
+
+TMB_24F stores 2 flags:-
+
+  *  Bit 7 is set for daylight-saving ON, clear for OFF.
+  *  Bit 0 is set for 24 hour mode, clear for 12 hour mode.
+
+These flags can be read or written to at any time.
+
+*******************************************************************************
+<a id="ch11-3"></a>System Services
+
+<a id="ch11-4"></a>***** TI$ENTR *****
+
+VECTOR NUMBER:    164
+INPUT PARAMETERS:    B register - Function number 0 or 1.
+OUTPUT VALUES:    None.
+
+
+DESCRIPTION
+
+Provides an entry point to the TIME application.
+
+There are two functions available:
+
+Function 0 - Initialise. Actually does nothing!
+Function 1 - Call the TIME application as from the top-level menu.
+
+EXAMPLE
+
+    LDA    B,#1        ;select function 1
+    OS    TI$ENTR        ;run the time application
+    RTS
+
+
+ERRORS
+    None.
+
+
+<a id="ch11-5"></a>***** TM$NDYS *****
+
+VECTOR NUMBER:    149
+INPUT PARAMETERS:    X register - Address of 3 byte date.
+OUTPUT VALUES:    B register - MSB of result.
+            X register - LSB's of result.
+            If the date is invalid, carry flag is set.
+PRESERVES:    A register.
+
+
+DESCRIPTION
+
+Returns the number of days since 01/01/1900 (if the date passed is
+01/01/1900, the routine will return 0).
+
+The X register points to a 3 byte date containing YEAR:MONTH:DAY in
+the following ranges:
+
+    YEAR:    0 - 255
+    MONTH:    0 - 11
+    DAY:    0 - 28,29,30 or 31
+
+The result is returned in the B,X registers (B has the MSB).
+
+Works from 01/01/1900 to 31/12/2155.
+
+If an invalid date is passed, the carry flag will be set.
+
+EXAMPLE
+
+Calculates the number of days from 1st Jan 1900 to 25th Dec 1988.
+
+    LDX    #DATE        ;point to 3 byte date
+    OS    TM$NDYS
+    BCS    BAD_DATE        ;branch if invalid date
+    STA    B,HDAYS
+    STX    LDAYS        ;store number of days
+    RTS
+
+DATE:    .BYTE    88        ;year 1988
+    .BYTE    11        ;month december
+    .BYTE    24        ;25th day
+
+
+ERRORS
+    None, just C set if date is invalid.
+
+
+<a id="ch11-6"></a>***** TM$WEEK *****
+
+VECTOR NUMBER:    150
+INPUT PARAMETERS:    X register - Address of 3 byte date.
+OUTPUT VALUES:    B register - Week number (0 to 52).
+            If the date is invalid, carry flag is set.
+PRESERVES:    X,A registers.
+
+
+DESCRIPTION
+
+Returns the week number of the supplied date. The first MONDAY of
+the year starts WEEK 1 which is returned as 0. Any dates before this
+MONDAY are in the last week of the previous year.
+
+Applications (e.g. the DIARY convert the week number from 0-52 to 1-53.
+
+The X register points to a 3 byte date containing YEAR:MONTH:DAY in
+the following ranges:
+
+    YEAR:    0 - 255
+    MONTH:    0 - 11
+    DAY:    0 - 28,29,30 or 31
+
+The result is returned in the B register, the 1st week is 0.
+
+Works from 01/01/1900 to 31/12/2155.
+
+EXAMPLE
+
+Returns the &quot;week number - 1&quot; for 25th Dec 1988.
+
+    LDX    #DATE        ;point to 3 byte date
+    OS    TM$WEEK
+    BCS    BAD_DATE    ;branch if invalid date
+    STA    B,WEEK        ;store week number
+    RTS
+
+DATE:    .BYTE    88        ;year 1988
+    .BYTE    11        ;month december
+    .BYTE    24        ;25th day
+
+
+ERRORS
+    None, just C set if date is invalid.
+
+
+<a id="ch11-7"></a>***** TM$DNAM *****
+
+VECTOR NUMBER:    151
+INPUT PARAMETERS:    B register - Day of the week 0 - 6 (0 is Monday).
+OUTPUT VALUES:    X register - Points to the day name string.
+
+
+DESCRIPTION
+
+Returns X as the address of the 3 letter day name for the day of the
+week contained in the B register. Day is in current language selected.
+Note that the day name will be in capitals.
+
+EXAMPLE
+
+Displays the 3 letter name for Sunday:
+
+    LDA    B,#6        ;Sunday
+    OS    TM$DNAM
+    LDA    B,#3        ;name is always 3 bytes long
+    OS    DP$PRNT        ;print the day name on the screen
+    RTS
+
+ERRORS
+    None.
+
+BUGS
+    If the B register is not in the range 0 - 6, garbage will be returned.
+
+
+<a id="ch11-8"></a>***** TM$MNAM *****
+
+VECTOR NUMBER:    170
+INPUT PARAMETERS:    B register - Month 0 - 11 (0 is Jan).
+OUTPUT VALUES:    X register - Points to the month name string.
+
+
+DESCRIPTION
+
+Returns X as the address of the 3 letter month name for the month
+contained in the B register. Month is in current language selected.
+Note that the month name will be capitalized.
+
+EXAMPLE
+
+Displays the 3 letter name for December:
+
+    LDA    B,#11        ;December     OS    TM$MNAM
+    LDA    B,#3        ;name is always 3 bytes long
+    OS    DP$PRNT        ;print the month name on the screen
+    RTS
+
+ERRORS
+    None.
+
+BUGS
+    If the B register is not in the range 0 - 11, garbage will be returned.
+
+
+<a id="ch11-9"></a>***** TM$TSET *****
+
+VECTOR NUMBER:    179
+INPUT PARAMETERS:    X register - Points to 6 byte date and time.
+OUTPUT VALUES:    None.
+
+
+DESCRIPTION
+
+Sets the system time to the time pointed to by the X register. The
+time cannot be simply poked into the system time variables since
+an NMI may be updating the time.
+
+EXAMPLE
+
+Set the system time to 25th December 1988 at 09.30:00am.
+
+    LDX    #TIME        ;point to 6 byte time to be set
+    OS    TM$TSET        ;set the time     RTS
+
+TIME:    .BYTE    88        ;year 1988
+    .BYTE    11        ;month December
+    .BYTE    24        ;day 25th
+    .BYTE    9        ;hour 9
+    .BYTE    30        ;minutes 30
+    .BYTE    00        ;seconds 0
+
+ERRORS
+    None.
+
+*******************************************************************************
+<a id="ch12">CHAPTER 12</a>    Notepad
+*******************************************************************************
+
+This chapter provides the information necessary to create a notepad
+in memory and invoke the notepad editor as called from NOTES or a
+named notepad in the top level menu or to generate a notepad on another
+computer that can be saved to a datapak with the notepad file type
+for loading from the editor.
+
+The Notepad uses the same editor as is used to edit OPL programs.
+This editor can be invoked directly by calling the system service
+LG$EDIT (see <a href="#ch22">chapter 22</a>, editor).
+
+*******************************************************************************
+<a id="ch12-1"></a>Notepad Structure
+
+The Notepad text is stored in allocator cell 16 (defined as NOTECELL)
+in exactly the same format as OPL source procedures (see main Organiser
+II Technical Manual). On cold boot, the notepad cell is initialised
+to contain the name &quot;Notepad:&quot; and system variables (see below) are
+initialised.
+
+The cell is structured as follows:
+
+    a leading word specifying the length of the rest of the cell
+    1-8 byte ascii name of notepad
+    a colon to terminate the name
+    an optional binary 0 byte to terminate the name
+    ascii lines of notepad text, each line terminated by binary 0 byte
+
+Each line has a maximum of 255 bytes including the 0 (these bytes
+are encrypted when not in the editor if a password has been set).
+
+Note that although the notepad name and colon are not editable, if
+the optional 0 is not included then the first text line INCLUDING
+THE NAME has a maximum of 255 bytes. The bytes after the colon can
+be edited. A line consisting only of the terminating 0 represents
+a blank line. The notepad can have any number of lines up to the capacity
+of memory.
+
+If the cell does not have this structure, the editor may display the
+&quot;PACK READ&quot; error as if a corrupted notepad has been loaded from a
+datapak or may produce unexpected results.
+
+The notepad is saved onto a pak as a block body file of type 87 (defined
+as BNOTTYP), and has the same structure as a saved OPL procedure with
+object but instead of the Object Code (OCODE) bytes, notepad header
+information is stored. Following the header, the file has the same
+structure as the notepad cell as described above. The OCODE cell is
+in fact used to hold the header information prior to saving to pak
+and is zeroed after saving.
+
+The header structure is:
+
+    1 word length of Header information
+    1 byte flags for notepad
+        bit7 - true if numbered
+        bit3 - true if on/clear exits editor
+        bit2 - true if prompt to be capitalized
+        bit1 - true if no title required
+        bit0 - true if changed (used in editor)
+        1 byte password flag         0 for no password set
+        9 for password set
+        if password flag is 9; 9 bytes password information
+
+Note that if this structure is generated by the programmer, the password flag
+must be set to 0 to signify no password or the program will try to decrypt the
+file when it is loaded.
+
+*******************************************************************************
+<a id="ch12-2"></a>System Variables
+
+Four system variables that are permanently maintained for the current
+notepad can be referenced from outside the notepad editor.
+
+<a id="ch12-3"></a>***** NTB_FLGS *****
+
+ADDRESS:    $7FEA
+VALUES:    0-$ff but excluding bit3 clear (see below)
+
+This byte contains flags for the editor (see <a href="#ch22-2">LG$EDIT</a>). The following
+bits are currently used:
+
+    bit7 - true if numbered            : may be poked
+    bit3 - true if on/clear exits editor    : do not poke
+    bit2 - true if prompt to be capitalized    : may be poked
+    bit1 - true if no title required    : may be poked
+    bit0 - true if changed (used in editor)    : may be poked
+
+The default value for a new notepad is $08 (bit3 set).
+
+Note that if bit3 is cleared then the notepad cannot be exited. This
+bit is 0 for editing OPL procedures where the menu includes the item
+EXIT.
+
+<a id="ch12-4"></a>***** NTB_PSSW *****
+
+ADDRESS:    $7FEB
+VALUES:    0 or TRUE.
+
+This byte is 0 if the current notepad in memory has no password or
+any non-zero value if a password exists.
+
+It has the default value 0 for a new notepad and is set when a password
+is set.
+
+It must not be poked or the editor may attempt to decrypt unencrypted
+data or not to decrypt encrypted data etc. with unknown results.
+
+<a id="ch12-5"></a>***** NTW_CLIN *****
+
+ADDRESS:    $7FFD
+VALUES:    0-$FFFF (see below).
+
+This word contains the current line number in the current notepad.
+Line 0 is the line containing the notepad name. This defines which
+line the cursor is on.
+
+This variable may be poked to change the line number but should not
+be given a value greater than the last line number in the notepad.
+The maximum line number is 1 less to the number of zero line-delimiters
+in an unencrypted notepad.
+
+<a id="ch12-6"></a>***** NTB_CPOS *****
+
+ADDRESS:    $7FFF
+VALUES:    0-$FE (see below).
+
+This byte contains the cursor position in the current line in the
+current notepad.
+
+This variable may be poked to change the cursor position but should
+not be given a value greater than the length of the current line.
+
+*******************************************************************************
+<a id="ch12-7"></a>System Services
+
+<a id="ch12-8"></a>***** NT$ENTR *****
+
+VECTOR NUMBER:    159
+INPUT PARAMETERS:    B register - Function number; 0, 1, 2, 3 or
+4.
+
+
+DESCRIPTION
+
+This is the correct way into the notepad from machine code - do not
+search the main menu for &quot;Notes&quot; and its address, as its name changes
+in multi-lingual versions.
+
+All four functions begin by clearing the diary's paste buffer which
+is used in the notepad editor to save the current find string. The
+block file type and the cell type are then initialised for Notepad
+editing. After the required function has been called, the block file
+type and cell type are set up for OPL editing again.
+
+The input parameters, returned values and error codes are specified
+for each function separately, or left blank if there are none.
+
+The following functions are available:
+
+Function 0 -    Initialise notepad. This is called on cold booting
+the LZ. It inserts the name &quot;Notepad:&quot; into the cell, sets the cursor
+to the first editable character, clears the system variable NTB_PSSW
+for no password, sets ntb_flgs=8 for no numbering, name not capitalized,
+do title line and exit when ON/CLEAR pressed.
+
+Function 1 -    Call the notepad as from the top-level menu option &quot;Notes&quot;.
+
+Function 2 -    Search first the current notepad and then all saved
+notepads for a given string. Saved notepads are searched in device
+order A:, B:, C:. This function is called by the &quot;Search&quot; option on
+the &quot;Utils&quot; menu. The find string should be in RTT_FF. If an entry
+matches it will be printed on the bottom line of the screen, and the
+user can press MODE to edit the notepad at this line, EXE to search
+for the next match, or ON/CLEAR to abort the search.
+
+Note that password protected notepads are not searched.
+
+Output Values:    C set: The search went past end of diary.
+            C clear, B=0: ON/CLR pressed, search aborted.
+            C clear, B=1: MODE pressed, diary entered, then left.
+
+Function 3 -    Edit a named notepad as from a top-level notepad
+menu item that has been added by the user. If the name is not the
+same as that in the notepad cell, the notepad file is searched for
+on the paks in order A:, B:, C: and loaded into the cell. Any error
+messages (e.g. File not found, Read pak error) are displayed on detection
+and no error codes are returned.
+
+Input Parameters:    UTW_S0 points to the name of the notepad to
+be edited.
+
+Function 4 -     Checks whether a notepad file is password protected.
+
+Input Parameters:    UTW_S0 points to the name of the notepad to
+be edited
+
+Output Values:    B register 0 if unprotected
+            B register TRUE if protected
+            A register has other flags for notepad (see discussion above)
+
+ERRORS
+    FL$BOPN errors
+
+Note: parameter values 0, 1 and 2 are standard across the interfaces
+to the built-in applications (&quot;initialise&quot;, &quot;normal entry&quot; and &quot;search&quot;).
+Values above 2 are application-dependent.
+
+*******************************************************************************
+<a id="ch13">CHAPTER 13</a>    World
+*******************************************************************************
+
+The world application gives the current time (ignoring day light time
+saving) and dialling code from the base city for 400 cities and 150
+countries.
+
+*******************************************************************************
+<a id="ch13-1"></a>System Services
+
+<a id="ch13-2"></a>***** WL$ENTR *****
+
+VECTOR NUMBER:    166
+INPUT PARAMETERS:    B register - Function number; 0, 1 or 2.
+
+
+DESCRIPTION
+
+Function 0 - Initialises the world application. It sets the
+base to be London, Paris or Bonn depending on the language byte (btb_lang).  The
+initial city is always set to New York Manhattan.
+
+Function 1 - Runs the world application exactly as in the top
+level.
+
+Function 2 - Gets the base city and country names into the run
+time buffer. Returns with the city name at rtt_bf+100 and the country
+name at rtt_bf+120.  Both are byte length strings.  If the current
+base is a country (so there is no city) then the country is promoted
+to the city field and the country field is blank.
+
+ERRORS
+    None.
+
+*******************************************************************************
+<a id="ch14">CHAPTER 14</a>    Alarm
+*******************************************************************************
+
+The alarms on the LZ are very similar to those on the standard Organiser,
+with information stored in the same 48 byte table. The last byte of
+each alarm record now contains additional information on the sound
+set for the alarm and the new repeat types.
+
+Bits 0-2 give the repeat setting associated with the alarm, as follows:
+
+    Value        Repeat Setting
+    0        Alarm not Set
+    1        Hourly
+    2        Daily
+    3        Workdays
+    4        Weekly
+    5        Once
+
+The top two bits give the associated tone to go with the alarm:
+
+    Value        Tone
+    0        Normal
+    1        Siren
+    2        Chimes
+
+A system variable AMB_WRKD is provided to indicated which days are
+workdays.
+
+*******************************************************************************
+<a id="ch14-1"></a>System Variables
+
+<a id="ch14-2"></a>***** AMB_WRKD *****
+
+ADDRESS:    $20A7
+VALUES:    All except the top bit are used.
+        The top bit is reserved.
+
+AMB_WRKD is used to determine which days of the week are workdays.
+With bit 0 representing Monday, bit 1 Tuesday etc. bits are set for
+workdays and cleared otherwise. Thus a value of $4f in AMB_WRKD moves
+the weekend to Friday and Saturday.
+
+Setting AMB_WRKD to 0 prevents checking for Workday alarms and removes
+the option from alarm setting.
+
+Note - AMB_WRKD should not be set to $80. If it is trying to
+set a workday alarm, or having an existing one go off will cause the
+machine to lock-up.
+
+*******************************************************************************
+<a id="ch14-3"></a>System Services
+
+<a id="ch14-4"></a>***** AM$ENTR *****
+
+VECTOR NUMBER:    158
+INPUT PARAMETERS:    B register - Function number, 0 - 6
+
+
+DESCRIPTION
+
+Provides an entry point into the ALARM routines.
+
+The available functions are:
+
+Function 0 - Initialise. This clears all alarms and enables
+alarm checking by setting AMB_EI.
+
+Function 1 - Calls the ALARM application as from the top level.
+Sets the screen to four line mode. Allows alarms to be viewed and
+set. On exit restores the screen to previously set mode.
+
+Function 2 - Checks for Diary and ordinary alarms due now and
+in the next 34mins and 8 secs. If an alarm is due it will go off.
+At most one Diary and two ordinary alarms will go off. The function
+then checks for an alarm due in the next 2048 seconds. If an alarm
+of any type is due the routine returns with carry set and D contains
+the number of seconds before the next alarm. (Note - 2&lt;=D&lt;2048). If
+no alarm is due in that time carry is clear on exit.
+
+Output Values:    C clear: No Alarm due in the next 2048s
+            C set: An alarm is due in the next 2048s.
+            If C is set, D register - number of seconds before alarm
+
+Note: if AMB_EI is clear this function does nothing.
+
+Function 3 - Tests for Diary and ordinary alarm due now. If
+one is due it will go off. At most one Diary and one ordinary alarm
+will go off.
+
+Note: if AMB_EI is clear this function does nothing.
+
+Function 4 - Checks for unacknowledged diary alarms. This does
+the 'Review missed alarms' screen on switch-on. It checks for any
+DIARY alarms that have gone off but were not acknowledged by pressing
+ON/CLEAR. If there are any it displays a screen showing how many were
+missed and will review them. The existing screen is preserved.
+
+Note: if AMB_EI is clear this function does nothing.
+
+Function 5 - Turns alarms off. This function preserves AMB_EI
+by copying it to AMB_SEI and then clears it. This disables functions
+2,3 &amp; 4 above. Care should be taken with this routine since it cannot
+be called again without restoring AMB_EI other wise alarms will be
+disabled until AMB_EI is set 'by hand'.
+
+Function 6 - Restores alarm. This copies AMB_SEI back to AMB_EI,
+effectively restoring the alarm checking.
+
+ERRORS
+    None.
+
+*******************************************************************************
+<a id="ch15">CHAPTER 15</a>    Prog
+*******************************************************************************
+
+The PROG application on the LZ is similar to on the standard Organiser.
+The editor used in PROG is described in <a href="#ch22">chapter 22</a>, editor.
+
+*******************************************************************************
+<a id="ch15-1"></a>System Services
+
+<a id="ch15-2"></a>***** LG$ENTR *****
+
+VECTOR NUMBER:    175
+INPUT PARAMETERS:    B register - Function number; 1 or 2.
+
+
+DESCRIPTION
+
+Provides an entry point to the PROG application in the top-level menu.
+There are 2 functions available:
+
+Function 1 - Call the PROG application as from the top-level
+menu.
+
+Function 2 - Search block body files (type in LGB_LANT) that
+are on packs for the string in RTT_FF (length in RTB_FL).
+Returns the following:
+
+Output Values:    Carry set if not found, or found and then EXE
+pressed.
+            If carry clear and B=1 the mode key was pressed.
+            else if carry clear and B=0 the ON/CLEAR was
+            pressed or an error occurred.
+
+EXAMPLE
+    None.
+
+ERRORS
+    None.
+
+*******************************************************************************
+<a id="ch16">CHAPTER 16</a>    Xfiles
+*******************************************************************************
+
+The Xfiles application in the LZ provides access to additional files.
+The top-level Find and Save access the MAIN file only which always
+has type $90. There can be up to 110 additional files per device (A,B
+or C) which will have record types from $91 to $FE. These 'additional'
+files have always been accessible from OPL.
+
+Access to the Xfiles application is via XF$ENTR.
+
+Also, a new facility has been introduced to sort a file on pack A:
+and this can be called using the system service XF$SORT.
+
+*******************************************************************************
+<a id="ch16-1"></a>System Services
+
+<a id="ch16-2"></a>***** XF$ENTR *****
+
+VECTOR NUMBER:    168
+INPUT PARAMETERS:    B register - Function number; 0,1,2,3,4,5.
+
+
+DESCRIPTION
+
+Provides an entry point to the XFILES application in the top-level
+menu.
+
+There are 6 functions available:
+
+Function 0 - Initialises the current XFILES file to be MAIN.
+
+Function 1 - Enters the XFILES application as if from the top-level
+menu.
+
+Function 2 - Search files on all devices for the string in RTT_FF
+(length in RTB_FL).
+
+Output Values:    Carry set if not found, or found and then EXE
+pressed.
+            If carry clear and B=1 the mode key was pressed.
+            else if carry clear and B=0 the ON/CLEAR was
+            pressed or an error occurred.
+
+Function 3 - Find in a file as from a top-level filename that
+has been inserted into the menu by the user. The file is search for
+on all packs in the order A;, B:, C: and if found made the current
+file in XFILES
+
+Input Parameters:    UTW_S0 points to the name of the file to be
+opened.
+
+Function 4 - Runs the top-level FIND function
+
+Function 5 - Runs the top-level SAVE function
+
+EXAMPLE
+    None.
+
+ERRORS
+    None.
+
+
+<a id="ch16-3"></a>***** XF$SORT *****
+
+VECTOR NUMBER:    174
+INPUT PARAMETERS:    X register - Points to filename to be sorted.
+            D register - Address of routine to call during sorting.
+OUTPUT VALUES:    None.
+
+
+DESCRIPTION
+
+Sorts the file pointed to by the X register. The filename at X is
+a leading byte count string of the form &quot;A:NAME&quot; (only files on A
+can be sorted).
+
+The D register should point to a subroutine which will be called during
+the sort (usually used to print to the screen). When the routine is
+called the A register will contain the 'pass' number (1,2,3) and the
+X register will contain the record number/number of comparisons, during
+the sort. If no routine is required, set D to 0000.
+
+The method used is a Quick Sort algorithm which can be used as a general
+sort (see <a href="#ch19-4">UT$SORT</a>).  The 3 passes are as follows:
+
+    1) Generate the tag list
+    2) Sort the tag list
+    3) Re-construct the file from the sorted tag list
+
+The total number of bytes in RAM required to sort a file of size S
+bytes and containing N records is approximately given by the following
+formula:
+
+    Space required = 2 * ( S + N )
+
+If there is insufficient memory for the sort, the file will left alone
+and the error ER_AL_NR will be returned.
+
+EXAMPLE
+    None.
+
+ERRORS
+    ER_AL_NR    - Not enough room for the sort
+    ER_FL_NX    - File does not exist
+    Any other file errors
+
+*******************************************************************************
+<a id="ch17">CHAPTER 17</a>    Utils
+*******************************************************************************
+
+Utils on the LZ provides some useful facilities and these can be accessed
+from machine code with the following system services.
+
+*******************************************************************************
+<a id="ch17-1"></a>System Services
+
+<a id="ch17-2"></a>***** XT$ENTR *****
+
+VECTOR NUMBER:    161
+INPUT PARAMETERS:    B register - Function number; 0 - 11.
+
+DESCRIPTION
+
+Provides an entry point to the UTILS application in the top-level
+menu. There are 12 functions available:
+
+Function 0 - Initialises system password (as no password).
+
+Function 1 - Call the UTILS application as from the top-level menu.
+
+Function 2 - Call the SEARCH option in Utils.
+
+Function 3 - Call the INFO option in Utils.
+
+Function 4 - Call the PASSW option in Utils.
+
+Function 5 - Call the LANG option in Utils.
+
+Function 6 - Check the system password if it is set on (called on warm start).
+
+Function 7 - Actually reset the machine (called from RESET in Utils).
+
+Function 8 - Actually format a RAMPAK (called from FORMAT in Utils).
+
+Input Parameters: A register - the pack to format (1 or 2 for B: or C:).
+
+Function 9 - Call the DIR option in Utils.
+
+Function 10 - Call the COPY option in Utils.
+
+Function 11 - Call the DELETE option in Utils.
+
+EXAMPLE
+    None.
+
+ERRORS
+    None.
+
+
+<a id="ch17-3"></a>***** XT$BAR *****
+
+VECTOR NUMBER:    162
+INPUT PARAMETERS:    A register - % of black on the left.
+            B register - % of grey on the right.
+OUTPUT VALUES:    Leaves characters for line in RTT_BF:RTT_BF+19
+            Sets RTB_BL=20
+
+
+DESCRIPTION
+
+Sets up the udgs for drawing a bar graph as in the INFO application.
+Also leaves characters for drawing the line in the runtime buffer.
+
+EXAMPLE
+
+Draws a bar graph on the second line of the screen with 35% black
+and 17% grey.
+
+    LDD    #&lt;35*256+17&gt;
+    OS    XT$BAR
+    LDX    #RTB_BL
+    PSHX
+    OS    UT$DISP
+    .BYTE    D_HM,D_LF
+    .ASCIZ    &quot;%s&quot;
+    RTS
+
+ERRORS
+      None.
+
+BUGS
+      Calling this service with A+B&gt;100 may cause unpredictable results.
+
+
+<a id="ch17-4"></a>***** XT$DIRM *****
+
+VECTOR NUMBER:    156
+INPUT PARAMETERS:    X register - Points to the prompt string (lcb).
+            B register - Maximum number of characters that can entered.
+            A register - File type for directory $81 - $8F or $00 for ALL.
+            RTB_BL:RTT_BF - Default filename offered
+            UTW_S0  - Line number for prompt 0 or 1 only
+                0 for prompt on top line
+                1 for prompt on 2nd line
+            UTW_S0+1  - flags for the directory display
+                0 for no directory, just calls TL$ZZMD
+                       1 for directory of files
+                2 put sizes of files on right
+                4 put in file types on left
+                8 put in &lt;*&gt; as entry 1 for COPY etc
+                16 insert file type after prompt, (e.g. &quot;Dir of All A:&quot;)
+                32 Disable EXE key from exiting (e.g. for DIR)
+                64 Disable MODE key from switching packs (e.g. for SORT).
+OUTPUT VALUES:    A register - file type of file selected    (provided UTW_S0+1 is
+                non-zero)
+            C set if ON/CLEAR pressed
+            else     RTT_BF holds the selected filename.
+                TLB_CPAK holds the device selected.
+
+ DESCRIPTION
+
+Produces a directory of files with a prompt like EDIT in PROG etc.
+If EXE is used to select a file, the filename will be printed after
+the prompt and the lower 2 or 3 lines of the screen will be cleared
+when the routine exits.
+
+EXAMPLE
+    None.
+
+ERRORS
+    None, C set indicates ON/CLEAR exit.
+
+*******************************************************************************
+<a id="ch18">CHAPTER 18</a>    Switching Off
+*******************************************************************************
+
+A new facility on the LZ is the ability to switch off for a specified
+time before switching back on automatically.  This can be done from
+OPL with the &quot;OFF x%&quot; command and from machine code using BT$TOFF.
+
+*******************************************************************************
+<a id="ch18-1"></a>System Services
+
+<a id="ch18-2"></a>***** BT$TOFF *****
+
+VECTOR NUMBER:    129
+INPUT PARAMETERS:    D register - No. of seconds to be off for
+(2-1800).
+OUTPUT VALUES:    None.
+
+DESCRIPTION
+
+Provides a temporary off facility. The machine will switch of for
+the number of seconds in the D register before automatically switching
+back on and returning from BT$TOFF. The maximum time to be off is
+1800 seconds (30 minutes) since the system clock must be updated.
+The routine can, of course, be called repeatedly to 'apparently' switch
+off for longer times.
+
+EXAMPLE
+
+Switch the machine off for 12 hours.
+
+    LDA    A,#24        ;24 1/2 hours needed
+    PSH    A
+    LDD    #1800        ;to switch off for 30 seconds
+    OS    BT$TOFF
+    PUL    A
+    DEC    A
+    BNE    1$        ;repeat 24 times
+    RTS
+
+ERRORS
+    None.
+
+BUGS
+
+If the value in the D register is out of range, the routine will not
+function correctly. If an ALARM is due before the time to switch back
+on, the machine will switch on early to service the alarm.
+
+*******************************************************************************
+<a id="ch19">CHAPTER 19</a>    General Utilities
+*******************************************************************************
+
+3 new utilities are provided on the LZ and are described below.
+
+*******************************************************************************
+<a id="ch19-1"></a>System Services
+
+<a id="ch19-2"></a>***** UT$CMPB *****
+
+VECTOR NUMBER:    178
+INPUT PARAMETERS:    X register - address of one string.
+            UTW_S0  - address of other string.
+            A register - length of string at X.
+            B register - length of string at UTW_S).
+OUTPUT VALUES:    B register -         0 : matched and same length.
+                &lt;0 : string at X is first alphabetically.
+                &gt;0 : string at UTW_S0 is first alphabetically.
+            Z flag     - according to B register.
+            N flag     - according to B register.
+PRESERVES:    X register.
+
+
+DESCRIPTION
+
+A case dependant buffer compare. Works in exactly the same way as
+UT$ICPB but is case dependant.
+
+EXAMPLE
+    None.
+
+ERRORS
+    None.
+
+
+<a id="ch19-3"></a>***** UT$WILD *****
+
+VECTOR NUMBER:    148
+INPUT PARAMETERS:    A register - length of major string.
+            B register - length of minor string.
+            X register - address of major string.
+            UTW_S0  - address of minor string.
+OUTPUT VALUES:    B register - position of match in major string.
+            Carry clear if matched, set if no match.
+
+
+DESCRIPTION
+
+Works in the same way as UT$ISBF except that the wild characters '*'
+and '+' apply, i.e. determines whether the minor string at UTW_S0 matches
+with the major string at X.
+
+Note the following, where &quot;&quot; is a null string:
+
+    MAJOR STRING    MINOR STRING    MATCH
+    &quot;ABC&quot;        &quot;&quot;        FALSE
+    &quot;&quot;        &quot;&quot;        TRUE
+    &quot;&quot;        &quot;*&quot;        TRUE
+    &quot;&quot;        &quot;+&quot;        FALSE
+
+EXAMPLE
+    None.
+
+ERRORS
+    None.
+
+
+<a id="ch19-4"></a>***** UT$SORT *****
+
+VECTOR NUMBER:    165
+INPUT PARAMETERS:    D register - number of items to be sorted
+            X register - address of caller supplied routine
+OUTPUT VALUES:    None
+
+
+DESCRIPTION
+
+Provides the core utility for a Quick Sort. The routine assigns space
+for a Tag for each of the items to be sorted. The caller's routine
+is then called for each item to obtain the Tag. These are then sorted,
+again using the routine at X to supply the comparison routine. Once
+sorted the Tags are passed in order to the routine at X.
+
+The caller supplied routine is called in three different ways, and
+should conform to the following spec:
+
+if b=0
+    x - number of record (0-n-1)
+    leaves
+    x:= tag for that record
+if b=1
+    x - tag for left hand record
+    s0 - tag for right hand record
+    should leave condition flags as for 'cmp x,s0'
+and when b=2
+    x - tag for next record in sorted order
+
+Note - The caller supplied routine MUST NOT use utw_r0,r1,r2
+or r3 without preserving the EACH time it is called. Nor should this
+routine use the runtime buffer rtb_bl:rtt_bf since this is used in
+the sort code at all times.
+
+EXAMPLE
+
+Sorts the qwerty alphabet into order
+
+    LDD    #26
+    LDX    #MYROUTINE
+    OS    UT$SORT
+    BCC    OKRTS
+    OS    ER$MESS
+OKRTS:     RTS
+
+MYROUTINE:
+    TST    B
+    BNE    1$
+    XGDX            ; returns address of letter
+    ADDD    #ORIGINAL
+    XGDX
+    RTS
+
+1$:    DEC    B
+    BNE    2$
+    LDA    A,0,X
+    LDX    UTW_S0:
+    LDA    B,0,x
+    CBA            ; does comparison
+    RTS
+
+2$:    LDA    A,0,X        ; copies sorted letters in order
+    LDX    SRTTAG
+    STA    A,0,X
+    INX
+    STX    SRTTAG
+    RTS
+
+SRTTAG:
+    .word    SORTED
+ORIGINAL:
+    .ascii &quot;QWERTYUIOPASDFGHJKLZXCVBNM&quot;
+SORTED:
+    .ascii &quot;00000000000000000000000000&quot;
+
+ERRORS
+    ER_AL_NR - either failed to allocate space for the tags or developed
+too many partitions.
+
+*******************************************************************************
+<a id="ch20">CHAPTER 20</a>    List Functions
+*******************************************************************************
+
+6 new functions are provided which work on lists of numbers.
+
+*******************************************************************************
+<a id="ch20-1"></a>System Services
+
+<a id="ch20-2"></a>***** FN$SUM *****
+
+VECTOR NUMBER:    137
+INPUT PARAMETERS:    Pointer on stack to floating-point numbers.
+            Word on stack specifying the number of floats.
+OUTPUT VALUES:    Floating-point result on the stack.
+
+DESCRIPTION
+
+Returns the sum of the floating-point numbers pointed to by the parameter
+on the run-time stack at RTA_SP. The number of floats is passed as
+a word on the stack at RTA_SP+2.The result is pushed onto the run-time
+stack, leaving the input parameters intact.
+
+EXAMPLE
+
+The follow code calculates the sum of COUNT floats at TABFLOATS and
+leaves the result on the stack.
+
+        LDD     RTA_SP:         ;CURRENT RUNTIME STACK POINTER
+        SUBD    #4              ;PREPARE TO PUSH 2 WORDS
+        XGDX
+        CPX     ALA_FREE        ;ENOUGH MEMORY FREE?
+        BCS     ERROR1          ;NO
+        STX     RTA_SP:         ;NEW STACK POINTER
+        LDD     #TABFLOATS      ;POINT TO TABLE OF FLOATS
+        STD     0,X             ;POINTER ON STACK
+        LDD     COUNT           ;COUNT OF FLOATS AT TABFLOATS
+        STD     2,X             ;COUNT ON STACK
+        OS      FN$SUM          ;SUM ON STACK
+        BCS     ERROR2
+        RTS
+
+ERRORS
+    ER_MT_EX    - exponent overflow
+    ER_IM_OV    - stack overflow
+
+
+<a id="ch20-3"></a>***** FN$MEAN *****
+
+VECTOR NUMBER:    138
+INPUT PARAMETERS:    Pointer on stack to floating-point numbers.
+            Word on stack specifying the number of floats.
+OUTPUT VALUES:    Floating-point result on the stack.
+
+
+DESCRIPTION
+
+Returns the arithmetic mean of the floating-point numbers pointed
+to by the parameter on the run-time stack at RTA_SP. The number of
+floats is passed as a word on the stack at RTA_SP+2.
+
+The result is pushed onto the run-time stack, leaving the input parameters
+intact. The follow code calculates the sum of COUNT floats at TABFLOATS
+and leaves the result on the stack.
+
+EXAMPLE
+
+The follow code calculates the arithmetic mean of COUNT floats at
+TABFLOATS and leaves the result on the stack.
+
+        LDD     RTA_SP:         ;CURRENT RUNTIME STACK POINTER
+        SUBD    #4              ;PREPARE TO PUSH 2 WORDS
+        XGDX
+        CPX     ALA_FREE        ;ENOUGH MEMORY FREE?
+        BCS     ERROR1          ;NO
+        STX     RTA_SP:         ;NEW STACK POINTER
+        LDD     #TABFLOATS      ;POINT TO TABLE OF FLOATS
+        STD     0,X             ;POINTER ON STACK
+        LDD     COUNT           ;COUNT OF FLOATS AT TABFLOATS
+        STD     2,X             ;COUNT ON STACK
+        OS      FN$MEAN         ;MEAN ON STACK
+        BCS     ERROR2
+        RTS
+
+ERRORS
+    ER_MT_EX    - exponent overflow
+    ER_IM_OV    - stack overflow
+
+
+<a id="ch20-4"></a>***** FN$VAR *****
+
+VECTOR NUMBER:    139
+INPUT PARAMETERS:    Pointer on stack to floating-point numbers.
+            Word on stack specifying the number of floats.
+OUTPUT VALUES:    Floating-point result on the stack.
+
+
+DESCRIPTION
+
+Returns the sample variance of the floating-point numbers pointed
+to by the parameter on the run-time stack at RTA_SP. The number of
+floats is passed as a word on the stack at RTA_SP+2.
+
+The result is pushed onto the run-time stack, leaving the input parameters
+intact.
+
+The sample variance differs from the population variance in assuming
+that the data set provided constitutes a sample of the data rather
+than the complete population.
+
+The sample variance has the formula:
+              N
+    var(Xi) = (Sigma (Xi-Xm)**2)/(N-1)
+              i=1
+where Xm is the arithmetic mean.
+
+If the complete data set IS provided, the population variance can
+be calculated by multiplying the sample variance by (N-1)/N.
+
+EXAMPLE
+
+The follow code calculates the sample variance of COUNT floats at
+TABFLOATS and leaves the result on the stack.
+
+        LDD     RTA_SP:         ;CURRENT RUNTIME STACK POINTER
+        SUBD    #4              ;PREPARE TO PUSH 2 WORDS
+        XGDX
+        CPX     ALA_FREE        ;ENOUGH MEMORY FREE?
+        BCS     ERROR1          ;NO
+        STX     RTA_SP:         ;NEW STACK POINTER
+        LDD     #TABFLOATS      ;POINT TO TABLE OF FLOATS
+        STD     0,X             ;POINTER ON STACK
+        LDD     COUNT           ;COUNT OF FLOATS AT TABFLOATS
+        STD     2,X             ;COUNT ON STACK
+        OS      FN$VAR          ;VARIANCE ON STACK
+        BCS     ERROR2
+        RTS
+
+ERRORS
+        ER_MT_EX    - exponent overflow
+        ER_IM_OV    - stack overflow
+
+
+<a id="ch20-5"></a>***** FN$STD *****
+
+VECTOR NUMBER:    140
+INPUT PARAMETERS:    Pointer on stack to floating-point numbers.
+            Word on stack specifying the number of floats.
+OUTPUT VALUES:    Floating-point result on the stack.
+
+
+DESCRIPTION
+
+Returns the sample standard deviation of the floating-point numbers
+pointed to by the parameter on the run-time stack at RTA_SP. The number
+of floats is passed as a word on the stack at RTA_SP+2.
+
+The result is pushed onto the run-time stack, leaving the input parameters
+intact.
+
+The sample standard deviation differs from the population standard
+deviation in assuming that the data set provided constitutes a sample
+of the data rather than the complete population.
+
+The sample standard deviation has the formula:
+                      N
+    std(Xi) = sqrt((Sigma (Xi-Xm)**2)/(N-1)) = sqrt(var(Xi))
+                     i=1
+where Xm is the arithmetic mean.
+
+If the complete data set IS provided, the population standard deviation
+can be calculated by multiplying the sample standard deviation by
+sqrt((N-1)/N).
+
+EXAMPLE
+
+The follow code calculates the sample standard deviation of COUNT
+floats at TABFLOATS and leaves the result on the stack.
+
+        LDD     RTA_SP:         ;CURRENT RUNTIME STACK POINTER
+        SUBD    #4              ;PREPARE TO PUSH 2 WORDS
+        XGDX
+        CPX     ALA_FREE        ;ENOUGH MEMORY FREE?
+        BCS     ERROR1          ;NO
+        STX     RTA_SP:         ;NEW STACK POINTER
+        LDD     #TABFLOATS      ;POINT TO TABLE OF FLOATS
+        STD     0,X             ;POINTER ON STACK
+        LDD     COUNT           ;COUNT OF FLOATS AT TABFLOATS
+        STD     2,X             ;COUNT ON STACK
+        OS      FN$STD          ;STD ON STACK
+        BCS     ERROR2
+        RTS
+
+ERRORS
+        ER_MT_EX    - exponent overflow
+        ER_IM_OV    - stack overflow
+
+
+<a id="ch20-6"></a>***** FN$MIN *****
+
+VECTOR NUMBER:    141
+INPUT PARAMETERS:    Pointer on stack to floating-point numbers.
+            Word on stack specifying the number of floats.
+OUTPUT VALUES:    Floating-point result on the stack.
+
+
+DESCRIPTION
+
+Returns the minimum of the floating-point numbers pointed to by the
+parameter on the run-time stack at RTA_SP. The number of floats is
+passed as a word on the stack at RTA_SP+2.
+
+The result is pushed onto the run-time stack, leaving the input parameters
+intact.
+
+EXAMPLE
+
+The follow code finds the minimum of the COUNT floats at TABFLOATS
+and leaves the result on the stack.
+
+        LDD     RTA_SP:         ;CURRENT RUNTIME STACK POINTER
+        SUBD    #4              ;PREPARE TO PUSH 2 WORDS
+        XGDX
+        CPX     ALA_FREE        ;ENOUGH MEMORY FREE?
+        BCS     ERROR1          ;NO
+        STX     RTA_SP:         ;NEW STACK POINTER
+        LDD     #TABFLOATS      ;POINT TO TABLE OF FLOATS
+        STD     0,X             ;POINTER ON STACK
+        LDD     COUNT           ;COUNT OF FLOATS AT TABFLOATS
+        STD     2,X             ;COUNT ON STACK
+        OS      FN$MIN          ;MINIMUM VALUE ON STACK
+        BCS     ERROR1          ;STACK OVERFLOW
+        RTS
+
+ERRORS
+        ER_IM_OV    - stack overflow
+
+
+<a id="ch20-7"></a>***** FN$MAX *****
+
+VECTOR NUMBER:    142
+INPUT PARAMETERS:    Pointer on stack to floating-point numbers.
+            Word on stack specifying the number of floats.
+OUTPUT VALUES:    Floating-point result on the stack.
+
+
+DESCRIPTION
+
+Returns the maximum of the floating-point numbers pointed to by the
+parameter on the run-time stack at RTA_SP. The number of floats is
+passed as a word on the stack at RTA_SP+2.
+
+The result is pushed onto the run-time stack, leaving the input parameters
+intact.
+
+EXAMPLE
+
+The follow code finds the maximum of the COUNT floats at TABFLOATS
+and leaves the result on the stack.
+
+        LDD     RTA_SP:         ;CURRENT RUNTIME STACK POINTER
+        SUBD    #4              ;PREPARE TO PUSH 2 WORDS
+        XGDX
+        CPX     ALA_FREE        ;ENOUGH MEMORY FREE?
+        BCS     ERROR1          ;NO
+        STX     RTA_SP:         ;NEW STACK POINTER
+        LDD     #TABFLOATS      ;POINT TO TABLE OF FLOATS
+        STD     0,X             ;POINTER ON STACK
+        LDD     COUNT           ;COUNT OF FLOATS AT TABFLOATS
+        STD     2,X             ;COUNT ON STACK
+        OS      FN$MAX          ;MAXIMUM ON STACK
+        BCS     ERROR1          ;STACK OVERFLOW
+        RTS
+
+ERRORS
+        ER_IM_OV    - stack overflow
+
+*******************************************************************************
+<a id="ch21">CHAPTER 21</a>    Trig Functions
+*******************************************************************************
+
+2 new trig functions are provided described below.
+
+*******************************************************************************
+<a id="ch21-1"></a>System Services
+
+<a id="ch21-2"></a>***** FN$ASIN *****
+
+VECTOR NUMBER:    172
+INPUT PARAMETERS:    Floating-point argument on the stack.
+OUTPUT VALUES:    Floating-point result on the stack.
+
+
+DESCRIPTION
+
+Returns the arcsine in radians of the floating-point number on the
+run-time stack. The stack pointer (RTA_SP) remains unchanged.
+
+EXAMPLE
+
+The following code returns the arcsine of 0.5 in FN_RESULT.
+
+        LDD     RTA_SP:
+        SUBD    #8              ;make room for argument on stack
+        STD     RTA_SP:         ;D now has destination for UT$CPYB
+        LDX     #8              ;length for copying argument
+        STX     UTW_S0:
+        LDX     #FN_ARG         ;source address for UT$CPYB
+        OS      UT$CPYB         ;copy argument to stack
+        OS      FN$ASIN
+        BCS     ERROR1
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_ARG:
+        .BYTE   0,0,0,0,0,$50,-1,0
+
+    FN_RESULT:
+        .BLKB   8
+
+    FN_RESULT will now contain the floating-point result 0.523598775598.
+
+ERRORS
+    ER_FN_BA    - Bad argument
+
+
+<a id="ch21-3"></a>***** FN$ACOS *****
+
+VECTOR NUMBER:    173
+INPUT PARAMETERS:    Floating-point argument on the stack
+OUTPUT VALUES:    Floating-point result on the stack.
+
+DESCRIPTION
+
+Returns the arccosine in radians of the floating-point number on the
+run-time stack. The stack pointer (RTA_SP) remains unchanged.
+
+EXAMPLE
+
+The following code returns the arccosine of 0.5 in FN_RESULT.
+
+        LDD     RTA_SP:
+        SUBD    #8              ;make room for argument on stack
+        STD     RTA_SP:         ;D now has destination for UT$CPYB
+        LDX     #8              ;length for copying argument
+        STX     UTW_S0:
+        LDX     #FN_ARG         ;source address for UT$CPYB
+        OS      UT$CPYB         ;copy argument to stack
+        OS      FN$ACOS
+        BCS     ERROR1
+        LDX     RTA_SP:         ;source address for copying result
+        LDD     #8
+        STD     UTW_S0:         ;length for copying result
+        ADDD    RTA_SP:         ;add 8 to stack pointer
+        STD     RTA_SP:         ;restore stack pointer
+        LDD     #FN_RESULT      ;destination for copy
+        OS      UT$CPYB
+        RTS
+
+    FN_ARG:
+        .BYTE   0,0,0,0,0,$50,-1,0
+
+    FN_RESULT:
+        .BLKB   8
+
+    FN_RESULT will now contain the floating-point result 1.04719755119.
+
+ERRORS
+    ER_FN_BA    - Bad argument
+
+*******************************************************************************
+<a id="ch22">CHAPTER 22</a>    Editor
+*******************************************************************************
+
+This section describes the editor used in PROG and NOTES on the LZ
+which is also called to produce the CAPTURE editor in Comms-Link.
+The system service LG$EDIT provides an entry point to the editor.
+
+TL$ZZMD is also described which uses the 1 line editor and allows
+the MODE key to change devices (A:,B:,C:)
+
+*******************************************************************************
+<a id="ch22-1"></a>System Services
+
+<a id="ch22-2"></a>***** LG$EDIT *****
+
+VECTOR NUMBER:    171
+INPUT PARAMETERS:    B register - Function number; 0 - 8
+            The individual entry points have parameters specified below.
+OUTPUT VALUES:    X register - current line
+            A register - flags:
+                bit7 - true if numbered
+                bit2 - true if prompt to be capitalized
+                bit1 - true if no title required
+                bit0 - true if changed
+            B register - position in current line X
+
+DESCRIPTION
+
+General entry point for language editor.
+
+Provides the following in-memory editor functions. Does not handle
+files.
+
+Function 0 - Initialise params
+Input Parameters:    A register - Block file type             UTW_S0 (msb)
+- CELL*2 (e.g. TEXTCELL*2)
+
+Function 1 - New
+Input Parameters:    X register - New name
+
+Function 2 - Edit existing cell
+Input Parameters:    X register - Current line (0 for 1st line)
+            A register - Offset in current line
+            UTW_S0 (msb) - flags:
+                 bit7 - true if numbered
+                 bit2 - true if prompt to be capitalized
+                 bit1 - true if no title required
+                 bit0 - true if changed
+
+Function 3 - Find
+
+Function 4 - Zap
+
+Function 5 - Top
+
+Function 6 - Bottom
+
+Function 7 - Print
+
+Function 8 - Restore editor status for PROG etc.
+
+Note the following:
+
+  *  Restore (lg$edit (8)) must be called when finished with editor.
+
+  *  UDG 0 must always be defined as the icon for the title line before
+     calling EDIT (lg$edit (2)).
+
+  *  The flags returned by LG$EDIT and passed to EDIT (lg$edit (2)) may be
+     ignored by passing 0 in the MSB of UTW_S0 before EDIT in which case
+     normal editing as in ORGANISER 2 will occur. The cell must exist before
+     calling LG$EDIT but may be zeroed. The NEW function inserts a name at
+     the start of an existing cell.
+
+To edit an existing cell, the cell MUST have a name terminated by
+a colon at the start. The lines are all terminated by a 0.
+
+EXAMPLE
+
+To create a cell for editing and edit it:
+
+    CLR    A        ; 0 initial size of the cell
+    CLR    B
+    OS    AL$GRAB
+    BCS    ERROR        ; Report error
+    STX    CELL        ; Save the tag
+    XGDX
+    SUBD    #ALT_BASE
+    STA    B,UTW_S0:    ;cell*2
+    CLR    A        ;don't care about lang type of cell
+    CLR    B        ;initialise cell
+    OS    LG$EDIT
+    LDX    #NAME
+    LDA    B,#1        ;insert name into zeroed cell
+    OS    LG$EDIT
+    BCS    ERROR        ;out of memory
+    CLR    A        ;initialise editor positions
+    CLR    B     STA    B,CURRENT_POS
+    STD    CURRENT_LINE
+1$:
+    LDX    #ICON_PATTERN    ;point to 8 byte icon pattern
+    CLR    A        ;8 byte pattern
+    CLR    B        ;udg 0
+    OS    DP$UDG        ;define udg 0 as the icon for lg$edit (2)
+    CLR    UTW_S0        ;not numbered, and dont care if changed
+    LDX    CURRENT_LINE    ;X:=0 for line 0
+    LDA    A,CURRENT_POS
+    LDA    B,#2        ;edit existing cell
+    OS    LG$EDIT        ;exit on MODE key, display left intact
+    STA    B,CURRENT_POS
+    STX    CURRENT_LINE
+    BSR    MYMENU    ;C set b=0 means exit, else c set means error
+    BCC    1$    ;edit again
+    TST    B
+    BEQ    OUT
+    OS    ER$MESS        ;display error and edit again
+    BRA    1$
+     OUT:    LDA    B,#8
+    OS    LG$EDIT        ;MUST RESTORE editor
+    RTS
+
+NAME:    .ASCIC    &quot;CAPTURE&quot;
+
+
+<a id="ch22-3"></a>***** TL$ZZMD *****
+
+VECTOR NUMBER:    155
+INPUT PARAMETERS:    X register - Address of prompt string.
+            A register - parameter to ED$EDIT.
+            B register - maximum input length.
+            UTW_S0+1 - line number for prompt (0-3)
+OUTPUT VALUES:    B register - key which caused exit.
+
+
+DESCRIPTION
+
+Works like TL$XXMD except that the screen is not cleared. Prompt is
+displayed on line in UTW_S0+1 (0-3).
+
+Returns with C set if ON/CLEAR was used to exit. Key for exit is returned
+in B reg.
+
+EXAMPLE
+     None.
+
+ERRORS
+     None.
+
+*******************************************************************************
+<a id="ch23">CHAPTER 23</a>    Error Printing
+*******************************************************************************
+
+Errors are printed in a new format on the LZ if in 4-line mode. In
+2-line mode they are printed in the same way as the standard Organiser.  A
+new system service ER$PRNT is provided on the LZ to print a text string
+in the same format as an error message, unlike ER$MESS which only
+prints operating system errors (error code given in the B register).
+
+*******************************************************************************
+<a id="ch23-1"></a>System Services
+
+<a id="ch23-2"></a>***** ER$PRNT *****
+
+VECTOR NUMBER:    169
+INPUT PARAMETERS:    X register - Address of leading byte count
+string.
+OUTPUT VALUES:    None.
+
+DESCRIPTION
+
+Prints the string at X in the same format as an error message.
+
+EXAMPLE
+
+Prints the string &quot;BAD PASSWORD&quot; in the same format as an operating
+system error message.
+
+    LDX    #BAD_PASS    ;point to string
+    OS    ER$PRNT
+    RTS
+
+BAD_PASS:
+        .ASCIC  &quot;BAD PASSWORD&quot;
+
+ERRORS
+        None.
+
+BUGS
+The string to be printed must be &lt;= 20 characters for 4-line mode
+and &lt;= 16 characters if it is to be used in 2-line mode.
+
+*******************************************************************************
+<a id="ch24">CHAPTER 24</a>    File Handling
+*******************************************************************************
+
+A number of new file system services are provided.
+
+*******************************************************************************
+<a id="ch24-1"></a>System Services
+
+<a id="ch24-2"></a>***** FL$WPAR *****
+
+VECTOR NUMBER:    143
+INPUT PARAMETERS:    B register - Length of filename to pars.
+            X register - Points to filename.
+OUTPUT VALUES:    A register - File type of filename.
+            B register - Length of body of name (before '.').
+            UTW_S0+1   - 1 if OPO, 2 if OPT, 0 otherwise.
+
+
+DESCRIPTION
+
+Validates wild card filename at X, with length B. Returns length of
+body of filename and the file type for the extension.
+
+    If the extension is &quot;.*&quot;, A reg will be 0.
+    If there is no extension, A reg will be $ff.
+
+The maximum body length is 8 characters, and file extensions must
+be 3 characters or &quot;.*&quot;.
+
+For extensions &quot;.OPO&quot; and &quot;.OPT&quot;, the file type will be returned as
+$83, the same as &quot;.OPL&quot;. If this is the case UTW_S0+1 will contain
+1 for &quot;.OPO&quot;, 2 for &quot;.OPT&quot;, or 0 for OPL.
+
+Returns ER_FL_BN error if the filename is illegal.
+
+A null filename is illegal.
+
+EXAMPLE
+    None.
+
+ERRORS
+    ER_FL_BN    - Bad filename
+
+
+<a id="ch24-3"></a>***** FL$WCAT *****
+
+VECTOR NUMBER:    144
+INPUT PARAMETERS:    A register - 1 to start catalogue and 0 to continue.
+                        Top bit set if sizes required.
+            B register - Device: 0=A:,1=B:,2=C:,3=D:
+            X register - Where to put the filename (leading byte count.
+            UTW_S0+1   - Length of string at UTW_S1.
+                     (if top bit is set, filetype is in UTW_S0)
+            UTW_S0(MSB)- File type if top bit of S0+1 is set.
+            UTW_S1       - Points to match string.
+OUTPUT VALUES:            A register - file type found.
+            B register - 1 if OPO, 2 if OPT or 0 otherwise.
+            UTW_S0       - contains no of bytes in the block file or
+                                     number of records in the ODB file found.
+                                     (only if top bit of A was set.)
+
+DESCRIPTION
+
+Provides a wild catalogue of the file names on a device. The routine
+must be called first with A register non zero and thereafter with
+the A register 0 for each subsequent entry.
+
+Works in the same way as FL$BCAT and FL$CATL except that it returns
+only those files which are consistent with the match string pointed
+to by UTW_S1. The match string can contain the wild card characters:-
+
+    *  match any number of any characters.
+    +  match any 1 character.
+
+It can also contain any of the following file extensions:-
+
+    .ODB        - text (database) files
+    .OPL        - OPL procedures (text or object)
+    .DIA        - CM/XP diary save files
+    .COM        - Comms Link setup files
+    .PLN        - Spreadsheet files
+    .PAG        - Pager setup files
+    .NTS        - Notepad files
+    .TY8-TYF     - file types (88-8F)
+    .OPT        - OPL procedures (text only)
+    .OPO        - OPL procedures (object only)
+
+Wild cards cannot be used in file extensions except * on its own so
+that &quot;MAIN.*&quot; will give all types of file called &quot;MAIN&quot;.
+
+&quot;*.*&quot; will give all files of all types.
+
+If no file extension is supplied, .* will be assumed, so that &quot;M*&quot;
+will give all files of all types starting with &quot;M&quot;.
+
+Note that the file extension .OPL will match and file which has Text
+or object and .OPO and .OPT work in exactly the same way as .OPL.
+
+If the top bit of UTW_S0+1 is set, it means that there is no extension
+in the filespec, but the file type to use is in UTW_S0.
+
+Returns error ER_FL_EF when there are no further directory entries
+which match the string supplied.
+
+Note that only X need be passed when A is 0 to continue.
+
+If the top bit of A is set, returns sizes in UTW_S0.
+
+EXAMPLE
+
+
+The following procedure will provide a catalog of all saved CM/XP
+diary files that begin with &quot;D&quot;.
+
+    LDA    A,#1        ;A=1 first time
+    LDX    #MATCH
+    LDA    B,0,X
+    STA    B,UTW_S0+1:    ;length of match string
+    INX
+    STX    UTW_S1:        ;Point to match string
+    LDA    B,#MY_DEVICE    ;which device : 0 - 3 for A: to D:
+    BRA    FIRST
+
+LOOP:    LDX    #TEMP        ;print byte string in TEMP
+    PSHX            ;pass address to UT$DISP
+    OS    UT$DISP
+    .ASCII    &quot;%s&quot;        ;leading count byte string
+    .BYTE    13,10        ; CR LF
+    .BYTE    0        ;terminator for format string
+
+    CLR    A        ;A=0 on subsequent calls to FL$WCAT
+FIRST:
+    LDX    #TEMP        ;filenames placed in TEMP by FL$WCAT
+    OS    FL$WCAT
+    BCC    LOOP        ;repeat until error returned
+    CMP    B,#ER_FL_EF    ;eof err means normal completion
+    BEQ    DONE
+ERROR:    ...            ;otherwise report error
+
+DONE:    ...
+
+MATCH:    .ASCIC    &quot;D*.DIA&quot;
+
+ERRORS
+    ER_PK_NP    - no pak in slot
+    ER_PK_DE    - bad or damaged pak in slot
+    ER_PK_DV    - selected an invalid pak.
+    ER_FL_EF    - No more entries.
+    ER_FL_BN    - Bad file name.
+
+
+
+<a id="ch24-4"></a>***** FL$NCAT *****
+
+VECTOR NUMBER:    157
+INPUT PARAMETERS:    A register - 1 to start catalogue and 0 to
+continue.
+                Top bit set if sizes required
+            B register - Device type 0,1,2 etc.
+            X register - Target for name.
+            UTW_S0+1   - Length of string at UTW_S1.
+                (if top bit is set, filetype is in S0)
+            UTW_S0(MSB)- File type if top bit of S0+1 is set.
+            UTW_S1       - Points to match string.
+            UTW_S2       - nth match required
+OUTPUT VALUES:            A register - file type found.
+            B register - 1 if OPO, 2 if OPT or 0 otherwise.
+            UTW_S0       - contains no of bytes in the block file
+                or number of records in the ODB file found.
+                (only if top bit of A was set)
+
+
+DESCRIPTION
+
+Same as FL$WCAT but gets the S2'th match.
+
+EXAMPLE
+    None.
+
+ERRORS
+    ER_FL_BN    - Bad file name.
+    ER_PK_NP    - no pak in slot.
+    ER_PK_DE    - bad or damaged pak in slot.
+    ER_PK_DV    - selected an invalid pak.
+    ER_FL_EF    - No more entries.
+
+
+<a id="ch24-5"></a>***** FL$WCPY *****
+
+VECTOR NUMBER:    145
+INPUT PARAMETERS:    D register - addr of 'copy-to' string.
+            X register - addr of 'copy-from' string.
+            UTW_S0  - address of user's routine called for each file copied
+                (e.g. to print filenames) - 0000 for no routine.
+OUTPUT VALUES:    None.
+
+
+DESCRIPTION
+
+Wild file copy, works in a similar way to FL$COPY.
+
+Copies files or block files from one device to another.
+
+X points to the 'copy from' string, D points to the 'copy to' string.
+
+The copy-from device must not be the same as the copy-to device. A
+file may be copied to a different name on the target device. If a
+device only is specified in the copy-to string, the file is copied
+with the same name.
+
+Note: When used to copy an OPL procedure to a different name, FL$WCPY
+does not actually change the name on the first line of the procedure.
+This means if an OPL procedure is copied to a different name and then
+listed on a printer, it will be shown with the original name.
+
+The following wild cards are allowed in the 'copy-from' name, but
+not in the 'copy-to' name.          *  match any number of any characters.
+    +  match any 1 character.      It can also contain any of the following
+file extensions:-
+
+    .ODB        - text files
+    .OPL        - OPL procedures (text and object)
+    .OPT        - OPL procedures (text only)
+    .OPO        - OPL procedures (object only)
+    .DIA        - CM/XP diary save files
+    .COM        - Comms Link setup files
+    .PLN        - Spreadsheet files
+    .PAG        - Pager setup files
+    .NTS        - Notepad files
+    .TY8-TYF    - file types (88-8F)
+
+Note that if the 'copy-from' name contains wild characters, the 'copy-to'
+name must be the device name only, e.g. &quot;B:&quot;.
+
+e.g., the following is ILLEGAL:-
+
+    From    A:*.DIA
+    To    B:*.ODB
+
+Note that the &quot;to&quot; name can never have wild chars or file extensions.
+
+UTW_S0 contains the address of the user's routine to be called for
+each file copied. When it is called, X reg will point to the filename
+and A reg will have its file type.
+
+EXAMPLE
+
+To copy all OPL procedures (text and object) starting with the letter
+&quot;X&quot; from A: to B:
+
+    CLR    A
+    CLR    B
+    STD    UTW_S0:        ;no routine called
+    LDX    #COPY_FROM
+    LDD    #COPY_TO
+    OS    FL$WCPY
+    BCS    ERROR
+    RTS
+
+COPY_FROM:
+    .ASCIC    &quot;A:X*.OPL&quot;
+COPY_TO:
+    .ASCIC    &quot;B:&quot;
+
+ERRORS
+    ER_GN_BL    - battery too low
+    ER_PK_BR    - read pack err
+    ER_FL_CY    - pak not copyable
+    ER_FL_DF    - directory full
+    ER_FL_NX    - file not found
+    ER_FL_BN    - bad file name
+    ER_FL_EF    - end of file
+    ER_FL_PF    - pack full
+    ER_PK_IV    - unknown pack
+    ER_PK_NB    - pack not blank
+    ER_PK_CH    - pak changed
+    ER_PK_DV    - bad device name
+    ER_PK_RO    - read only pack
+    ER_PK_DE    - write pack err
+    ER_PK_NP    - no pack
+
+
+<a id="ch24-6"></a>***** FL$WDEL *****
+
+VECTOR NUMBER:    146
+INPUT PARAMETERS:    X register - Address of filename (leading
+byte count).
+            UTW_S0        - address of user's routine called for each
+                file deleted - 0000 for no routine.
+OUTPUT VALUES:    None.
+
+
+DESCRIPTION
+
+Wild file delete, works in a similar way to FL$DELN and FL$BDEL except
+that wild card characters and file extensions are allowed.
+
+The file name at X is a leading count byte string of the form D:NNNNNNNN.XXX
+where XXX is a 3 letter file extension or &quot;.*&quot;
+
+EXAMPLE
+
+
+To delete all OPL procedures beginning with &quot;X&quot; from B:
+
+    LDX    #MATCH_STRING
+    OS    FL$WDEL
+    BCS    ERROR
+    RTS
+
+MATCH_STRING:    .ASCIC    &quot;B:X*.OPL&quot;
+
+ERRORS
+
+    ER_GN_BL    - battery too low
+    ER_PK_BR    - read pack err
+    ER_FL_NX    - file not found
+    ER_FL_BN    - bad file name
+    ER_PK_IV    - unknown pack
+    ER_PK_NB    - pack not blank
+    ER_PK_DV    - bad device name
+    ER_PK_RO    - read only pack
+    ER_PK_DE    - write pack err
+    ER_PK_NP    - no pack
+
+
+<a id="ch24-7"></a>***** FL$WFND *****
+
+VECTOR NUMBER:    147
+INPUT PARAMETERS:    D register - Address of search string (lbc)
+            X register - Where to put the record found (lbc)
+OUTPUT VALUES:    A register - the record type of the record found.
+
+
+DESCRIPTION
+
+Wild FIND, works exactly like FL$FIND but the wild card characters
+*, +, can be used.
+
+Finds a record from the current pak into RAM as a leading count byte
+string at X. Leaves the record number at the record found.
+
+Starts from the current position - to start from the very beginning,
+FL$RSET should be called with d = 1.
+
+EXAMPLE
+    None.
+
+ERRORS
+    ER_GN_BL    - battery too low
+    ER_PK_BR    - read pack err
+    ER_FL_EF    - end of file (no match occurred)
+    ER_PK_IV    - unknown pack
+    ER_PK_NB    - pack not blank
+    ER_PK_DV    - bad device name
+    ER_PK_DE    - write pack err
+    ER_PK_NP    - no pack
+
+
+<a id="ch24-8"></a>***** FL$FDEL *****
+
+VECTOR NUMBER:    176
+INPUT PARAMETERS:    D register - Record to delete from.
+            X register - No. of records to delete, or $FFFF
+                to delete to end of file.
+OUTPUT VALUES:    None.
+
+
+DESCRIPTION
+
+Fast delete of X records starting from record D, of type FLB_RECT
+(the current record type). If X=$FFFF, this deletes to end of file.
+
+EXAMPLE
+    None.
+
+ERRORS
+    None.
+
+
+<a id="ch24-9"></a>***** FL$GETX *****
+
+VECTOR NUMBER:    152
+INPUT PARAMETERS:    A register - file type.
+            X register - Where to put the file extension.
+            UTW_S0+1 - OPL file type IF A=$83.
+OUTPUT VALUES:        B register - length of extension copied into X.
+
+
+DESCRIPTION
+
+Get file extension for type in A reg into X including the &quot;.&quot;. The
+number of bytes copied is returned in B.
+
+    If A is in range $81 to $8F &quot;.ODB&quot; to &quot;.TYF&quot; will be copied.
+    If A=$83, UTW_S0+1 should contain 0 for OPL, 1 for OPO, 2 for OPT.
+    If A=0 &quot;.*&quot; is copied (and B returns 2). If A=$FF nothing happens and
+       B returns 0.
+
+EXAMPLE
+    None.
+
+ERRORS
+    None.
+
+BUGS
+    If A reg is ridiculous value, garbage will be copied in X.
+
+
+<a id="ch24-10"></a>***** FL$VALX *****
+
+VECTOR NUMBER:    153
+INPUT PARAMETERS:    X register - points to &quot;.ext&quot;.
+            B register - length of extension 0,2 or 4
+OUTPUT VALUES:    A register - file type for extension at x.
+            UTW_S0+1   - 1 if OPO, 2 if OPT, 0 otherwise.
+
+
+DESCRIPTION
+
+Returns A as file type for extension at X (points to &quot;.&quot;) length B.
+If X points to &quot;.*&quot;, returns A=0. If B is passed as 0, returns A=$FF.
+
+EXAMPLE
+    None.
+
+ERRORS
+    ER_FL_BN    - bad file name
+
+*******************************************************************************
+<a id="ch25">CHAPTER 25</a>    Opl Translator
+*******************************************************************************
+
+The translator on the LZ is much the same as on the standard Organiser
+(for changes to the existing call, see <a href="#ch30-5">LN$STRT in chapter 30</a>, extensions
+to existing system services). One system service has been added to
+force translation in two or four line mode.
+
+*******************************************************************************
+<a id="ch25-1"></a>System Services
+
+<a id="ch25-2"></a>***** LN$XSTT *****
+
+VECTOR NUMBER:    154
+INPUT PARAMETERS:    B register    - 0 translating language procedure
+                - 1 translating CALC expressions
+                - 2 locating errors in CALC
+                - 3 locating errors in language procedures
+            X register     - offset in QCODE to runtime error
+                ignored if B register is 0 or 1
+            A register     - 0 translation done as for two line machines
+                - 1 translation done as for four line machine
+OUTPUT VALUES:    If error occurs:
+            X register    - offset in source code of error
+            B register    - error code
+ DESCRIPTION
+
+Acts as existing translator call LN$STRT except that the A register
+determines whether the source is to be translated as on existing machines
+or with the extra OPL features in the LZ.
+
+EXAMPLE
+    None.
+
+ERRORS
+    Numerous.
+
+*******************************************************************************
+<a id="ch26">CHAPTER 26</a>    Keyboard
+*******************************************************************************
+
+The keyboard on the LZ has been extended to allow SHIFT-EXE, SHIFT-SPACE
+and SHIFT-RIGHT-ARROW.  One new system service has been added, KB$CONK.
+These SHIFT-KEY functions can be disabled by setting bit 7 of KBB_SPEC.
+
+*******************************************************************************
+<a id="ch26-1"></a>Shift Exe
+
+To allow the use of SHIFT-EXE, bit 0 of KBB_SPEC must be set. When
+set, SHIFT-EXE will be returned as value 14 (e.g. by KB$TEST).
+
+*******************************************************************************
+<a id="ch26-2"></a>Shift Space
+
+To allow the use of SHIFT-SPACE, bit 1 of KBB_SPEC must be set. When
+set, SHIFT-SPACE will be returned as value 15 (e.g. by KB$TEST).
+
+*******************************************************************************
+<a id="ch26-3"></a>Shift Right-arrow
+
+SHIFT-RIGHT-ARROW is used to select foreign characters for the next
+key press only. For example, when the language is set to French, SHIFT-RIGHT
+arrow followed by 'A' produces the character -A acute-.
+
+*******************************************************************************
+<a id="ch26-4"></a>System Variables
+
+<a id="ch26-5"></a>***** KBB_SPEC *****
+
+ADDRESS:    $2185
+VALUES:    Bits 7,1 and 0 are used.
+        All other bits are reserved.
+
+KBB_SPEC contains flags to handle the 'special' keys.
+
+    Bit 7    - set to disable all special SHIFT keys.
+    Bit 1   - set to allow SHIFT-SPACE.
+    Bit 0     - set to allow SHIFT-EXE.
+
+It can be read and written to at any time but should be preserved
+around applications.
+
+*******************************************************************************
+<a id="ch26-6"></a>System Services
+
+<a id="ch26-7"></a>***** KB$CONK *****
+
+VECTOR NUMBER:    177
+INPUT PARAMETERS:    None.
+OUTPUT VALUES:    B register - ascii value of key press.
+
+
+DESCRIPTION
+
+Exactly the same as KB$GETK but turns the cursor ON before waiting
+for a key and OFF afterwards.
+
+EXAMPLE
+    None.
+
+ERRORS
+    None.
+
+*******************************************************************************
+<a id="ch27">CHAPTER 27</a>    Foreign Languages
+********************************************************************************
+
+The LZ operating system is multi-lingual and currently offers English,
+French and German.  All Organiser text, menus and error messages are
+automatically translated when a new language is selected.
+
+The LCD display in the LZ facilitates foreign characters and these
+can be typed in when the appropriate language is selected - see the
+<a href="tech07.htm">chapter concerning the keyboard</a>.
+
+The 'language byte' BTB_LANG, has been changed, enabling multi-lingual
+devices (such as Comms-Link, Spreadsheet etc) to convert to the language
+selected.
+
+*******************************************************************************
+<a id="ch27-1"></a>Language Selection On Cold Start
+
+When the machine is switched on from a 'cold start', the language
+menu is presented (after displaying the copyright message).  One language
+MUST be selected (ON/CLEAR will do nothing) before the top-level menu
+is displayed in the language chosen.
+
+Devices are also re-booted whenever a language is selected.
+
+These two functions:    1)    Displaying the language menu
+            2)    Booting devices
+
+can be disabled to allow bootable software to 'take over' the machine
+on a cold start.  To do this the flags in XTB_COLD described below
+are used.
+
+*******************************************************************************
+<a id="ch27-2"></a>Changing Language
+
+To switch languages under program control, the system service TL$LSET
+must be used. BTB_LANG should not be poked directly.
+
+*******************************************************************************
+<a id="ch27-3"></a>System Variables
+
+<a id="ch27-4"></a>***** BTB_LANG *****
+
+ADDRESS:    $2186
+VALUES:    0 for English
+        1 for French
+        2 for German
+        3 for Spanish
+        4 for Italian
+        5 for Portuguese
+        6 for Swedish
+        7 for Danish
+        8 for Norwegian
+        9 for Dutch
+        10 for Turkish
+DEFAULT:    0
+
+The above values have been pre-assigned but only 3 are available on
+each LZ machine. The default value, 0, is the value before any language
+has been chosen so that devices booted on cold start will boot in
+English.
+
+BTB_LANG can be read at any time but should not be written to directly
+(TL$LSET must be used).
+
+BTB_LANG can be read on ALL Organiser models but cannot be changed
+unless the machine is multi-lingual.
+
+<a id="ch27-5"></a>***** XTB_COLD *****
+
+ADDRESS:    $232E
+VALUES:    Bits 7 and 0 only are used.
+        All other bits are reserved.
+DEFUALT:    0
+
+XTB_COLD stores 2 flags:-
+
+    Bit 7 is set to disable the language selection menu.
+    Bit 0 is set to disable the 'second boot' after language selection.
+
+These flags can be read or written to at any time.
+
+Note that if bit 7 is set, the second boot will still take place unless
+bit 0 is set.
+
+XTB_COLD is reset to zero after language selection is attempted.
+
+*******************************************************************************
+<a id="ch27-6"></a>System Services
+
+<a id="ch27-7"></a>***** TL$LSET *****
+
+VECTOR NUMBER:    128
+INPUT PARAMETERS:    B register - language to be loaded.
+OUTPUT VALUES:    None.
+
+
+DESCRIPTION
+
+Sets language to that specified in the B register.  See <a href="#ch27-4">BTB_LANG</a> (above)
+for values. If the language requested is not available, English is
+selected. Sets BTB_LANG to the language selected.  The top-level menu
+is re-initialised so any 'inserted items' will be removed.
+
+It is possible to get an error if there is insufficient room in RAM
+for the new top-level menu (different languages have different sized
+top-level menus). If an error occurs, the language is unchanged.
+
+EXAMPLE
+
+    LDA    B,#2        ;select German
+    OS    TL$LSET
+    BCS    ERROR
+
+ERRORS
+    ER_AL_NR    - Not enough room for the new language top-level menu.
+
+*******************************************************************************
+<a id="ch28">CHAPTER 28</a>    Passwords
+*******************************************************************************
+
+Two types of password protection are available - the ability to set
+a system password, to be asked for whenever the LZ/LZ64 is turned
+on, and the ability to set a password on a notepad. A password-protected
+notepad is stored in encrypted form.
+
+Outside of Psion, no further details are available on this subject.
+
+*******************************************************************************
+<a id="ch29">CHAPTER 29</a>    LZ64 Ram Usage
+*******************************************************************************
+
+The RAM in an LZ64 is arranged in a similar fashion to the
+ROM in both LZ and LZ64 - 3 &quot;banks&quot; of 16K are switched between,
+as required. The memory map is outlined in the &quot;Technical Programming&quot;
+appendix in the LZ/LZ64 manual. On the LZ64, the 16K RAM between
+addresses $4000 and $8000 is used in the same way as on the CM/XP/LZ
+models, for example to hold the current diary (and on the LZ, the
+current notepad), except that &quot;PACK A:&quot; starts in the third RAM bank
+and, as it grows, works its way through the second bank and then into
+the main bank which the other functions (diary etc) use.
+
+PEEKing and POKEing between addresses $4000 and $8000 on an LZ64 will
+only access the bank which is currently selected, and is therefore
+not recommended.
+*******************************************************************************
+<a id="ch30">CHAPTER 30</a>    Extensions To Existing System Services
+*******************************************************************************
+
+Some existing system services have been extended for 4-line operation.
+*******************************************************************************
+<a id="ch30-1"></a>DP$EMIT
+
+Seven additional control chars are available in 4 line
+mode only:
+
+    D_3R    20    /* refresh 3rd line    */
+    D_4R    21    /* refresh 4th line    */
+    D_C3    22    /* clear 3rd line    */
+    D_C4    23    /* clear 4th line    */
+    D_HD    24    /* print high dotted line */
+    D_LD    25    /* print low dotted line */
+    D_CE    26    /* clear to end of line    */
+
+Notes: D_CB clears line 2. D_HD and D_LD both use UDG 2.
+
+*******************************************************************************
+<a id="ch30-2"></a>DP$VIEW
+
+This can view lines 0 - 3 in 4-line mode.
+
+*******************************************************************************
+<a id="ch30-3"></a>MN$DISP
+
+Menus are aligned in 3 columns when in 4-line mode.
+Note that any spaces within menu items are now converted to character 254
+to save confusion.
+
+*******************************************************************************
+<a id="ch30-4"></a>ER$MESS
+
+This prints errors on 4 lines if in 4-line mode.
+
+*******************************************************************************
+<a id="ch30-5"></a>LN$STRT
+
+This translates OPL in the current mode (2- or 4- line) specified by dpb_mode.
+
+*******************************************************************************
+<a id="ch30-6"></a>UT$DISP
+
+An additional control code has been added to centre
+text - DSP_CN (value 31). When this is used, the next string
+to be displayed will be centred on the current line,
+with the line cleared on either side.
+
+*******************************************************************************
+<a id="ch30-7"></a>TL$LSET
+
+The number of languages supported is
+not as many as on multi-lingual CM/XP machines.
+
+*******************************************************************************
+<a id="ch30-8"></a>TM$DAYV
+
+This has been extended to work from 1900 to 2155.
+
+*******************************************************************************
+<a id="ch30-9"></a>DP$SAVE AND DP$REST
+
+These now use DPT_4SAV, the 4-line save buffer, even in 2-line mode,
+instead of the previous DPT_SAVE which no longer exists.
+
+*******************************************************************************
+<a id="ch30-10"></a>DV$BOOT
+
+This jumps to 2-line mode when running &quot;remove&quot; and &quot;install&quot;
+vectors which print (unless 4 line mode has been set).
+
+*******************************************************************************
+<a id="ch30-11"></a>RM$RUNP
+
+Jumps to 2-line mode if running OPL which was translated on ORG II.
+
+*******************************************************************************
+<a id="ch30-12"></a>ED$EDIT / ED$EPOS
+
+If bit 1 of A register is set, then the edit will exit if an
+UP or DOWN arrow key is pressed.
+*******************************************************************************
+<a id="ch31">CHAPTER 31</a>    Additional Record Types
+*******************************************************************************
+
+The following block body types have been assigned for the following use:
+
+    RECORD TYPE    APPLICATION
+
+    $81        Filenames
+    $82        Old diary block files (XDiary)
+    $83        OPL procedures
+    $84        Comms-Link setup files
+    $85        Spreadsheet files
+    $86        Pager setup files
+    $87        Notepad files
+    $88        Reserved
+    $8A        Reserved
+    $8B        Reserved
+    $8C        Reserved
+    $8D        Reserved
+    $8E        General use
+    $8F        Reserved
+
+*******************************************************************************
+<a id="ch32">CHAPTER 32</a>    Release Notes
+*******************************************************************************
+
+What follows are notes for the different releases of LZ/LZ64 machines.
+All significant enhancements known bugs are listed.
+
+All the bugs noted are fixed for the following release.
+
+*******************************************************************************
+<a id="ch32-1"></a>Version 4.2
+
+Released on: 16th March 1989
+
+    1) Memory 'grabbed' by devices (e.g. capture buffer in Comms-Link) is not
+    shown in INFO.
+
+    2) If LOW BATTERY is detected during a cold start, garbage ALARMS are set.
+
+    3) SORTING a file which contains other records interspersed within its
+     own will cause 'extra' records to be added at the front of the file.
+
+    4) SORT does not order records containing the same character repeated
+    different numbers of times correctly, e.g. AA and A.
+
+    5) If there is an error in when saving a DIARY (e.g. PACK FULL) during
+     TIDY, the DIARY is still be deleted.
+
+    6) If a match string &gt; 10 characters is passed to any of the WILD CARD
+    OPL FUNCTIONS (e.g. DIRW) the machine will crash.
+
+    7) OPL VIEW of a null string will crash the machine.
+    Also DISP(0,&quot;string&quot;) will crash.
+
+    8) If part of a password is typed on entry to a notepad and then left
+    to time out - it beeps and clears the password, then prompts for the
+     password again.
+
+    9) If memory is full and a notepad is attempted to be entered, OUT
+    OF MEMORY is displayed the first time but the 2nd time a new notepad
+    is created.
+
+    10) &quot;Load...&quot; is displayed without clearing the screen on entry to
+    the notepad.
+
+    11) In the DIARY &quot;nn entries shortened&quot; says 10 when there is 100 etc.
+
+    12) In WORLD &quot;The Hague&quot; is shown as &quot;The Hage&quot;
+
+    13) Alarms go off accurate to within 1 minute only. They should be
+    exact.
+
+    14) If part of an OPL procedure or NOTEPAD is received with COMMS-LINK
+    and the connection is broken, the machine may crash.
+
+    15) A bootable pack created on the DEVELOPER runs ok in 2-line mode
+    but if COMMS-LINK is present as well, it runs in 4-line mode.
+
+    16) There is a chance of getting a garbage ALARM going off during RESET.
+
+    17) There are some errors in the GERMAN text.
+
+    18) Calling OPL EDIT with an 80 character prompt,
+    e.g. AT 20,4 :PRINT &quot;X&quot;: :EDIT A$  does not work correctly.
+
+*******************************************************************************
+<a id="ch32-2"></a>Version 4.3
+
+Released on: 24th April 1989
+
+    1) If a &quot;workday&quot; alarm is set for the Friday before the end of a
+    month whose last day falls on a Saturday or Sunday, some corruption
+    may occur when the alarm goes off or if you attempt to set an alarm
+    on the Saturday or Sunday following the Friday.
+    On version V4.2 you will get a DEVICE MISSING error but on V4.3 it will
+     appear to be ok. In both versions there may be corruption and there may
+     be a possibility of the machine TRAP'ing.  The dates it will occur on
+     are as follows:
+    28/APR/89, 29/SEP/89, 29/DEC/89,30/MAR/90, 29/JUN/90, 28/SEP/90 etc
+
+*******************************************************************************
+<a id="ch32-3"></a>Version 4.4
+
+Released on: 8th May 1989
+
+Current production version with no known bugs.
+
+
+
+*******************************************************************************
+<a id="indx"></a>Index Of New System Services
+
+<a href="#ch14-4">AM$ENTR</a>        Entry to ALARM
+
+<a href="#ch18-2">BT$TOFF</a>        Temporary switch off
+
+<a href="#ch10-2">CA$ENTR</a>        Entry to calculator
+
+<a href="#ch9-5">DI$ENTR</a>        Entry to Diary and Month
+<a href="#ch7-9">DP$CPRN</a>        update UDG clock
+<a href="#ch7-8">DP$CSET</a>        Set UDG clock
+<a href="#ch5-9">DP$MSET</a>        Set display mode
+<a href="#ch5-10">DP$PVEW</a>        Partial scroll view
+<a href="#ch6-3">DP$UDG</a>         Define/read UDGs
+
+<a href="#ch24-8">FL$FDEL</a>        Fast record delete
+<a href="#ch24-9">FL$GETX</a>        Get file extension
+<a href="#ch24-4">FL$NCAT</a>        Matches nth filename
+<a href="#ch24-10">FL$VALX</a>        Get value of a file extension
+<a href="#ch24-3">FL$WCAT</a>        Directory with wild card matching
+<a href="#ch24-5">FL$WCPY</a>        Wild card file copy
+<a href="#ch24-6">FL$WDEL</a>        Wild card file delete
+<a href="#ch24-7">FL$WFND</a>        Wild card FIND
+<a href="#ch24-2">FL$WPAR</a>        Parses a wild card filename
+<a href="#ch21-2">FN$ACOS</a>        Floating point arccosine
+<a href="#ch21-3">FN$ASIN</a>        Floating point arcsine
+<a href="#ch20-7">FN$MAX</a>         Floating point MAXIMUM
+<a href="#ch20-3">FN$MEAN</a>        Floating point MEAN
+<a href="#ch20-6">FN$MIN</a>         Floating point MINIMUM
+<a href="#ch20-5">FN$STD</a>         Floating point STANDARD DEVIATION
+<a href="#ch20-2">FN$SUM</a>         Floating point SUM
+<a href="#ch20-4">FN$VAR</a>         Floating point VARIANCE
+
+<a href="#ch26-7">KB$CONK</a>        Get a key with cursor ON
+
+<a href="#ch22-2">LG$EDIT</a>        Entry to main editor
+<a href="#ch15-2">LG$ENTR</a>        Entry to PROG
+<a href="#ch25-2">LN$XSTT</a>        OPL translator in specified mode
+
+<a href="#ch8-5">MN$1DSP</a>        Display 1 line menu
+<a href="#ch8-6">MN$TITL</a>        Display titled menu
+<a href="#ch8-4">MN$XDSP</a>        Display menu with text
+
+<a href="#ch12-8">NT$ENTR</a>        Entry to NOTES
+
+<a href="#ch11-4">TI$ENTR</a>        Entry to TIME
+<a href="#ch27-7">TL$LSET</a>        Selects language
+<a href="#ch22-3">TLZZMD</a>         Edit with prompt, MODE selects pack
+<a href="#ch11-7">TM$DNAM</a>        Returns day name
+<a href="#ch11-8">TM$MNAM</a>        Returns month name
+<a href="#ch11-5">TM$NDYS</a>        Calculates number of days
+<a href="#ch11-9">TM$TSET</a>        Sets the system time
+<a href="#ch11-6">TM$WEEK</a>        Calculates week number
+
+<a href="#ch19-2">UT$CMPB</a>        Case dependant buffer compare
+<a href="#ch19-4">UT$SORT</a>        General sort routine
+<a href="#ch19-3">UT$WILD</a>        Wild character buffer compare
+
+<a href="#ch13-2">WL$ENTR</a>        Entry to WORLD
+
+<a href="#ch16-2">XF$ENTR</a>        Entry to XFILES
+<a href="#ch16-3">XF$SORT</a>        Sorts a file
+<a href="#ch17-3">XT$BAR</a>         Draws a bar graph
+<a href="#ch17-4">XT$DIRM</a>        Prints a directory of files
+<a href="#ch17-2">XT$ENTR</a>        Entry to UTILS
+</pre>
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

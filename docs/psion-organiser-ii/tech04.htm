@@ -1,0 +1,357 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 4 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech04.htm", "name": "Chapter 4" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 4</li>
+</ol>
+
+
+<PRE>                                 CHAPTER 4
+
+                              ______________
+                              TOP SLOT BOARD
+
+
+
+     _______
+<a id="p4.1">4.1</a>  GENERAL
+
+
+
+The Organiser interfaces to the outside world through three slots:-
+
+     1.  SLOT 1.  Side entry, top (nearest display)
+
+     2.  SLOT 2.  Side entry, bottom
+
+     3.  SLOT 3.  Top entry
+
+Slots 1 and 2 are generally used for memory devices such as  datapacks  and
+rampacks,  and  slot  3  is  normally  used  for  communications  or  other
+interfaces.  Electrically  all  three  slots  are  very  similar,  and  the
+distinction  is  for  ergonomic  reasons.   Internally  the three slots are
+connected together as a bus, carrying 8 bit bi-directional data, power  and
+control lines to select and control devices plugged in.
+
+     This section describes the bus hardware in general terms,  and  should
+be read together with the sections on specific devices and control software
+to gain a full understanding of its operation.
+
+
+
+     ____ _______ ___
+<a id="p4.2">4.2</a>  SLOT CONTROL BUS
+
+
+Figure 3.1 is a schematic of the slot control circuitry.  All  three  slots
+have 16 connections.  In general they are connected as a bus, but there are
+some minor differences in signals particularly to slot 3.  The slot signals
+and their functions are listed below :-
+    1. power rails
+        0volts          (all slots)     system ground
+        Vcc3            (all slots)     5 volt rail, switched under
+                                        software control
+        Vpp             (slots 1,2)     21 volt rail for programming
+                                        datapacks.
+        Vb              (slot 3)        system power rail for power
+                                        in or out. 5.5 to 11 volts.
+
+    2. data bus
+        SD7-SD0         (all slots)     8 bit data bus from processor
+                                        port 2
+
+    3. control bus
+        SCK             (all slots)     4 general control lines
+        SMR             (all slots)     from processor port 6
+        SOE_B           (all slots)
+        SPGM_B          (slots 1,2)
+
+    4. slot selection
+        SS1_B           (slot 1)        3 control lines from processor
+        SS2_B           (slot 2)        port 6, used to select the
+        SS3_B           (slot 3)        current active slot
+
+    5. other
+        AC_B            (slot 3)        Input for external Organiser
+                                        switch on
+
+
+
+     ___________
+<a id="p4.3">4.3</a>  POWER RAILS
+
+
+
+A detailed description of the power supply circuitry is included in chapter
+3.   The  main  properties  of  the  externally  available  power rails are
+included here for reference.
+
+
+
+     1.  Vb             (slot 3 only)
+
+              This is the main Organiser system power rail, and is  fed  by
+         the   Organiser  battery  via  a  forward  diode.   All  Organiser
+         regulated power rails are derived from this rail.  Vb can be  used
+         as  a  power  output  or  as  an external power input.  As a power
+         output, the battery voltage minus a diode drop will appear at this
+         pin (5.5 to 8.5 volts dependant on battery condition).  As a power
+         input, the voltage applied  should  be  higher  than  the  battery
+         voltage  to  ensure  no  current  drain  from  the battery.  It is
+         recommended that an external power source also feeds  the  Vb  pin
+         through  a  forward  diode,  to  ensure  no reverse current to the
+         external source when it is powered  off.   In  this  configuration
+         power  for the system is drawn from either the internal battery or
+         the external power  source,  whichever  is  supplying  the  higher
+         voltage.   Vb should be between 5.5 and 11.0 volts under a maximum
+         system load of 175 mA.  The  lower  limit  is  determined  by  the
+         dropout  voltage  of  the  5 volt pass regulators (the low battery
+         indicator is triggered at approx.  5.3 volts on  Vb).   The  upper
+         limit is defined primarily by the Vcc3 pass regulator - see below.
+
+     2.  Vcc3           (all slots)
+
+              This is the main power rail to the slots, and is regulated to
+         5  volts  +/-5%.   It  is  derived  from  the  Vb rail above.  The
+         regulator is a low-dropout type with a PNP pass  transistor  rated
+         at  1  watt.   At  a Vb voltage of 11 volts the maximum DC current
+         capacity of Vcc3 is therefore 167  mA  (167*(11-5)=1000  mW).   In
+         practice  150  mA  should  be  used  as  the  rating of this rail,
+         remembering that all three slots are  powered  in  parallel.   The
+         power  budget  allocated  to each slot is 40 mA for an idle device
+         and 70 mA for an active selected device.  Only one slot should  be
+         active  at  any one time, giving 40+40+70=150 mA as the peak power
+         drain with three devices present and one active.
+
+              Vcc3 is switched on and off by the PACON_B  signal  from  the
+         processor  port  6,  bit 7.  When this bit is defined as input the
+         PACON_B signal is pulled high to leave the regulator  in  the  off
+         state.   (When  off,  only  leakage  current  of  a few nA will be
+         supplied to the Vcc3 rail).  To switch  Vcc3  on,  port  6  bit  7
+         should be defined as output and low (0).
+
+     3.  Vpp            (slots 1,2)
+
+              This  rail  is  designed  specifically  for  programming   of
+         datapack eproms, and may assume one of three voltages :-
+
+         1.  0 volts            when Vcc3 is off
+
+         2.  4.5 volts          when Vcc3 is on (diode drop below Vcc3)
+
+         3.  21 volts +/-2%     when the 21 volt regulator is on
+
+
+The 21 volt state is normally used in a pulsed mode under software control,
+for  programming eproms with defined algorithms.  This is discussed further
+in the Datapack section of the manual.
+
+
+
+     ___________________________
+<a id="p4.4">4.4</a>  DATA BUS (PROCESSOR PORT 2)
+
+
+
+The data bus SD0-SD7 is an 8 bit bi-directional bus to all three slots, and
+is  controlled  from  the  processor I/O port 2.  The notes below summarise
+port 2 operation in the context of the Organiser system.
+
+     1.  The primary use of port 2 is as an eight bit  parallel  I/O  port.
+         Two registers control this function :-
+
+             Port 2 data register       $0003
+
+             Port 2 DDR                 $0001
+
+         The DDR determines the I/O direction  of  the  port  bits  (0  for
+         input, 1 for output).  Only 2 bits of the DDR are active :-
+
+             Bit 0 defines the direction of SD0
+
+             Bit 1 defines the direction of SD1-SD7
+
+         The  DDR  is  a   write-only   register,   and   read-modify-write
+         instructions should be used with caution.
+
+     2.  With the DDR set to input, data present on the  bus  can  be  read
+         through  the  data  register.   If no slot is active a $00 will be
+         returned, defined by the eight pull-down  resistors  on  the  data
+         lines.
+
+         When the Organiser is off (processor in standby mode) the  DDR  is
+         automatically  set  to  input, and remains in this state on system
+         initialisation.  In subsequent operation this should  be  used  as
+         the  rest  state,  and in particular should always be set to input
+         whenever Vcc3 is switched off.
+
+     3.  With the DDR set to output, data can be set  onto  the  bus  by  a
+         write  to  the  data register.  Data is latched into the register,
+         and will remain on the bus until a further write.  Note that  data
+         can be written to the data register with the DDR set to input, and
+         this data will be set onto the bus when the DDR is turned round.
+
+     4.  Control of the bus and bus direction is  entirely  under  software
+         control.   Control of devices in the slots is described further in
+         the next section, but it is important to stress here that  control
+         of  the port 2 DDR is vital for proper bus operation.  A condition
+         where the DDR  is  set  to  output  and  a  slot  device  is  also
+         outputting  to  the  bus  should  not  be  allowed to occur if bus
+         contention and possible device damage are to be avoided.
+
+     5.  In addition to the data bit I/O function, each bit of port 2 has a
+         secondary  function  which may be selected under software control.
+         When selected, the relevant bits assume their secondary  function,
+         overriding   the  DDR  setting  where  necessary.   The  secondary
+         functions are described in the processor manual.   An  example  of
+         their  use  is  the  Organiser  RS232  interface,  which  uses the
+         internal serial communications interface and the port 2 Tx and  Rx
+         bits.   Note  that  in special cases such as this, various bits of
+         the data bus may separately  be  defined  as  inputs  and  outputs
+         simultaneously.
+
+
+
+
+     ________________________________
+<a id="p4.5">4.5</a>  CONTROL LINES (PROCESSOR PORT 6)
+
+     Port 6 of the processor is  an  8  bit  I/O  port  controlled  by  two
+registers :-
+
+         Port 6 data register   $0017
+
+         Port 6 DDR             $0016
+
+
+     The DDR determines the direction of the port bits (0 for input, 1  for
+output).  Each bit of the DDR determines the direction of the corresponding
+bit of  the  data  register.   The  DDR  is  a  write  only  register,  and
+read-modify-write instructions should be used with caution.
+
+     When the Organiser is off (processor in  standby  mode),  the  DDR  is
+automatically   set   to   input  and  remains  in  this  state  on  system
+initialisation.  In this case the lines from the ports will take up  states
+defined by the relevant external pull-up and pull-down resistors.
+
+     The port bits are defined as follows :-
+        bit 7   PACON_B
+
+                This bit is used to switch the main Vcc3 power rail to the
+                slots as described in section <a href="#p4.3">4.3</a>.
+
+        bit 6   SS3_B
+        bit 5   SS2_B
+        bit 4   SS1_B
+
+                These three bits are used to select the current active
+                slot. The rest state should be with all three bits set high
+                i.e. with all slots inactive. Note that when the relevant
+                port bits are set to input, these lines are pulled high by
+                external 6k8 ohm pull up resistors to the Vcc1 voltage
+                rail. Vcc1 is the supply rail to the processor board and is
+                present at all times (including when the Organiser is off).
+                Of particular importance, these lines are pulled high
+                whether or not the Vcc3 rail is on. This has been designed
+                so that a small amount of power - of the order of 10
+                micro-amps -can be drawn by each of the slots through the
+                slot select line when the slots are otherwise powered down.
+                Rampacks are an example of the use of this facility. To
+                protect against unwanted power drain through this line, a
+                blocking diode or transistor are normally employed in each
+                device between the slot select input and the device
+                circuit. A slot is selected by setting a "0" onto one of
+                the three lines. Only one should be selected at any one
+                time, and the software is responsible for ensuring this.
+                Each device should be designed so that it can only output
+                to the bus when its slot select line is pulled low.
+
+        bit 3   SOE_B
+        bit 2   SPGM_B
+        bit 1   SMR
+        bit 0   SCK
+
+                These are four general purpose control lines used to
+                control devices in the slots. All four are wired to slots 1
+                and 2, but the SPGM_B signal is not available on slot 3.
+                With the port bits defined as input, the rest state of all
+                except SPGM_B is low. SPGM_B is pulled to the Vcc3 rail via
+                a resistor, and so will be low with Vcc3 off and high with
+                Vcc3 on.
+                The way these lines are used is to some extent dependent
+                on the type of device currently selected. They are normally
+                used as outputs to control devices, but under special
+                circumstances one or more of the lines may be defined as
+                input. The four signal names are related to the functions
+                of the lines when used to control 8 or 16k datapacks :-
+
+                 SOE_B  directly controls the datapack eprom OE_B  signal
+                 SPGM_B directly controls the datapack eprom PGM_B signal
+                 SMR    resets the datapack address counters
+                 SCK    clocks the datapack address counters
+
+                These meanings are not fixed and the lines can be used in
+                different ways depending on the particular active device.
+
+
+
+
+     __________
+<a id="p4.6">4.6</a>  AC_B INPUT
+
+     The AC_B signal from slot 3 can be used by a top slot device to switch
+the  Organiser  on.   Its function is the same as pressing the Organiser AC
+key, but it is only effective when the machine is off.
+
+     To activate this function, the AC_B signal should be pulled low by the
+external  device,  by  an  open-collector  npn  transistor  or  other means
+(internally the signal is pulled up to Vcc1 by a 47k  ohm  resistor).   The
+RS232 interface is an example of the use of this.
+
+     If the Organiser is off, pulling the AC_B line low will switch it  on.
+When the Organiser is on the AC_B signal is disconnected and has no effect.
+Note that if the line is pulled low permanently the Organiser will re-start
+whenever it tries to switch off.
+
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech03.htm">Ch. 3</a></li>
+<li class=navactive>Ch. 4</li>
+<li><a href="tech05.htm">Ch. 5</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

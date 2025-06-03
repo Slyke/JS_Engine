@@ -1,0 +1,448 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 19 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech19.htm", "name": "Chapter 19" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 19</li>
+</ol>
+
+
+<PRE>                                CHAPTER 19
+
+                                   _____
+                                   DIARY
+
+
+
+     This section describes the workings of the top level  functions  DIARY
+and  ALARM.   The  ORGANISER  II  manual describes how to use the DIARY and
+ALARMS.
+
+
+
+      ____________
+<a id="p19.1">19.1</a>  DIARY FORMAT
+
+     The information in the diary is stored in RAM in  an  allocated  CELL,
+separate from the RAM device A:, so the diary can not be accessed as a file
+from OPL or by the top level functions FIND and  SAVE.   Entries  are  kept
+sorted  by  date  and  time, and apart from general data on A:, in order to
+allow alarm checking interrupts to scan the diary efficiently.   This  also
+enables  the  SAVE and RESTORE functions to save the whole diary as a block
+easily.
+
+     For information on the storage  allocator,  see  section  <a href="tech06.htm#p6.3.2">6.3.2</a>.   The
+diary  is  held in the third cell, base pointer $2004.  Below the diary are
+the DEVICE and MENU cells, so any operation which grows  or  shrinks  these
+cells  will  cause  the  diary to move.  This includes calls to DV$ and TL$
+services, device booting at the top level and any changes in the top  level
+menu.  Within the diary cell the entries are stored as follows :
+
+        BYTE    RANGE
+
+        0       1 - 64          length of text
+        1       0 - 99          year
+        2       0 - 11          month
+        3       0 - 30          day
+        4       0 - 23          hour
+        5       0 or 30         minutes
+        6       0 - 60          if 0
+                                  no alarm set
+                                else
+                                  (number of minutes early+1)
+
+        7                       text of diary entry
+        ...                     (1-64 chars)
+        ...
+        ...
+
+
+        Example :
+
+        12 JAN 1986 17:00       ABCDEF  (alarm set 15 minutes early
+
+        Bytes :
+
+                $06     length of "ABCDEF"
+                $56     year 1986
+                $00     month JAN
+                $0B     day 12
+                $11     hour 17
+                $00     minutes 0
+                $10     15 minutes early
+                6 bytes "ABCDEF"
+                next entry or 0 terminator
+
+     The diary is terminated by a byte zero, not by the end of the cell and
+so  at initialisation time the diary cell just contains this zero byte.  It
+is illegal to shrink the cell to nothing using  AL$ZERO  or  AL$SHNK.   The
+following examples scan through each diary entry :
+
+        LDX     $2004   ; X points to 1st byte
+        BRA     2$
+
+1$:     ADD     B,#7    ; skip length byte date alarm flag
+        ABX             ; and skip over text
+2$:     LDA     B,0,X   ; get length byte
+        BNE     1$      ; until 0 terminator found
+
+
+        ADDR% = PEEKW($2004)
+        LEN%  = PEEKB(ADDR%)
+        WHILE LEN% &lt;&gt; 0
+          ADDR% = ADDR% + 7 + LEN%
+          LEN%  = PEEKB(ADDR%)
+        ENDWH
+
+
+     The diary is saved on the datapacks as a block file of type  $82  (see
+section <a href="tech12.htm#p12.1.3">12.1.3</a>).
+
+     Bear in mind the following restrictions when manipulating the diary :
+
+     1) Use SEI to prevent alarm checking interrupts  while  the  diary  is
+being  modified or during loading from a datapack.  Also see below, section
+<a href="#p19.3">19.3</a>.
+
+     2) All entries must be inserted in chronological order
+
+     3) No two entries must have the same time
+
+     4) The time must be in the year range 1900-1999 with minutes 0 or 30
+
+     5) Text must be less than 65 chars
+
+     6) The AL$ system services must be used to allocate space in the diary
+
+
+     The following OPL program writes a formatted listing of the  diary  to
+either a file or the RS232.  The main procedure is "DIARY:".
+
+OUTLINE:(STRING$)
+IF CHOICE%=1
+ A.A$=STRING$
+ APPEND
+ELSE
+ LPRINT STRING$
+ENDIF
+
+
+DIEND%:
+RETURN (PEEKB(PTR%)=0)
+
+
+INIT:
+PTR%=PEEKW($2004)
+PREVDAY$=""
+
+
+DIG2$:(NUM%)
+RETURN RIGHT$("0"+NUM$(NUM%,6),2)
+
+
+OUTENTRY:
+OUTLINE:("")
+IF LEN(DAY$)
+ OUTLINE:(DAY$)
+ENDIF
+OUTLINE:(TIME$)
+OUTLINE:(DATA$)
+
+
+GETENTRY:
+LOCAL YEAR%,MONTH%,DAY%,HOUR%,MINUTE%,ALARM%,LEN%,D%,ENDP%
+LOCAL AMPM$(2)
+YEAR%=1900+PEEKB(PTR%+1)
+MONTH%=PEEKB(PTR%+2)
+DAY%=1+PEEKB(PTR%+3)
+HOUR%=PEEKB(PTR%+4)
+MINUTE%=PEEKB(PTR%+5)
+ALARM%=PEEKB(PTR%+6)
+DAY$=WKDAY$:(PTR%+1)+" "+NUM$(DAY%,-2)+" "+
+                MID$("JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC",MONTH%*3+1,3)+
+                " "+NUM$(YEAR%,4)
+IF PREVDAY$=DAY$
+ DAY$=""
+ELSE
+ PREVDAY$=DAY$
+ENDIF
+AMPM$="AM"
+IF HOUR%&gt;=12
+ AMPM$="PM"
+ IF HOUR%&gt;12
+  HOUR%=HOUR%-12
+ ENDIF
+ENDIF
+TIME$="    "+DIG2$:(HOUR%)+"."+DIG2$:(MINUTE%)+" "+AMPM$
+IF ALARM%
+ TIME$=TIME$+"  ALARM SET "
+ IF ALARM%&gt;1
+  TIME$=TIME$+DIG2$:(ALARM%-1)+" MINUTES EARLY."
+ ENDIF
+ENDIF
+DATA$="    "
+LEN%=PEEKB(PTR%)
+PTR%=PTR%+7
+ENDP%=PTR%+LEN%
+D%=ADDR(DATA$)+LEN(DATA$)+1
+DO
+ POKEW D%,PEEKW(PTR%)
+ D%=D%+2
+ PTR%=PTR%+2
+UNTIL PTR%&gt;=ENDP%
+POKEB ADDR(DATA$),LEN(DATA$)+LEN%
+PTR%=ENDP%
+
+ASKFILE:
+LOCAL READY%,ERR%
+LOCAL FILE$(10),K$(1)
+AGAIN::
+ONERR HANDLER::
+DO
+ DO
+  CLS
+  PRINT "FILE ";
+  TRAP INPUT FILE$
+  IF ERR
+   RAISE ERR
+  ENDIF
+  FILE$=UPPER$(FILE$)
+ UNTIL LEN(FILE$)
+ READY%=0
+ TRAP OPEN FILE$,A,A$
+ IF ERR AND (ERR&lt;&gt;234)
+  RAISE ERR
+ ENDIF
+ TRAP CLOSE
+ IF EXIST(FILE$)
+  CLS
+  PRINT FILE$;" EXISTS"
+  PRINT "DELETE [Y/N]?";
+  DO
+   K$=UPPER$(GET$)
+   IF K$=CHR$(1)
+    RAISE 206
+   ENDIF
+  UNTIL K$="Y" OR K$="N"
+  IF K$="Y"
+   DELETE FILE$
+   READY%=1
+  ENDIF
+ ELSE
+  READY%=1
+ ENDIF
+UNTIL READY%
+CREATE FILE$,A,A$
+RETURN
+
+HANDLER::
+ERR%=ERR
+TRAP CLOSE
+IF ERR%=206
+ STOP
+ELSEIF ERR%=236 OR ERR%=243
+ CLS
+ PRINT CHR$(16);ERR$(ERR%);
+ IF GET=1
+  STOP
+ ENDIF
+ GOTO AGAIN::
+ENDIF
+RAISE ERR%
+
+
+WKDAY$:(ADDR%)
+LOCAL ND%,YR%,M%
+YR%=PEEKB(ADDR%)
+M%=PEEKB(ADDR%+1)
+ND%=YR%+YR%/4+PEEKB(ADDR%+2)+ASC(MID$("035136240250",M%+1,1))+ND%-(((YR% AND 3)=0) AND (M%&lt;=1))
+RETURN MID$("SUNMONTUEWEDTHUFRISAT",(ND%-ND%/7*7)*3+1,3)
+
+
+DIARY:
+GLOBAL CHOICE%,PTR%,DAY$(50),TIME$(50),DATA$(100),PREVDAY$(50)
+CLS
+CHOICE%=MENU("FILE,PRINTER")
+IF CHOICE%
+ INIT:
+ IF DIEND%:
+  PRINT "DIARY EMPTY";
+  GET
+ ELSE
+  IF CHOICE%=1
+   ASKFILE:
+  ENDIF
+  DO
+   GETENTRY:
+   OUTENTRY:
+  UNTIL DIEND%:
+  IF CHOICE%=1
+   CLOSE
+  ENDIF
+ ENDIF
+ENDIF
+
+
+
+
+      __________________
+<a id="p19.2">19.2</a>  ALARM TABLE FORMAT
+
+
+     The eight alarms are stored in a fixed length  48  byte  area  AMT_TAB
+($22F9).   Each entry contains a date-time in the usual format, with a flag
+indicating the type of alarm.
+
+        BYTE    RANGE
+
+        0       0 - 99   year
+        1       0 - 11   month
+        2       0 - 30   day
+        3       0 - 23   hour
+        4       0 - 59   minutes
+        5       0 - 4    0 means alarm cancelled
+                         1 non-repeating
+                         2 weekly, 3 daily, 4 hourly repeat
+
+
+
+     An alarm entry is cancelled by setting byte 5 to zero.  Before setting
+or modifying any alarms, byte 5 should be cleared and then set last of all.
+This is to prevent interrupts from checking that entry.  Note that although
+there is no way of manually setting an alarm outside the current week, this
+limitation need  not  apply  to  user  programs  which  manipulate  AMT_TAB
+directly.   You can set an alarm to ring at any time between 1900 and 2000,
+exclusive of 2000.  The date-time of a repeating alarm is updated each time
+it rings ; an alarm entry does not contain the original date-time.
+
+
+
+      _________________________
+<a id="p19.3">19.3</a>  ALARM CHECKING INTERRUPTS
+
+     Both the diary and the alarms are scanned approximately  every  minute
+by  the 50ms maskable interrupts which scan the keyboard.  Users wishing to
+alter the alarm or diary alarm action, see section <a href="tech07.htm#p7.3">7.3</a> vector  BTA_OCI,  or
+section <a href="tech20.htm#p20.0.1">20.0.1</a>  BZ$ALRM  service.   Every  minute an NMI makes a request for
+alarm  checking  by  setting  the  flag  AMB_DOIT  provided  the  following
+conditions are met :
+
+        BTB_IGNM &lt;&gt; 0   (else NMI does nothing)
+        AMB_EI &lt;&gt; 0
+        TMB_SECS = 0    (we are on a minute boundary)
+
+
+     The flag AMB_EI is provided specifically so  that  user  programs  can
+disable  alarm checking.  If all these conditions are met, the alarm is not
+actually checked immediately :  this is left to the next maskable interrupt
+which  rings  any pending alarms whenever AMB_DOIT is set.  This means that
+alarms are checked as soon as possible after each minute boundary, but  any
+time-critical  activities such as writing to datapacks and other operations
+can delay alarms by using the SEI instruction.   Alarms  will  never  occur
+while  the  interrupt  mask is set.  Also certain activities such as device
+booting (DV$ calls), storage management (AL$ calls), or modification of the
+diary  or  alarms  can  cause an ALARM to ring late.  If interrupts are not
+required, then an SEI instruction is all that is required to disable  alarm
+checking.   If  interrupts  are required the following code must be used to
+maintain compatibility with all OS versions :
+
+        LDA     A,AMB_EI
+        PSH     A
+
+        TPA                     ; preserve interrupt mask
+        SEI
+        CLR     AMB_EI          ; prevent NMI setting AMB_DOIT
+        CLR     AMB_DOIT        ; in case AMB_DOIT already set
+        TAP                     ; restore interrupt mask
+
+        ...
+; user program alarm checking now off
+;       ...
+
+; the next two lines are optional
+        INC     AMB_EI          ; set AMB_DOIT if check required **
+        INC     AMB_DOIT        ; on next interrupt              **
+
+        PUL     A
+        STA     A,AMB_EI        ; restart normal checking
+
+
+     The two lines ** will cause the next 50  ms  interrupt  to  perform  a
+check without waiting for the next minute boundary.  This will minimise any
+late running of the alarms.  The AMB_DOIT flag can also be set  to  request
+more frequent checking than once each minute.  However, AMB_DOIT must at no
+time be set non-zero when AMB_EI is zero as this may  cause  problems  with
+some early OS versions.  Note also that AMB_EI should not be set to $FF.
+
+     The 50 ms interrupt first checks the DIARY then the eight alarms.  All
+alarms are sounded even if they are overdue.  The earliest DIARY alarm will
+sound, then the lowest numbered ALARM alarm.  If more  than  one  DIARY  or
+ALARM  alarm  are  due,  they will ring in pairs (DIARY, ALARM) each minute.
+Before a DIARY alarm sounds, the alarm flag  (byte  6)  in  that  entry  is
+cleared.   Before  an  ALARM  alarm sounds, the repeat time is added on for
+repeating alarms, and byte 5 is  cleared  for  non-repeating  alarms.   The
+system  service  DP$SAVE  (see section <a href="tech08.htm#p8.3.5">8.3.5</a>) is called to save the screen,
+and the time and diary text or "ALARM" is displayed for one minute or until
+ON/CLEAR  is  pressed.   The screen is then restored with a call to DP$REST
+(see section <a href="tech08.htm#p8.3.6">8.3.6</a>).  The ON/CLEAR key is polled directly, so the  keyboard
+buffer  is  not  affected.   BZ$ALRM makes the ALARM sound, while the DIARY
+beep is a call to BZ$TONE with D = 200 (proportional to 1/frequency),  X=50
+(note length).
+
+
+
+      ______________________
+<a id="p19.4">19.4</a>  WAKING UP FOR AN ALARM
+
+     The Organiser II maintains the system time  with  a  12  bit  external
+counter while switched off (see section <a href="tech02.htm#p2.6">2.6</a>).  The machine switches on when
+the counter overflows every 2048 seconds (34 minutes  8  seconds),  updates
+the  system time, and switches off again.  The system service BT$SWOF rings
+any alarms pending, then checks if an alarm is due in the next  34  mins  8
+secs.   If necessary, BT$SWOF sets the counter to a value greater than zero
+to switch the machine on early.  When the  Organiser  II  switches  on,  it
+rings  the alarm then remains on until normal switch-off.  Users wishing to
+alter this behaviour see section <a href="tech05.htm#p5.4">5.4</a> for vector BTA_SOF, and section  <a href="tech05.htm#p5.3.2">5.3.2</a>
+for vector BTA_WRM.
+
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech18.htm">Ch. 18</a></li>
+<li class=navactive>Ch. 19</li>
+<li><a href="tech20.htm">Ch. 20</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

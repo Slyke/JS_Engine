@@ -1,0 +1,150 @@
+{
+  name: "Atari 2600",
+  storage: { platform: "atari2600" },
+  runOnStart: true,
+  cpu: {
+    module: "./cpu/6507.js",
+    clockHz: 1193191,
+    runsPerHostFrame: 2,
+    cyclesPerRun: 9943,
+    initialPc: 61440,
+    initialSp: 253,
+    maxInstructionsPerRun: 7000,
+    maxInstructionsPerFrame: 14000
+  },
+  controls: {
+    inputs: [
+      { id: "fire", label: "P1 Fire" },
+      { id: "select", label: "Select", pulse: true },
+      { id: "reset", label: "Game Reset", pulse: true }
+    ],
+    advancedInputs: [
+      { id: "p1up", label: "P2 Up" },
+      { id: "p1down", label: "P2 Down" },
+      { id: "p1left", label: "P2 Left" },
+      { id: "p1right", label: "P2 Right" },
+      { id: "p1fire", label: "P2 Fire" },
+      { id: "bw", label: "B/W" },
+      { id: "difficultyA", label: "P1 Diff A" },
+      { id: "p1difficultyA", label: "P2 Diff A" }
+    ],
+    commandHotkeys: { pause: "KeyP", step: "KeyN", reset: "Shift+KeyT", saveState: "KeyI", loadState: "KeyO" },
+    keyboardGroups: [{ id: "wsad", label: "P1 WSAD" }, { id: "arrows", label: "P2 Arrow Keys" }],
+    inputHotkeys: {
+      up: "KeyW",
+      down: "KeyS",
+      left: "KeyA",
+      right: "KeyD",
+      fire: "Space",
+      select: ["KeyC", "Digit2"],
+      reset: ["Enter", "Digit1"],
+      p1up: "ArrowUp",
+      p1down: "ArrowDown",
+      p1left: "ArrowLeft",
+      p1right: "ArrowRight",
+      p1fire: "Numpad0",
+      bw: "KeyB",
+      difficultyA: "Digit9",
+      p1difficultyA: "Digit0"
+    },
+    pulseInputs: ["select", "reset"],
+    pulseDurations: { select: 160, reset: 220 }
+  },
+  memory: {
+    mmu: "./memory/mmu/atari2600.js",
+    devices: [
+      {
+        type: "atari2600",
+        index: 0,
+        label: "Atari 2600 13-bit bus",
+        module: "./memory/atari2600.js",
+        start: 0,
+        size: 8192,
+        video: { width: 160, height: 224 },
+        writable: true
+      }
+    ],
+    segments: [
+      { type: "tia", label: "TIA registers", start: 0, size: 128, writable: true },
+      { type: "ram", label: "RIOT RAM", start: 128, size: 128, writable: true },
+      { type: "tia", label: "TIA mirror", start: 256, size: 128, writable: true },
+      { type: "ram", label: "RIOT RAM mirror", start: 384, size: 128, writable: true },
+      { type: "riot", label: "RIOT I/O", start: 640, size: 128, writable: true },
+      { type: "rom", label: "Cartridge window", start: 4096, size: 4096, writable: false }
+    ],
+    map: {
+      start: 0,
+      size: 8192,
+      columns: 128,
+      rows: 64,
+      bytesPerCell: 1,
+      valueMode: "max",
+      samplesPerCell: 8,
+      colors: {
+        tia: { zero: [16, 16, 24], active: [255, 196, 64] },
+        riot: { zero: [16, 28, 20], active: [92, 224, 120] },
+        ram: { zero: [0, 20, 40], active: [72, 148, 255] },
+        rom: { zero: [32, 20, 14], active: [255, 102, 68] },
+        unmapped: { zero: [0, 0, 0], active: [255, 40, 40] },
+        pc: [80, 255, 120],
+        sp: [90, 170, 255]
+      }
+    }
+  },
+  romLoading: { defaultOffset: "0x0000" },
+  video: {
+    module: "./video/atari2600-tia.js",
+    driver: "atari2600-tia",
+    width: 160,
+    height: 224,
+    fps: 60
+  },
+  audio: {
+    module: "./audio/atari2600-tia.js",
+    enabled: true,
+    volume: 0.3
+  },
+  websocket: {
+    enabled: true,
+    autoConnect: false,
+    endpoints: [
+      {
+        id: "debug",
+        label: "Debug API",
+        url: "ws://127.0.0.1:8765/debug",
+        autoConnect: false,
+        channels: ["commands", "events", "rules"]
+      },
+      {
+        id: "events",
+        label: "Event Sink",
+        url: "ws://127.0.0.1:8765/events",
+        autoConnect: false,
+        channels: ["events", "rules"]
+      }
+    ]
+  },
+  debugger: {
+    disassembly: { beforeLines: 10, afterLines: 12 }
+  },
+  debuggerCards: [
+    { id: "atari-audio", title: "Audio", module: "./debugger/atari2600-audio-card.js", columns: 5, rows: 3 }
+  ],
+  debuggerLayout: {
+    sections: {
+      game: { columns: 5 },
+      debugger: { columns: 7, collapsedWidth: "3.25rem" }
+    },
+    cards: [
+      { id: "memory-map", columns: 5, rows: 5 },
+      { id: "disassembly", columns: 7, rows: 5 },
+      { id: "cpu", columns: 8, rows: 2 },
+      { id: "flags", columns: 4, rows: 2 },
+      { id: "status", columns: 5, rows: 2 },
+      { id: "ports", columns: 7, rows: 3 },
+      { id: "memory-editor", columns: 7, rows: 5 },
+      { id: "search", columns: 5, rows: 5 },
+      { id: "atari-audio", columns: 5, rows: 3 }
+    ]
+  }
+}

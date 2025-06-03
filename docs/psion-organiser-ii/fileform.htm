@@ -1,0 +1,883 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Psion File Formats - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<style type="text/css">
+  table {
+    margin-left:30px;
+  }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "fileform.htm", "name": "Psion File Formats" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li>Psion File Formats</li>
+</ol>
+
+<h1>Psion File Formats</h1>
+
+<hr>
+
+<p>This text will explain the various file formats the Psion Organiser II uses.
+
+<p class=contents><b><a href="#packs">1. Packs</a></b>
+      <a href="#header">1.1 Pack Header</a>
+      <a href="#flagbyte">1.2 Pack header flag byte</a>
+      <a href="#trappack">1.3 Trap Rampak</a>
+      <a href="#bootpack">1.4 Bootable packs</a>
+      <a href="#idbyte">1.5 Device Identification Number</a>
+      <a href="#flashpak">1.6 Flash datapaks</a>
+      <a href="#relocat">1.7 Relocatable code block</a>
+      <a href="#device">1.8 Device Code</a>
+      <a href="#vector">1.9 Device Vectors</a>
+
+<b><a href="#fileform">2. General File Formats</a></b>
+      <a href="#shortrec">2.1 Short Records</a>
+      <a href="#longrec">2.2 Long Records</a>
+      <a href="#rectypes">2.3 Record types</a>
+      <a href="#datafile">2.4 Data File</a>
+      <a href="#blockfile">2.5 Block File</a>
+      <a href="#headless">2.6 Headerless blocks</a>
+      <a href="#deleted">2.7 Deleted records and files</a>
+      <a href="#errcorr">2.8 Pack error correction</a>
+
+<b><a href="#blockfiles">3. Block File Formats</a></b>
+      <a href="#diary">3.1 CM/XP Diary files</a>
+      <a href="#procs">3.2 Procedure files</a>
+      <a href="#comms">3.3 Comms link setup files</a>
+      <a href="#sprdsht">3.4 Pocket Spreadsheet files</a>
+      <a href="#pager">3.5 Pager setup files</a>
+      <a href="#notepad">3.6 LZ notepad file</a>
+
+<b><a href="#pcfiles">4. PC files</a></b>
+      <a href="#odbfile">4.1 ODB files</a>
+      <a href="#oplfile">4.2 OPL files</a>
+      <a href="#obxfile">4.3 OBx files</a>
+      <a href="#lnofile">4.4 LNO file for the Organiser Developer kit</a>
+      <a href="#opkfile">4.5 OPK file for the Organiser Developer kit</a>
+      <a href="#ipkfile">4.6 IPK file for the Organiser Developer kit</a>
+      <a href="#binfile1">4.7 BIN file for the Organiser Developer kit</a>
+      <a href="#binfile2">4.8 BIN file for Comms boot</a>
+      <a href="#orgbak">4.9 ORGBAK.BUF backup file</a>
+
+
+<hr>
+
+
+<a id="packs"></a><h2>1. Packs</h2>
+
+<p>First, lets examine packs, and how info is stored on them. It is important
+to realise that a clean datapack has all its bits set, and the organiser can
+only clear bits to write its data. This has many consequences for the way
+that data is organised.
+
+<a id="header"></a><h3>1.1 Pack header</h3>
+
+<p>Every pack starts with a 10 byte header, containing the info about the pack
+itself. This header is written by the organiser when it 'Sizes' a pack.
+
+<p>Normal packs have the following header:
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0       </td><td valign=top>Flags (<a href="#flagbyte">see below</a>)</td></tr>
+<tr><td valign=top>1       </td><td valign=top>Size in 8k blocks (so 4 means 32k, 8 means 64k etc.)</td></tr>
+<tr><td valign=top>2       </td><td valign=top>Year, when pack was sized (0-255)</td></tr>
+<tr><td valign=top>3       </td><td valign=top>Month, when pack was sized (0-11)</td></tr>
+<tr><td valign=top>4       </td><td valign=top>Day, when pack was sized (0-30)</td></tr>
+<tr><td valign=top>5       </td><td valign=top>Hour, when pack was sized (0-23)</td></tr>
+<tr><td valign=top>6/7     </td><td valign=top>Frame counter, when pack was sized (see system variable $20CB)</td></tr>
+<tr><td valign=top>8/9     </td><td valign=top>Word 'checksum' of header. This word is the sum of the words at pack
+        address 0, 2, 4, and 6. The organiser never checks this sum, because
+        a pack's copy/write protection is sometimes set after the checksum
+        has already been computed and written.</td></tr>
+</table>
+
+<p>
+Once a pack has been detected or booted by the Organiser, the pack header is
+copied into memory. The header for slot B: is located at address $20E1 (8417)
+and the slot C: header is directly after that at $20EB (8427). You can use
+this for example to find out the size of a pack by evaluating 8*PEEKB(8418)
+or 8*PEEKB(8428) in the calculator for the pack in slot B: or C: respectively.
+</p>
+
+
+<a id="flagbyte"></a><h3>1.2 Pack header flag byte</h3>
+
+<p>The bits of the flag byte all have a different meaning:
+<table summary="">
+<tr><th valign=top>Bit:</th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0   </td><td valign=top>Clear for a valid pack.</td></tr>
+<tr><td valign=top>1   </td><td valign=top>EPROM:  Set for a datapack (or flashpak), clear for a Rampak.</td></tr>
+<tr><td valign=top>2   </td><td valign=top>PGCPK:  Set for page counted packs (most packs 32K and larger), clear for linear packs (all 8K and 16K packs, some 32K packs).</td></tr>
+<tr><td valign=top>3   </td><td valign=top>RDWRT:  Normally set, clear for write protection. Always clear for flashpaks.</td></tr>
+<tr><td valign=top>4   </td><td valign=top>NOBOOT: Normally set, clear for a <a href="#bootpack">bootable pack</a></td></tr>
+<tr><td valign=top>5   </td><td valign=top>COPYPK: Normally set, clear for copy protection.</td></tr>
+<tr><td valign=top>6   </td><td valign=top>NYIMPL: Normally set, clear for <a href="#flashpak">flashpaks</a>, and for <a href="#trappack">trap Rampaks</a>.</td></tr>
+<tr><td valign=top>7   </td><td valign=top>MKIPAK: Normally clear. Set on an organiser 1 pack.</td></tr>
+</table>
+
+<p>Note that it is possible to clear the RDWRT and/or COPYPK bits to set
+the pack protection, but it is not possible to remove it again (except by
+copying to a new pack).
+
+<p>Here are some common values of the first two bytes of the header:
+<table summary="">
+<tr><th valign=top>Flag &amp; size:</th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>$7A 01</td><td valign=top>8K datapak.</td></tr>
+<tr><td valign=top>$7A 02</td><td valign=top>16K datapak.</td></tr>
+<tr><td valign=top>$7E 04</td><td valign=top>32K datapak (paged).</td></tr>
+<tr><td valign=top>$7E 08</td><td valign=top>64K datapak.</td></tr>
+<tr><td valign=top>$7E 10</td><td valign=top>128K datapak.</td></tr>
+<tr><td valign=top>$52 02</td><td valign=top>16K datapak. Copy and write protected.</td></tr>
+<tr><td valign=top>$56 04</td><td valign=top>32K datapak (paged). Copy and write protected.</td></tr>
+<tr><td valign=top>$56 08</td><td valign=top>64K datapak. Copy and write protected.</td></tr>
+<tr><td valign=top>$42 02</td><td valign=top>16K datapak. Bootable, copy and write protected.</td></tr>
+<tr><td valign=top>$46 04</td><td valign=top>32K datapak (paged). Bootable, copy and write protected.</td></tr>
+<tr><td valign=top>$46 08</td><td valign=top>64K datapak. Bootable, copy and write protected.</td></tr>
+<tr><td valign=top>$7C 04</td><td valign=top>32K rampak.</td></tr>
+<tr><td valign=top>$26 10</td><td valign=top>128K flashpak.</td></tr>
+<tr><td valign=top>$26 20</td><td valign=top>256K flashpak.</td></tr>
+</table>
+
+
+
+<a id="trappack"></a><h3>1.3 Trap Rampak</h3>
+
+<p>This is a 32k Rampak which has bit 6 of the <a href="#flagbyte">flag byte</a> cleared, and hence
+a flag byte of $3C. When a system crash occurs on a Psion organiser, a Trap
+interrupt is generated which jumps to a routine in the ROM. This routine
+prints 'TRAP' on the screen, possibly some extra information, and switches
+off. In ROM versions 3.6 or above, it checks whether a trap Rampak is in
+any of the slots and if found it will copy the Ram contents to the corresponding
+addresses on the pack. Of course the areas $00-$3F and $100-$400 are not copied
+because they are processor ports and semi-custom chip controls. Therefore those
+pack addresses are left untouched (so the <a href="#header">pack header</a> stays intact too).
+Note that the LZ64's extra Ram banks are not copied.
+
+
+<a id="bootpack"></a><h3>1.4 Bootable packs</h3>
+
+<p>A bootable pack is a pack that contains a machine code program that is loaded
+and run when 'the devices are booted', i.e. when ON is pressed in the main
+menu. The Comms link for example acts like a bootable pack, and its program
+inserts/deletes a menu item, and handles the new OPL commands for the link.
+
+<p>Bootable packs have the following header:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0       </td><td valign=top>Flags, <a href="#flagbyte">as above</a>.</td></tr>
+<tr><td valign=top>1       </td><td valign=top>Size, <a href="#header">as above</a>.</td></tr>
+<tr><td valign=top>2       </td><td valign=top>Code byte, 0 for a software device (e.g. normal pack) or 1 for a
+        hardware device (e.g. Comms link). Descriptive only.</td></tr>
+<tr><td valign=top>3       </td><td valign=top>Identification number. Should be unique amongst the devices used on
+        the organiser at the same time. <a href="#idbyte">See below.</a></td></tr>
+<tr><td valign=top>4       </td><td valign=top>Version number. A binary coded decimal number, i.e. the number $25
+        means version 2.5 etc. Descriptive only.</td></tr>
+<tr><td valign=top>5       </td><td valign=top>Priority. Devices are booted highest priority first. Generally the
+        same as the Identification number.</td></tr>
+<tr><td valign=top>6/7     </td><td valign=top>Code address. Pack address of the <a href="#relocat">relocatable code</a> block containing
+        the <a href="#device">device code</a> to run. Usually $0019, where the block immediately follows the
+        pack header and MAIN file header.</td></tr>
+<tr><td valign=top>8/9     </td><td valign=top>Word 'checksum', <a href="#header">as above</a>.</td></tr>
+</table>
+
+<a id="idbyte"></a><h3>1.5 Device Identification Number</h3>
+
+<p>Officially, Identification numbers in the range $80-$C0 are reserved for Psion's hardware
+devices, and $00-40 for their software devices. However, the convention of using that same number
+for the boot priority sometimes causes conflict with those ranges. Here is a table of the
+Identification/Priority numbers that I have found so far.</p>
+<table summary="">
+<tr><th valign=top>Id Byte:</th><th valign=top>Device</th></tr>
+<tr><td>02</td><td>SDRP software pack</td></tr>
+<tr><td>09</td><td>Formulator</td></tr>
+<tr><td>0A</td><td>Concise Oxford Spelling Checker, OWI interface</td></tr>
+<tr><td>0B</td><td>Thesaurus and Spelling Checker</td></tr>
+<tr><td>20</td><td>FlightMaster software pack 1</td></tr>
+<tr><td>40</td><td>Microtima SigSet software pack</td></tr>
+<tr><td>41</td><td>Dial-Link software pack, AutoScribe Plus</td></tr>
+<tr><td>50</td><td>HB Games Pack</td></tr>
+<tr><td>80</td><td>KDG Mobrey MSP100 software pack</td></tr>
+<tr><td>90</td><td>Bootable packs using Boot.BIN from the Organiser Developer kit.</td></tr>
+<tr><td>BC</td><td>Extech Comms Modem</td></tr>
+<tr><td>BE</td><td>Magnetic Card Reader</td></tr>
+<tr><td>BF</td><td>Barcode Reader, Digitron SF10 software pack</td></tr>
+<tr><td>C0</td><td>RS232 Link, Comms Link, Paralink (later versions)</td></tr>
+<tr><td>C1</td><td>CNF41 Hart Interface, Hand-held Operator's Terminal</td></tr>
+<tr><td>C2</td><td>Psion Printer</td></tr>
+<tr><td>C3</td><td>Sony Lisa-1 EVR packs</td></tr>
+<tr><td>C4</td><td>Extech Comms Printer II</td></tr>
+<tr><td>C6</td><td>Pager</td></tr>
+<tr><td>C8</td><td>Pocket Spreadsheet</td></tr>
+<tr><td>CB</td><td>Sony PRM-1 pack</td></tr>
+<tr><td>CD</td><td>Dynapen</td></tr>
+<tr><td>CF</td><td>Sony Lisa-1 pixel repair pack</td></tr>
+<tr><td>F7</td><td>Flashpak</td></tr>
+<tr><td>F8</td><td>Flashpak</td></tr>
+<tr><td>FF</td><td>Paralink (earlier versions)</td></tr>
+</table>
+
+<a id="flashpak"></a><h3>1.6 Flash datapaks</h3>
+
+<p>A flash datapak (or flashpak) is a datapak that uses an EEPROM instead of
+an EPROM. This allows it to be electronically formatted. As the Organiser's
+operating system has no way of formatting or writing to these chips, the flashpak
+normally contains a driver to allow it to do so. The pack is therefore bootable.
+
+<p>It always has its write-protect bit cleared so that no attempt will be made to write
+to it as if it were a normal datapak. The flashpak driver instead uses the most significant
+bit of the 'checksum' word to signify the write protection (normally set, but cleared for
+write-protection).
+
+<p>Flashpaks have the following bootable header:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:</th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0    </td><td valign=top>Flag byte has value $26, or $06 for copy-protected packs.</td></tr>
+<tr><td valign=top>1    </td><td valign=top>Size. Usually $10 (128K) or $20 (256K).</td></tr>
+<tr><td valign=top>2    </td><td valign=top>Code byte is $01 to indicate a hardware device.</td></tr>
+<tr><td valign=top>3    </td><td valign=top>Identification number for flashpaks is $F8.</td></tr>
+<tr><td valign=top>4    </td><td valign=top>Version number. The latest driver is version 1.9, in which case the byte is $19.</td></tr>
+<tr><td valign=top>5    </td><td valign=top>Priority is $F8 for flashpaks.</td></tr>
+<tr><td valign=top>6/7  </td><td valign=top>Code address for the driver, usually $0019.</td></tr>
+<tr><td valign=top>8/9  </td><td valign=top>Checksum word, except that the high bit indicates the real write-protection status.</td></tr>
+</table>
+
+
+<a id="relocat"></a><h3>1.7 Relocatable code block</h3>
+
+<p>Here is a short description of the Psion relocatable object format, as used
+for <a href="#device">device code</a> on <a href="#bootpack">bootable packs</a>:
+
+<ul>
+  <li>A word containing length of code block,
+  <li>the code block itself (of the length above),
+  <li>a word containing the byte checksum of the code block (i.e. sum of all the bytes in the code block)
+  <li>a word containing the number of fix-ups,
+  <li>a list of fix-ups,
+  <li>a word containing the word checksum of the fix-up list (i.e. sum of all the words in the list)
+</ul>
+
+<p>The code block is such that all absolute jumps and other absolute references
+are coded as if the block was at address 0. The fix-up list contains the
+addresses of those absolute references (with 0 meaning the first byte of the
+code block). When the code is loaded in memory (by using the DV$LOAD service
+in the ROM; SWI $1A), the new address of the code block is added at all the
+places indicated by the fixup list, so that all the absolute references are
+correct.
+
+
+<a id="device"></a><h3>1.8 Device code</h3>
+
+<p>Device code is a program that is run when a pack (or top slot device) is
+booted. They are booted either when ON/Clear is pressed in the main menu,
+or when the system service DV$BOOT (SWI $17) is called. See <a href="#bootpack">bootable packs</a>.
+Device code is in a <a href="#relocat">relocatable code</a> format, and its code block has the
+following format:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0/1     </td><td valign=top>Contains 0000. When loaded into memory, the program length is stored
+        here, allowing the organiser to skip through consecutively loaded
+        device code blocks.</td></tr>
+<tr><td valign=top>2       </td><td valign=top>Contains 00. When loaded into memory, the program pack is stored here,
+        which is 1, 2, or 3 for packs B:, C:, or D: (top slot).</td></tr>
+<tr><td valign=top>3       </td><td valign=top>Device identification number. Same as in the <a href="#header">pack header</a>.</td></tr>
+<tr><td valign=top>4       </td><td valign=top>Device Version number. Same as in the <a href="#header">pack header</a>.</td></tr>
+<tr><td valign=top>5       </td><td valign=top>Number of vectors. Device code consists of several smaller programs
+        called vectors. Generally, device code must have at least 3 special
+        vectors, which are <a href="#vector">detailed below</a>.</td></tr>
+<tr><td valign=top>6/7+    </td><td valign=top>List of addresses of the vectors. These addresses are normally fixed
+        up addresses pointing to routines in this code block.</td></tr>
+<tr><td valign=top>??+     </td><td valign=top>This is followed by the device vector routines.</td></tr>
+</table>
+
+<p>Device code is generally stored on a pack in a <a href="#headless">headerless block</a>.
+
+
+<a id="vector"></a><h4>1.9 Device vectors</h4>
+
+<p><a href="#device">Device code</a> consists of several smaller programs called vectors. By using the
+system service DV$VECT (SWI $1B) any vector on any booted device can be
+called (register A should contain the device number, B the vector number).
+
+<p>Generally, a device must have at least 3 special vectors, which are detailed below.</p>
+
+<table summary="">
+<tr><th valign=top>Vector:   </th><th valign=top>Purpose:</th></tr>
+<tr><td valign=top>0         </td><td valign=top>Install vector. Performs device initialisation, for example inserts
+          a menu item. If the carry flag is set on return, the device code
+          will be rejected, i.e. not loaded.</td></tr>
+<tr><td valign=top>1         </td><td valign=top>Remove vector. Performs removal, for example deletes a menu item.
+          (On return, carry flag is ignored.) After running this vector, the
+          device code could be safely deleted from memory.</td></tr>
+<tr><td valign=top>2         </td><td valign=top>Language vector. Is called by the organiser to see if the device is
+          willing to accept a particular procedure name as an external
+          command. Peripherals like the Comms link use this vector for all
+          the extra commands. On entry, X points to the string (with leading
+          byte count) and on exit it should have the device identification number
+          in register A and the vector number of the vector that performs the task
+          in register B, ready for a DV$VECT call. Carry should be clear. If the
+          device will not handle that command name, carry should be set. On a device
+          which does not implement any extra commands, this vector generally reads SEC,
+          RTS.</td></tr>
+</table>
+
+<p>Pressing ON/Clear in the main menu (or using service DV$BOOT, SWI $17) will
+first call the remove vector of all devices (using service DV$CLER, SWI $18)
+and remove all device code from memory. Then all device code is loaded,
+calling the install vector in the process.
+
+<p>If a procedure call is encountered in a program or in the calculator, (the
+service DV$LKUP, SWI $19, is called so that) the procedure name is passed to
+the language vector of all devices in turn. If the carry flag is set, then
+none of the devices accept it and the packs are searched for a normal OPL
+procedure of that name. If a device returns with a clear carry flag, then
+the appropriate vector is immediately called (registers A and B are already
+prepared for calling service DV$VECT, SWI $1B).
+
+<hr>
+
+<a id="fileform"></a><h2>2. General File Formats</h2>
+
+<p>There now follows a description of the various file types that can be stored
+on a pack. Two types of record are used for storing files.
+
+<a id="shortrec"></a><h3>2.1 Short Records</h3>
+
+<p>A short record is used for storing file names, and for records in data files.
+It has the following format:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0       </td><td valign=top>Length byte. Contains the length of the data in the record, and must
+        be in the range $01-FE (1-254).</td></tr>
+<tr><td valign=top>1       </td><td valign=top>Record type. Explained below.</td></tr>
+<tr><td valign=top>2+      </td><td valign=top>Data, of the given length.</td></tr>
+</table>
+
+<a id="longrec"></a><h3>2.2 Long records</h3>
+
+<p>A long record is used for a large block of data, for example the data of a
+procedure, and has the following format:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0       </td><td valign=top>Contains $02, for error correcting purposes explained later.</td></tr>
+<tr><td valign=top>1       </td><td valign=top>Contains $80, the record type of a long record.</td></tr>
+<tr><td valign=top>2/3     </td><td valign=top>Length word. Contains the length of the data in the record.</td></tr>
+<tr><td valign=top>4+      </td><td valign=top>Data, of the given length.</td></tr>
+</table>
+
+<a id="rectypes"></a><h3>2.3 Record types</h3>
+
+<p>The record type bytes that the organiser uses are as follows:</p>
+
+<table summary="">
+<tr><th valign=top>Type:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>80      </td><td valign=top>A long record.</td></tr>
+<tr><td valign=top>81      </td><td valign=top>A data file.</td></tr>
+<tr><td valign=top>82      </td><td valign=top>A CM/XP diary file.</td></tr>
+<tr><td valign=top>83      </td><td valign=top>A procedure file.</td></tr>
+<tr><td valign=top>84      </td><td valign=top>A Comms link setup file.</td></tr>
+<tr><td valign=top>85      </td><td valign=top>A pocket spreadsheet file.</td></tr>
+<tr><td valign=top>86      </td><td valign=top>A pager setup file.</td></tr>
+<tr><td valign=top>87      </td><td valign=top>An LZ notepad file.</td></tr>
+<tr><td valign=top>88-8F   </td><td valign=top>Other types of file not officially used by Psion.</td></tr>
+<tr><td valign=top>90-FE   </td><td valign=top>Used to identify records of data files.</td></tr>
+<tr><td valign=top>FF      </td><td valign=top>Used for error correcting purposes.</td></tr>
+</table>
+
+<p>Note that when a record or file is deleted, the high bit of the record type byte
+is cleared, so record types 01-7E signify deleted files/records.
+
+
+<a id="datafile"></a><h3>2.4 Data file</h3>
+
+<p>A data file, for example the MAIN file, consists of a header, and its
+separate data records. The header is a <a href="#shortrec">short record</a> of record type
+$81 and length 9, in which the data consists of the file name (padded to 8 characters with
+spaces) followed by its file identifier byte (range $90-FE). In other words:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0       </td><td valign=top>Contains 9, length byte of the header.</td></tr>
+<tr><td valign=top>1       </td><td valign=top>Contains $81, data file type.</td></tr>
+<tr><td valign=top>2-9     </td><td valign=top>File name, padded with spaces if necessary.</td></tr>
+<tr><td valign=top>10      </td><td valign=top>File identifier byte (range $90-FE), see below.</td></tr>
+</table>
+
+<p>Every data file on a pack must have a unique File Identifier byte. The data records of a data
+file are <a href="#shortrec">short records</a>, which use the file identifier byte as their record
+type, i.e.</p>
+
+<table summary="">
+<tr><td valign=top>0       </td><td valign=top>Length byte of the record.</td></tr>
+<tr><td valign=top>1       </td><td valign=top>Contains file identifier.</td></tr>
+<tr><td valign=top>2+      </td><td valign=top>Record data, where the fields of the record are separated by ASCII character 9.</td></tr>
+</table>
+
+<p>The header and data records of a file can be interspersed by any number of
+other records and files. When a data file is deleted, all the records and its
+header are individually marked as deleted, so that the file identifier byte
+can be reused when a new file is created on a pack.
+
+<p>Also the header need not come before the first record of a file, because when
+a file is renamed, the header is deleted and rewritten (with the new name but the
+same file identifier) at the end of the pack. The header of the MAIN file is written
+on the pack during 'Sizing', so it has file identifier byte $90. The MAIN file should
+not be renamed or deleted.
+
+
+<a id="blockfile"></a><h3>2.5 Block files</h3>
+
+<p>Apart from data files explained above, the only other files the organiser
+uses are block files. These are files in which the data is stored as one
+block in a <a href="#longrec">long record</a>. A block file consists of a file name header, followed
+immediately by a long record:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0       </td><td valign=top>Contains 9, length byte of the header.</td></tr>
+<tr><td valign=top>1       </td><td valign=top>The block file type, e.g. $83 for a procedure.</td></tr>
+<tr><td valign=top>2-9     </td><td valign=top>File name, padded with spaces if necessary.</td></tr>
+<tr><td valign=top>10      </td><td valign=top>Unused byte. Generally 00.</td></tr>
+</table>
+
+<p>followed by:</p>
+
+<table summary="">
+<tr><td valign=top>0       </td><td valign=top>Contains $02, for error correcting purposes explained later.</td></tr>
+<tr><td valign=top>1       </td><td valign=top>Contains $80, the record type of a long record.</td></tr>
+<tr><td valign=top>2/3     </td><td valign=top>Length word. Contains the length of the data in the block.</td></tr>
+<tr><td valign=top>4+      </td><td valign=top>Data, of the given length.</td></tr>
+</table>
+
+
+<a id="headless"></a><h3>2.6 Headerless blocks</h3>
+
+<p>Sometimes a <a href="#longrec">long record</a> is used without preceding it with a header. The most
+common use for this is for storing <a href="#device">device code</a>. Generally it is the first
+new item on the pack, following directly after the <a href="#header">pack header</a> and the MAIN file
+header. This places the device code at pack address $0019 ($0A bytes in the
+pack header, $0B bytes in the MAIN header, 4 bytes in the long record header).
+
+
+<a id="deleted"></a><h3>2.7 Deleted records and files</h3>
+
+<p>Note that when a record or file is deleted, the high bit of the type byte
+is cleared, so file types 01-7E signify deleted files/records.
+
+<p>When a <a href="#blockfile">block file</a> is deleted, the file header is marked deleted, but the
+long record is not changed (see <a href="#errcorr">error correction</a> for the meaning of a 00 type
+byte). When a data file is deleted, all its data records are marked as
+deleted as well as its file header, allowing the file identifier to be
+reused.
+
+<p>The data file header usually precedes the data records of that file, but this
+is not true if the file has been renamed. When a data file is renamed, the
+old header is deleted, and a new one is written at the end of the pack, using
+the same file identifier byte.
+
+
+<a id="errcorr"></a><h3>2.8 Pack error correction</h3>
+
+<p>The Psion uses a simple but fairly effective system to recover from errors
+when writing to a pack. When a pack is sized, the organiser checks that all
+bytes are set to FF (or else a pack not blank error occurs). If the <a href="#header">pack header</a>
+cannot be written, the pack is unusable.
+
+<p>If an error occurs when writing the first byte of a short or long record,
+then the second byte is left untouched, and the organiser tries again at the
+next address. Therefore a 'record type' of FF means that the two bytes should
+be ignored.
+
+<p>This method fails if the incorrect length byte has become 0 or $FF. The
+byte 0 is taken by the organiser to mean that the pack has been removed.
+The byte $FF on the other hand signifies (especially when followed by
+another $FF) that the end of the data is reached, and that new data can be
+written there.
+
+<p>If an error occurs when writing the length word of a long record, then the
+type byte is marked deleted, so that it becomes in effect a deleted short
+record with length 2. The file header is then also deleted, and the organiser
+tries again at the next address.
+
+<hr>
+
+<a id="blockfiles"></a><h2>3. Block File Formats</h2>
+
+<p>There now follows a description of the content format of various types of <a href="#blockfile">block files</a>.
+Unfortunately not all are complete, due to being difficult to reverse-engineer.
+</p>
+
+<a id="diary"></a><h3>3.1 CM/XP Diary files</h3>
+
+<p>These are <a href="#blockfile">block files</a> of type $82. Its data block consists of a list of
+entries which is terminated by a zero-byte. Each entry has the form:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0       </td><td valign=top>Length of the text of this entry. Must be at least 1 to distinguish it from the data block's terminating zero.</td></tr>
+<tr><td valign=top>1       </td><td valign=top>Year (0-99)</td></tr>
+<tr><td valign=top>2       </td><td valign=top>Month (0-11)</td></tr>
+<tr><td valign=top>3       </td><td valign=top>Day (0-30)</td></tr>
+<tr><td valign=top>4       </td><td valign=top>Hour (0-23)</td></tr>
+<tr><td valign=top>5       </td><td valign=top>Minute (0-59)</td></tr>
+<tr><td valign=top>6       </td><td valign=top>Alarm flag  (0-60): 0 for no alarm, otherwise one more than the
+        number of minutes early the alarm has to go off.</td></tr>
+<tr><td valign=top>7+      </td><td valign=top>Text of length given above.</td></tr>
+</table>
+
+<a id="procs"></a><h3>3.2 Procedure files</h3>
+
+<p>These are <a href="#blockfile">block files</a> of type $83. The data block consists of two parts,
+both preceded by a length word. The first part contains the object code
+of the procedure (i.e. the translated code), the second the source code
+(i.e. the typed OPL).
+
+<p>The object code data is too complicated to explain here, for full details see
+<a href="qcodes.htm">Translated Procedures and QCodes</a>. A procedure which
+has not been translated will have an object code block of length zero.
+
+<p>The source code data consists of text, with each line terminating in a zero-byte.
+The first line must contain a title ending in a colon. In an object-only
+procedure, the source code block is of length zero.
+
+<p>Procedures translated by the emulator in the Organiser Developer are block files
+of type FE. For details of these files, again see <a href="qcodes.htm">Translated Procedures and QCodes</a>.
+
+
+<a id="comms"></a><h3>3.3 Comms link setup files</h3>
+
+<p>These are <a href="#blockfile">block files</a> of type $84, containing the saved settings for
+the Comms Link. Its data block consists of 27 bytes exactly, containing the parameters:</p>
+
+<table summary="">
+<tr><th>Byte index:</th><th>Meaning:</th></tr>
+<tr><td>0    </td><td>Baud rate (0-9 for 50, 75, 110, 150, 300, 600, 1200, 2400, 4800, 9600 baud respectively)</td></tr>
+<tr><td>1    </td><td>Parity (0-4 for NONE, ODD, EVEN, MARK, SPACE respectively)</td></tr>
+<tr><td>2    </td><td>Data bits (0-1 for 7 or 8 bits)</td></tr>
+<tr><td>3    </td><td>Stop bits (0-1 for 1 or 2 bits)</td></tr>
+<tr><td>4    </td><td>Handshake (0-7 for NONE, XON, RTS, XON+RTS, DTR, XON+DTR, RTS+DTR, ALL respectively)</td></tr>
+<tr><td>5    </td><td>Protocol (0-2 for NONE, XMODEM, PSION respectively)</td></tr>
+<tr><td>6    </td><td>Echo (0-1 for LOCAL, HOST respectively)</td></tr>
+<tr><td>7    </td><td>Width (0-250, 0 for none)</td></tr>
+<tr><td>8    </td><td>Timeout (0-255 in seconds, 0 for none)</td></tr>
+<tr><td>9-$0B</td><td>REOL, string of length at most 2 with leading length byte. Any unused bytes after the string are ignored so may have any value.</td></tr>
+<tr><td>0C-0E</td><td>REOF, as above.</td></tr>
+<tr><td>0F-11</td><td>RTRN, as above.</td></tr>
+<tr><td>12-14</td><td>TEOL, as above.</td></tr>
+<tr><td>15-17</td><td>TEOF, as above.</td></tr>
+<tr><td>18-1A</td><td>TTRN, as above.</td></tr>
+</table>
+
+<a id="sprdsht"></a><h3>3.4 Pocket Spreadsheet files</h3>
+
+<p>These are <a href="#blockfile">block files</a> of type $85. This is a complicated file type, and I
+have not yet been able to work out the exact specifications.
+
+
+<a id="pager"></a><h3>3.5 Pager setup files</h3>
+
+<p>These are <a href="#blockfile">block files</a> of type $86 containing the saved settings for
+the Pager. Its data block consists of 119 bytes exactly. There are many bytes that seem to have
+fixed values and which are not actually used by the Wordcall Pager I have, but it may be that
+other types of Pager make use of those bytes to store further settings.</p>
+
+<table summary="">
+<tr><th>Byte index:</th><th>Value range</th><th>Default Value</th><th>Meaning:</th></tr>
+<tr><td>00   </td><td>00</td><td></td><td></td></tr>
+<tr><td>01   </td><td>00-02</td><td>02</td><td>Status: 00=Off, 01=On, 02=Auto</td></tr>
+<tr><td>02   </td><td>01</td><td></td><td></td></tr>
+<tr><td>03   </td><td>00-01</td><td>01</td><td>Sounder: 00=Off, 01=On</td></tr>
+<tr><td>04   </td><td>02</td><td></td><td></td></tr>
+<tr><td>05   </td><td>00-03</td><td>03</td><td>Volume: 00=Quietest, 03=Loudest</td></tr>
+<tr><td>06   </td><td>05</td><td></td><td></td></tr>
+<tr><td>07   </td><td>3E</td><td></td><td></td></tr>
+<tr><td>08   </td><td>04</td><td></td><td></td></tr>
+<tr><td>09   </td><td>00-17</td><td>08</td><td>Hour ON: Hour of the day it switches on in Auto mode</td></tr>
+<tr><td>0A   </td><td>04</td><td></td><td></td></tr>
+<tr><td>0B   </td><td>00-17</td><td>12</td><td>Hour OFF: Hour of the day it switches off in Auto mode</td></tr>
+<tr><td>0C   </td><td>03</td><td></td><td></td></tr>
+<tr><td>0D   </td><td>00-FF</td><td>04</td><td>Repeat 1: Initial delay in minutes between unacknowledged message warning beeps.</td></tr>
+<tr><td>0E   </td><td>03</td><td></td><td></td></tr>
+<tr><td>0F   </td><td>00-FF</td><td>3c</td><td>Period 1: Number of minutes to sound warnings before moving on to Repeat 2.</td></tr>
+<tr><td>10   </td><td>03</td><td></td><td></td></tr>
+<tr><td>11   </td><td>00-FF</td><td>3c</td><td>Repeat 2: Delay in minutes between unacknowledged message warning beeps.</td></tr>
+<tr><td>12   </td><td>01</td><td></td><td></td></tr>
+<tr><td>13   </td><td>00-01</td><td>01</td><td>Duplicates: Duplicate filtering, 00=OFF, 01=ON.</td></tr>
+<tr><td>14   </td><td>01</td><td></td><td></td></tr>
+<tr><td>15   </td><td>00-01</td><td>01</td><td>Warning: Sound warning beeps when switching on or off, 00=OFF, 01=ON.</td></tr>
+<tr><td>16   </td><td>06</td><td></td><td></td></tr>
+<tr><td>17   </td><td>00-27</td><td>07</td><td>Size: The size of message storage is (value+1)*500 bytes.</td></tr>
+<tr><td>18   </td><td>07</td><td></td><td></td></tr>
+<tr><td>19   </td><td>03</td><td></td><td></td></tr>
+<tr><td>1A   </td><td>08</td><td></td><td></td></tr>
+<tr><td>1B   </td><td>00</td><td></td><td></td></tr>
+<tr><td>1C   </td><td>09</td><td></td><td></td></tr>
+<tr><td>1D   </td><td>00</td><td></td><td></td></tr>
+<tr><td>1E   </td><td>09</td><td></td><td></td></tr>
+<tr><td>1F   </td><td>09</td><td></td><td></td></tr>
+<tr><td>20   </td><td>09</td><td></td><td></td></tr>
+<tr><td>21   </td><td>12</td><td></td><td></td></tr>
+<tr><td>22   </td><td>00</td><td></td><td></td></tr>
+<tr><td>23   </td><td>0A</td><td></td><td><small>Length of storage space reserved for next parameter, including this byte. Must not be changed.</small></td></tr>
+<tr><td>24-2C</td><td>lbc string</td><td>"sMTWTFs"</td><td>Days: A string of length 7 (starting with its length byte which is of course 07), one letter for each day of the week. Capital letters are days when Auto is in effect, on lower case days it remains off. Note that the unused byte of storage space after the string is ignored and normally 00.</td></tr>
+<tr><td>2D   </td><td>0C</td><td></td><td><small>Length of storage space reserved for next parameter, including this byte. Must not be changed.</small></td></tr>
+<tr><td>2E-38</td><td>lbc string</td><td>"A:MAIN"</td><td>Log: Filename (including device letter) of data file.</td></tr>
+<tr><td>39   </td><td>04</td><td></td><td><small>Length of storage space reserved for next parameter, including this byte. Must not be changed.</small></td></tr>
+<tr><td>3A-3C</td><td>lbc string</td><td>"U:"</td><td>Semi-Urgt: Two characters that mark a message as urgent in semi-urgent mode.</td></tr>
+<tr><td>3D   </td><td>09</td><td></td><td><small>Length of storage space reserved for next parameter, including this byte. Must not be changed.</small></td></tr>
+<tr><td>3E-45</td><td>lbc string</td><td>"Tone 1"</td><td>Text 1: Text to display when alert 1 sounds.</td></tr>
+<tr><td>46   </td><td>09</td><td></td><td><small>Length of storage space reserved for next parameter, including this byte. Must not be changed.</small></td></tr>
+<tr><td>47-4E</td><td>lbc string</td><td>"Tone 2"</td><td>Text 2: Text to display when alert 2 sounds.</td></tr>
+<tr><td>4F   </td><td>09</td><td></td><td><small>Length of storage space reserved for next parameter, including this byte. Must not be changed.</small></td></tr>
+<tr><td>50-57</td><td>lbc string</td><td>"Tone 3"</td><td>Text 3: Text to display when alert 3 sounds.</td></tr>
+<tr><td>58   </td><td>00</td><td></td><td></td></tr>
+<tr><td>59   </td><td>00-02</td><td>01</td><td>Alert 1: Status of the tone-only alert 1, 0=Off, 1=On, 2=Urgent.</td></tr>
+<tr><td>5A   </td><td>00-02</td><td>01</td><td>Alert 2: Status of the tone-only alert 2, 0=Off, 1=On, 2=Urgent.</td></tr>
+<tr><td>5B   </td><td>00-02</td><td>01</td><td>Alert 3: Status of the tone-only alert 3, 0=Off, 1=On, 2=Urgent.</td></tr>
+<tr><td>5C   </td><td>00-03</td><td>01</td><td>Alert 4: Status of the text alert 4, 0=Off, 1=On, 2=Urgent, 3=Semi-Urgent.</td></tr>
+<tr><td>5D   </td><td>03</td><td></td><td></td></tr>
+<tr><td>5E   </td><td>65</td><td></td><td></td></tr>
+<tr><td>5F   </td><td>9A</td><td></td><td></td></tr>
+<tr><td>60   </td><td>01</td><td></td><td></td></tr>
+<tr><td>61-73</td><td>00</td><td></td><td></td></tr>
+<tr><td>74   </td><td>59</td><td></td><td></td></tr>
+<tr><td>75   </td><td>00</td><td></td><td></td></tr>
+<tr><td>76   </td><td>15</td><td></td><td></td></tr>
+<tr><td>77   </td><td>00</td><td></td><td></td></tr>
+</table>
+
+<p>It is clear that in the first part of the file, each numerical setting is preceded by a
+byte that indicates the range of values the setting has, for instance all settings that
+only allow On/Off (00/01) are preceded by 01. The bytes at 07-08 and 18-21 therefore
+probably represent settings that other Pagers could use, such as Pagers that can also
+send messages. The byte at 07 containing the '&gt;' character could be some kind of prompt.
+</p>
+
+
+<a id="notepad"></a><h3>3.6 LZ notepad file</h3>
+
+<p>These are <a href="#blockfile">block files</a> of type $87. Its data block consists of two parts,
+the header, and the data, both preceded by a length word. The header has
+the form:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0       </td><td valign=top>Flag byte. The bits are set as for the LG$EDIT service (SWI $AB), so
+        Bit 7 is set if the notepad is numbered, bit 3 must be set, bits 1
+        and 2 are clear.</td></tr>
+<tr><td valign=top>1       </td><td valign=top>Password code length, 0 when no password, 9 when there is a password.</td></tr>
+<tr><td valign=top>2-$0A   </td><td valign=top>Password code, only included if a password is set. This code is
+        a series of 9 bytes computed from the notepad's password. If the
+        entered password gives the same passcode, then the notepad is
+        decoded.</td></tr>
+</table>
+
+<p>The data consists of text with zero-bytes indicating the end of a line (so
+the data ends in zero). The first line must contain a title ending in a
+colon. If a password has been set, all the data after the title is encrypted.
+Note that the title, the colon after the title, and if present the zero-byte
+immediately following the colon, are all left unencrypted.
+
+<p>
+For an in-depth description of the password system and the notepad encryption,
+see <a href="password.htm">The Psion LZ Password System</a> page.
+</p>
+
+<hr>
+
+<a id="pcfiles"></a><h2>4. PC files</h2>
+
+<p>When a file is transferred via a Comms link to another computer, its format
+is changed somewhat. Here the various PC files are described.
+
+
+<a id="odbfile"></a><h3>4.1 ODB files</h3>
+
+<p>These are data files which have been sent to a PC. The file name extension
+is ODB. This is an ordinary ASCII text file. Each record is placed on a
+single line, and tab characters (ASCII code 9) are used to separate the fields.
+No line may be longer than 254 characters.
+
+
+<a id="oplfile"></a><h3>4.2 OPL files</h3>
+
+<p>These are procedures which have been sent to a PC. The file name extension
+is OPL. This is an ordinary ASCII text file, containing only the source of
+the procedure. No line may be longer than 254 characters.
+
+
+<a id="obxfile"></a><h3>4.3 OBx files</h3>
+
+<p>These are <a href="#blockfile">block files</a> which have been sent to a PC. The file name extension
+is OBx where x is the low nibble of the file type, i.e. OB3 for a translated
+procedure, OB7 for a notepad file etc. The file has the following format:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0-2     </td><td valign=top>'Magic number', the ASCII characters 'ORG'. Used to check whether a
+        file is a Psion organiser file.</td></tr>
+<tr><td valign=top>3/4     </td><td valign=top>Length word, the length of the data block.</td></tr>
+<tr><td valign=top>5       </td><td valign=top>File type, between $82 and $8F.</td></tr>
+<tr><td valign=top>6+      </td><td valign=top>Data block.</td></tr>
+</table>
+
+
+<a id="lnofile"></a><h3>4.4 LNO files for the Organiser Developer kit</h3>
+
+<p>These are files containing a translated procedure, similar to an
+OB3 file. It has file type FE instead of 83. For the details of these
+files, see <a href="qcodes.htm">Translated Procedures and QCodes</a>.
+
+
+<a id="opkfile"></a><h3>4.5 OPK file for the Organiser Developer kit</h3>
+
+<p>These are pack image files. It contains all the data of a pack, and has the
+following format:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0-2     </td><td valign=top>'Magic number', the ASCII characters 'OPK'. Used to check whether a
+        file is a Psion pack image file.</td></tr>
+<tr><td valign=top>3-5     </td><td valign=top>Length, a three byte integer, the length of the pack data block.</td></tr>
+<tr><td valign=top>6+      </td><td valign=top>Pack data block. It is a direct copy of the data on the pack,
+        beginning with the ten byte <a href="#header">pack header</a>, and ending with the FFFF
+        word which follows the last data on the pack.</td></tr>
+</table>
+
+<p>There is a slight ambiguity with this format. When BLDPACK is used, the length integer
+includes the final FFFF bytes, so that it is 6 less than the OPK file size.
+When UNMAKE is used, the length integer does not include the FFFF bytes, so
+that it is 8 less than the OPK file size. In practice this does not matter, since
+writing FF bytes to an empty part of a pack changes nothing.
+
+
+<a id="ipkfile"></a><h3>4.6 IPK file for the Organiser Developer emulator</h3>
+
+<p>These pack image files are used in the emulator that is part of
+the Organiser Developer kit, and the format is almost identical to the OPK file format:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0-2     </td><td valign=top>'Magic number', the ASCII characters 'IPK'. Used to check whether a
+        file is a Psion pack image file.</td></tr>
+<tr><td valign=top>3-5     </td><td valign=top>Length, a three byte integer, the length of the pack data block.</td></tr>
+<tr><td valign=top>6+      </td><td valign=top>Pack data block. It is a direct copy of the data on the pack,
+        beginning with the ten byte <a href="#header">pack header</a>, and ending with the FFFF
+        word which follows the last data on the pack. Note however that an .IPK image can only
+        contain data files and LNO procedure files. The latter are procedures translated by the
+        emulator.</td></tr>
+<tr><td valign=top>?       </td><td valign=top>Padding, filled with zeroes. This can be any length, but is not
+        included in the length integer.</td></tr>
+</table>
+
+<p>The length integer includes the final FFFF bytes at the end of the pack data, but not any of the padding that may follow.
+
+<a id="binfile1"></a><h3>4.7 BIN file for the Organiser Developer kit</h3>
+
+<p>These files are used by the BLDPACK program in the Organiser Developer kit for
+constructing <a href="#bootpack">bootable packs</a>. It has the following format:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0-2     </td><td valign=top>'Magic number', the ASCII characters 'ORG'. Used to check whether a
+        file is a Psion organiser file.</td></tr>
+<tr><td valign=top>3/4     </td><td valign=top>Length word, the length of the data following the 'file type' byte.</td></tr>
+<tr><td valign=top>5       </td><td valign=top>File type, is set to $FF.</td></tr>
+<tr><td valign=top>6-$F    </td><td valign=top><a href="#bootpack">Bootable pack header</a>. Note that the flag byte, size byte, and
+        checksum word are ignored, and are usually set to $FF. The code
+        address is set to $0019.</td></tr>
+<tr><td valign=top>10-1A   </td><td valign=top>MAIN file header.</td></tr>
+<tr><td valign=top>1B+     </td><td valign=top><a href="#headless">Headerless block</a>, containing the <a href="#device">device code</a>.</td></tr>
+</table>
+
+<p>The format of bytes 6+ are basically used as the first part of the pack. As
+such, it could probably be chosen to be different from the standard format
+outlined above, as long as it generates a valid pack image.
+
+
+<a id="binfile2"></a><h3>4.8 BIN file for Comms boot</h3>
+
+<p>These files are loaded by the Comms link BOOT option. They simply contain
+the standard <a href="#device">device code</a> (i.e. a <a href="#relocat">relocatable code</a> block) without any
+preceding or subsequent bytes. There are a few differences from standard
+device code. The device code block is like this:</p>
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>0/1     </td><td valign=top>The length of the code. The same as the length word of the
+        <a href="#relocat">relocatable code</a> block.</td></tr>
+<tr><td valign=top>2       </td><td valign=top>Contains 00 as normal.</td></tr>
+<tr><td valign=top>3       </td><td valign=top>Device identification number. Generally in the region $C-$18.</td></tr>
+<tr><td valign=top>4       </td><td valign=top>Device Version number.</td></tr>
+<tr><td valign=top>5       </td><td valign=top>Number of <a href="#vector">vectors</a> is 1. Only the install vector is used.</td></tr>
+<tr><td valign=top>6/7     </td><td valign=top>Address of the install vector.</td></tr>
+<tr><td valign=top>8+      </td><td valign=top>The device vector routine and data.</td></tr>
+</table>
+
+<a id="orgbak"></a><h3>4.9 ORGBAK.BUF backup file</h3>
+
+<p>This file contains a backup of the RAM of the organiser, including
+the contents of device A:, diaries, alarms, etc. It is created by running
+the TRANS.BIN Comms boot code, and loaded back into the organiser by
+running the RECV.BIN boot code.</p>
+
+<p>This file consists of separate blocks. Each block starts with a length word,
+which is the length of the block including the length word itself. The third byte
+is the type of block. This type byte can have the following values:
+
+<table summary="">
+<tr><th valign=top>Byte:   </th><th valign=top>Meaning:</th></tr>
+<tr><td valign=top>00</td><td valign=top>Header. This must be present and is always the first block the file,
+    and has length $0010. The 13 data bytes consist of the Rom version
+    ($FFE9), model bytes 1 and 2 ($FFE8, $FFCB), the selected language
+    byte ($2186), the version byte of TRANS used to create the file, followed
+    by the length of the whole file in 8 byte floating point format.</td></tr>
+<tr><td valign=top>01</td><td valign=top>Pack block. Contains complete contents of pack A: starting with the
+    title record of the MAIN file, just like a pack image.</td></tr>
+<tr><td valign=top>02</td><td valign=top>Diary block. Contains contents of diary allocator cell $2004.</td></tr>
+<tr><td valign=top>03</td><td valign=top>Notepad block. Contains contents of notepad allocator cell $2020.</td></tr>
+<tr><td valign=top>04</td><td valign=top>Menu block. Contains contents of main menu allocator cell $2002.</td></tr>
+<tr><td valign=top>05</td><td valign=top>Alarm block. Contains the alarm table $22F9-2328 (all 48 bytes
+    regardless of how many of the alarms are set).</td></tr>
+<tr><td valign=top>06</td><td valign=top>System variables block. Contains various system variables, and is $0064
+    bytes long. The variables are: the time ($20C5-A), delays ($69-C,$77),
+    swoff vars ($7C-E), buzzer mute ($A4), keyboard ($20C0,$20C2-4,$7B),
+    calculator mems ($20FF-$214E).</td></tr>
+<tr><td valign=top>07</td><td valign=top>LZ system variables block. Is always 3 bytes long and contains the
+    2-line border ($2099), workday ($20A7) and time flags ($20A6).</td></tr>
+</table>
+
+<hr>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

@@ -1,0 +1,1242 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Translated Procedures and QCodes - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<style type="text/css">
+.tran {
+  margin-left:10px;
+  vertical-align:top;
+}
+.tran th{
+  font-family: Courier, "Courier New", monospace;
+  white-space: pre;
+}
+</style>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "qcodes.htm", "name": "QCodes" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li>QCodes</li>
+</ol>
+
+<h1>Translated Procedures and QCodes</h1>
+
+<hr>
+
+<p>This document contains a description of a translated OPL procedure. A procedure
+is translated (i.e. compiled) into QCode, which is a byte code that can be executed
+by the Psion Organiser.
+
+<p class=contents><b>1. <a href="#variables">Variables</a></b>
+<b>2. <a href="#stack">Language Stack</a></b>
+<b>3. <a href="#procform">The procedure file format</a></b>
+<b>4. <a href="#example1">Example QCode Header</a></b>
+<b>5. <a href="#qcode">QCode</a></b>
+<b>6. <a href="#example2">QCode Examples</a></b>
+<b>7. <a href="#lno">LNO files</a></b>
+
+<hr>
+
+<a id="variables"></a><h2>1. Variables</h2>
+
+There a six main types of variable: Integer, Float, and String, and arrays of
+Integers, Floats, or Strings. Sometimes the type of a variable needs to be
+denoted in QCode, and this is done by a single byte in the range 00 to 05.
+
+
+<h3>Format of variables</h3>
+
+<h4>Integer Variable</h4>
+<div class=indent>
+<p><b>Format:</b> HH LL
+<br>16 bit integer, first the high byte then the low byte.
+<br><b>Size:</b> 2
+<br><b>Type Byte:</b> 00
+
+<p><b>Example:</b> 13579
+<br>35 0B
+</div>
+
+<h4>Float Variable</h4>
+
+<div class=indent>
+
+<p><b>Format:</b> MM MM MM MM MM MM EE SS
+<br>6-byte mantissa (least to most significant), Exponent byte, Sign byte
+<br><b>Size:</b> 8
+<br><b>Type Byte:</b> 01
+
+<p>Mantissa is binary coded decimal, most significant digit in high nibble.
+<br>Exponent is in range -99 to 99, with 0 meaning 1 digit before decimal point.
+<br>Sign byte: sign in bit 7, rest clear, so $80 if negative, $00 if positive.
+
+<p><b>Example</b>: -123.456789
+<br>00 90 78 56 34 12 02 80
+
+<p>Float constants inside a procedure are stored in a shortened form:
+<br>LL [MM] EE
+<br>Length and sign byte LL, a number of mantissa bytes, an exponent byte.
+
+<p>The missing least significant mantissa bytes are considered to be 0.
+<br>The sign bit is stored in the high bit of LL.
+
+<p><b>Example</b>: -123.4
+<br>83 34 12 02
+
+</div>
+
+<h4>String Variable</h4>
+
+<div class=indent>
+
+<p><b>Format:</b> MM; LL [characters]
+<br>Declared maximum length, Actual length, ASCII contents
+<br><b>Size:</b> MM+2
+<br><b>Type Byte:</b> 02
+
+<p>MM is the maximum length of string, i.e. the number of bytes reserved for contents as stated in the LOCAL or GLOBAL declaration.
+<br>LL is actual length of string.
+<br>In the MM character bytes that follow, the first LL are actual contents, the rest are indeterminate.
+
+<p>Note that the address of the string variable is that of the length byte.
+
+<p><b>Example</b>: LOCAL A$(10) : A$ = "ABCD"
+<br>0A; 04 41 42 43 44 ?? ?? ?? ?? ?? ??
+
+<p>String constants inside a procedure are stored simply as a length byte followed by the contents.
+
+<p><b>Example</b>: "ABCD"
+<br>04 41 42 43 44
+
+</div>
+
+<h4>Integer Array Variable</h4>
+
+<div class=indent>
+
+<p><b>Format:</b> LL LL [integers]
+<br>Array size, list of integers
+<br><b>Size:</b> LLLL*2+2
+<br><b>Type Byte:</b> 03
+
+<p>LLLL is a word (16-bit integer) containing the number of integers in the array.
+<br>This is followed by the array contents, two bytes for each integer.
+
+<p>In OPL, ADDR(array%()) returns address of first integer in the array. In QCode, the
+  array variable's address is the address of the array size word.
+
+<p><b>Example</b>: LOCAL A%(2) : A%(1)=123 : A%(2)=-1234
+<br>00 02, 00 7B, FB 2E
+
+</div>
+
+<h4>Float Array Variable</h4>
+
+<div class=indent>
+
+<p><b>Format:</b> LL LL [floats]
+<br>Array size, list of floats
+<br><b>Size:</b> LLLL*8+2
+<br><b>Type Byte:</b> 04
+
+<p>LLLL is the number of integers in the array.
+<br>This is followed by the array contents, eight bytes for each float.
+
+<p>In OPL, ADDR() returns address of first float. In QCode, the array address is the address of the array size word.
+
+<p><b>Example</b>: LOCAL A(2) : A(1)=1234567 : A(2)=-123.456789
+<br>00 02, 00 00 70 56 34 12 06 00, 00 90 78 56 34 12 02 80
+
+</div>
+
+<h4>String Array Variable</h4>
+
+<div class=indent>
+
+<p><b>Format:</b> MM; LL LL [strings]
+<br>Declared maximum length, Array size, list of strings
+<br><b>Size:</b> LLLL*(MM+1)+3
+<br><b>Type Byte:</b> 05
+
+<p>MM is shared maximum length of the strings.
+<br>LLLL is the number of strings in the array.
+<br>This is followed by the array contents, MM+1 bytes of storage space for each
+ string of which the first is its length byte.
+
+<p>In OPL, ADDR() returns address of first string. In QCode, the array address is the address of the array size word.
+
+<p><b>Example</b>: LOCAL A$(2,4) : A$(1)="ABC" : A$(2)="1234"
+<br>04; 00 02,    03 41 42 43 ??,   04 31 32 33 34
+
+</div>
+
+<hr>
+
+<a id="stack"></a><h2>2. Language Stack</h2>
+
+<p>When a procedure is run, it is copied from whatever pack it is on into
+memory (even if it is on pack A:). It is placed on the language stack,
+which is an area of memory that grows downwards from the address given
+in the bta_sbas system variable ($2065/66). The lowest address currently
+in use by the stack is given by the language stack pointer rta_sp ($A5/A6).
+
+<p>When a procedure is placed on the language stack, it will have the following
+format:</p>
+
+<table class=indent summary="">
+<tr><td>Highest address, previous head of the stack</td><td>---------------------------</td></tr>
+<tr><td></td><td>
+  <ul>
+    <li>Length (2 bytes) of data added to the stack
+    <li>Storage space for variables
+      <ul>
+        <li>Global variable name table
+        <li>Parameters (two bytes each)
+        <li>Externals (two bytes each)
+        <li>Globals (storage size as explained above)
+        <li>Locals (storage size as explained above)
+      </ul>
+    <li>QCode (translated program instructions)
+   </ul>
+</td></tr>
+<tr><td>Lowest address, New head of the stack</td><td>---------------------------</td></tr>
+</table>
+
+<p>The global variable name table contains all the information about the
+global variables declared in this procedure. If, later on, some procedure is
+called and loaded that uses global variables declared elsewhere, then the stack
+is examined to see if those variables have been declared in previously loaded
+procedures.
+
+<p>The parameters and externals (those global variables declared in other procedures) only
+need 2 bytes of storage space, which contains the memory address of the location somewhere
+highter up the language stack where the value of the variable is actually stored. Global
+variables (declared in this procedure) and local variables are given the amount of space
+listed in the previous section.
+
+
+<hr>
+
+<a id="procform"></a><h2>3. The procedure file format</h2>
+
+<p>A procedure file is a binary file of type $83, as described in the file formats
+document. Its binary data block has the following format:</p>
+
+<table class=indent summary="">
+ <tr><td>VVVV</td><td>Total size that variables need on the stack.
+                        <br>This is size of storage space reserved for local/global varables defined in this procedure
+                        <br>plus two bytes for each external variable or parameter
+                        <br>plus size of global variable name table.</td></tr>
+ <tr><td></td><td>&nbsp;</td></tr>
+ <tr><td>QQQQ</td><td>Size of procedure QCode</td></tr>
+ <tr><td></td><td>&nbsp;</td></tr>
+ <tr><td>XX</td><td>Number of parameters</td></tr>
+ <tr><td>[XX]</td><td>Type bytes for parameters, in reverse order</td></tr>
+ <tr><td></td><td>&nbsp;</td></tr>
+ <tr><td>XXXX</td><td>Size of global variable name table in bytes</td></tr>
+ <tr><td>[string,</td><td>Global variable name (starts with length byte, name will include any final % or $)</td></tr>
+ <tr><td>BB,</td><td>Global variable type byte (0-5)</td></tr>
+ <tr><td>AAAA]</td><td>Global variable address (offset into reserved variable space)<br>Variables are listed in order of use in the procedure</td></tr>
+ <tr><td></td><td>&nbsp;</td></tr>
+ <tr><td>XXXX</td><td>Size of external variable name table in bytes</td></tr>
+ <tr><td>[string,</td><td>External variable name (starts with length byte, name will include any final % or $)</td></tr>
+ <tr><td>BB]</td><td>External variable type byte (0-5)<br>Variables are listed in order of use in the procedure</td></tr>
+ <tr><td></td><td>&nbsp;</td></tr>
+ <tr><td>XXXX</td><td>Size of string fixup table in bytes</td></tr>
+ <tr><td>[AAAA,</td><td>Address of string variable or string array, minus 1 (offset into reserved variable space)</td></tr>
+ <tr><td>MM]</td><td>Maximum number of bytes in string contents</td></tr>
+ <tr><td></td><td>&nbsp;</td></tr>
+ <tr><td>XXXX</td><td>Size of array fixup table in bytes</td></tr>
+ <tr><td>[AAAA,</td><td>Address of array (offset into reserved variable space)</td></tr>
+ <tr><td>LLLL]</td><td>Number of elements in the array</td></tr>
+ <tr><td></td><td>&nbsp;</td></tr>
+ <tr><td>[CC]</td><td>QCode, number of bytes is QQQQ above.</td></tr>
+</table>
+
+<p>When a procedure is loaded, VVVV bytes are reserved on the stack. This is partially filled by a
+copy of the global variable name table (after checking that these names have not been
+defined in the name table of any previous procedure on the stack). Below that is the
+space reserved for variables. The addresses of parameters and externals are filled in (the
+latter by looking through the global variable name tables of previous procedures). The rest
+of the variable storage is filled with zeroes, except for the array lengths and maximum
+string lengths. These are filled in by using the data in the two fixup tables.
+
+<p>The addresses in the fixup tables and the addresses of variables in the global
+variable name table and in the QCode block are all relative to the top of the
+part of the stack reserved for the variables of the procedure. The variables are referred
+to by their offset from the top of this variable storage space. If no globals were defined
+(so the global variable name table would just consist of the length word 0000) then the first
+variable would have the offset address $0000-2-x where x is the space needed by the variable.
+An integer would therefore have offset address $FFFC.
+
+
+<hr>
+
+<a id="example1"></a><h2>4. Example QCode Header</h2>
+
+<p>The following example procedure uses all possible types of variable.
+
+<p class=program>TEST:(P1,P2%,P3$)
+LOCAL L1,L2%,L3$(5)
+LOCAL L4(4),L5%(5),L6$(6,12),L7%
+GLOBAL G1,G2%,G3$(13)
+GLOBAL G4(4),G5%(5),G6$(6,14),G7%
+REM rest of code, including use of the following externals
+PRINT E1;E2%;E3$
+PRINT E4(4);E5%(5);E6$(6)</p>
+
+<p>The translated procedure will have the following header data:
+
+<table class=tran summary="">
+<tr><th>0000 : 017D               </th><td>Size of variable space</td><td></td></tr>
+<tr><th>       014C               </th><td>Size of the qcode</td><th>LOCAL L1, L2%, L3$(5)</th></tr>
+<tr><th>       03                 </th><td>Number of parameters</td><td rowspan=34></td></tr>
+<tr><th>       02 00 01           </th><td>Parameter types</td></tr>
+<tr><th></th><td></td></tr>
+<tr><th>0008 : 00 2F              </th><td>Size of global varname table</td></tr>
+<tr><th>       02 47 31    01 FFB3</th><td> G1, float type, address</td></tr>
+<tr><th>       03 47 32 25 00 FFB1</th><td> G2%, integer type, address</td></tr>
+<tr><th>       03 47 33 24 02 FFA3</th><td> G3$, string type, address</td></tr>
+<tr><th>       02 47 34    04 FF80</th><td> G4, float array type, address</td></tr>
+<tr><th>       03 47 35 25 03 FF74</th><td> G5%, integer array type, address</td></tr>
+<tr><th>       03 47 36 24 05 FF18</th><td> G6$, string array type, address</td></tr>
+<tr><th>       03 47 37 25 00 FF15</th><td> G7%, integer type, address</td></tr>
+<tr><th></th><td></td></tr>
+<tr><th>0039 : 0020               </th><td>Size of external varname table</td></tr>
+<tr><th>       02 45 31    01     </th><td> E1, float type</td></tr>
+<tr><th>       03 45 32 25 00     </th><td> E2%, integer type</td></tr>
+<tr><th>       03 45 33 24 02     </th><td> E3$, string type</td></tr>
+<tr><th>       02 45 34    04     </th><td> E4, float array type</td></tr>
+<tr><th>       03 45 35 25 03     </th><td> E5%, integer array type</td></tr>
+<tr><th>       03 45 36 24 05     </th><td> E6$, string array type</td></tr>
+<tr><th>       02 4C 35    04     </th><td> E7%, integer type</td></tr>
+<tr><th></th><td></td></tr>
+<tr><th>005B : 000C               </th><td>Size of string fixups</td></tr>
+<tr><th>       FF04 05            </th><td> Fixup for L3$ maximum string length</td></tr>
+<tr><th>       FE85 0C            </th><td> Fixup for L6$() maximum string length</td></tr>
+<tr><th>       FFA2 0D            </th><td> Fixup for G3$ maximum string length</td></tr>
+<tr><th>       FF17 0E            </th><td> Fixup for G6$() maximum string length</td></tr>
+<tr><th>0069 : 0018               </th><td>Size of array fixups</td></tr>
+<tr><th>       FEE2 0004          </th><td> Fixup for L4() array length</td></tr>
+<tr><th>       FED6 0005          </th><td> Fixup for L5%() array length</td></tr>
+<tr><th>       FE86 0006          </th><td> Fixup for L6$() array length</td></tr>
+<tr><th>       FF80 0004          </th><td> Fixup for G4() array length</td></tr>
+<tr><th>       FF74 0005          </th><td> Fixup for G5%() array length</td></tr>
+<tr><th>       FF18 0006          </th><td> Fixup for G6$() array length</td></tr>
+<tr><th>0083 :                    </th><td>Start of the QCode instructions</td></tr>
+</table>
+
+
+<p>The variable storage area used by the program will look as follows:</p>
+
+<p class=program>FFFE-FF           Global variable name table length (will contain 002F)
+FFCF-FD           Global variable name table, of length 002F, exact copy of the above.
+FFCD-CE   P1      Parameters and externals use 2 bytes each
+FFCB-CC   P2%
+FFC9-CA   P3$
+FFC7-C8   E1
+FFC5-C6   E2%
+FFC3-C4   E3$
+FFC1-C2   E4()
+FFBF-C0   E5%()
+FFBD-BE   E6$()
+FFBB-BC   L5%()
+
+FFB3-BA   G1      Float uses 8 bytes
+FFB1-B2   G2%     Integer uses 2 bytes
+FFA3-B0   G3$     String uses 2+maxStrLen bytes, but maxStrLen value stored in preceding byte
+FFA2              Maximum string length of G3$
+FF80-A1   G4()    float array uses 2+8*arrLen bytes
+FF74-7F   G5%()   integer array uses 2+2*arrLen bytes
+FF18-73   G6$()   String array uses 3 + (1+maxStrLen)*arrLen, but maxStrLen value stored in preceding byte
+FF17              Maximum string length of G6$() elements
+FF15-16   G7%
+
+FF0D-14   L1
+FF0B-0C   L2%
+FF05-0A   L3$
+FF04              Maximum string length of L3$
+FEE2-03   L4()
+FED6-E1   L5%()
+FE86-D5   L6$()
+FE85              Maximum string length of L6$() elements</p>
+
+
+<hr>
+
+<a id="qcode"></a><h2>5. QCode</h2>
+
+<p>The instructions in the procedure are translated into qcode. Almost every
+keyword in OPL (functions and statements) is translated into a single
+code byte. When such a qcode byte is executed it will gather its input by
+popping whatever arguments it needs from the stack, and possibly read some
+data bytes that immediately follow the qcode instruction byte. After its
+work is done, it may push a single resulting value back onto the stack.
+
+
+
+<p>Abbreviation for bytes following the QCode byte:
+<table class=indent summary="Abbreviation for bytes following the QCode byte">
+<tr><td>v</td><td>=</td><td>Address of variable, 2 bytes, offset into variable storage area</td></tr>
+<tr><td>V</td><td>=</td><td>Address of external variable, 2 bytes, offset into variable storage area</td></tr>
+<tr><td>m</td><td>=</td><td>Single byte, offset into calculator memory</td></tr>
+<tr><td>f</td><td>=</td><td>Single byte, logical file name, 0-3 for A-D</td></tr>
+<tr><td>I</td><td>=</td><td>Integer value</td></tr>
+<tr><td>F</td><td>=</td><td>Float value (in compact form)</td></tr>
+<tr><td>S</td><td>=</td><td>String value</td></tr>
+<tr><td>B</td><td>=</td><td>Byte value</td></tr>
+<tr><td>O</td><td>=</td><td>Single byte, 0=OFF, 1=ON</td></tr>
+<tr><td>D</td><td>=</td><td>Two bytes as a relative distance. Distance to next instruction is 0002.
+<tr><td>f+list</td><td>=</td><td>A logical file name as above, followed by a list of field names where
+         each field is a variable type byte (0-2) followed by a string that is
+         the field name. The list is terminated by a $88 qcode byte.</td></tr>
+</table>
+
+<p>Abbreviation for stack pushes/pops:
+<table class=indent summary="Abbreviation for stack pushes/pops">
+<tr><td>I</td><td>=</td><td>Integer value</td></tr>
+<tr><td>F</td><td>=</td><td>Float value</td></tr>
+<tr><td>S</td><td>=</td><td>String value</td></tr>
+<tr><td>B</td><td>=</td><td>Byte value</td></tr>
+<tr><td>i</td><td>=</td><td>Integer reference</td></tr>
+<tr><td>f</td><td>=</td><td>Float reference</td></tr>
+<tr><td>s</td><td>=</td><td>String reference</td></tr>
+<tr><td>params</td><td>=</td><td>List of parameters, list of parameter type bytes, byte with number of parameters.</td></tr>
+<tr><td>FList</td><td>=</td><td>Either: fIB where B is zero byte
+   <br>or: [F]BB where first B is number of floats, second is 1.</td></tr>
+</table>
+
+<table summary="">
+<tr><th>QCode&nbsp;&nbsp;&nbsp;</th><th>+bytes&nbsp;&nbsp;&nbsp;</th><th>pops&nbsp;&nbsp;&nbsp;</th><th>pushes&nbsp;&nbsp;&nbsp;</th><th>Description</th></tr>
+<tr><td>00</td><td>v</td><td>-</td><td>I</td><td>Push local/global integer variable value</td></tr>
+<tr><td>01</td><td>v</td><td>-</td><td>F</td><td>Push local/global float variable value</td></tr>
+<tr><td>02</td><td>v</td><td>-</td><td>S</td><td>Push local/global string variable value</td></tr>
+<tr><td>03</td><td>v</td><td>I</td><td>I</td><td>Pop integer index and push local/global integer array variable value</td></tr>
+<tr><td>04</td><td>v</td><td>I</td><td>F</td><td>Pop integer index and push local/global float array variable value</td></tr>
+<tr><td>05</td><td>v</td><td>I</td><td>S</td><td>Pop integer index and push local/global string array variable value</td></tr>
+<tr><td>06</td><td>m</td><td>-</td><td>F</td><td>Push calculator memory. Is followed by a byte indicating which of the 10 memories.</td></tr>
+<tr><td>07</td><td>V</td><td>-</td><td>I</td><td>Push parameter/external integer variable value</td></tr>
+<tr><td>08</td><td>V</td><td>-</td><td>F</td><td>Push parameter/external float variable value</td></tr>
+<tr><td>09</td><td>V</td><td>-</td><td>S</td><td>Push parameter/external string variable value</td></tr>
+<tr><td>0A</td><td>V</td><td>I</td><td>I</td><td>Pop integer index and push parameter/external integer array variable value</td></tr>
+<tr><td>0B</td><td>V</td><td>I</td><td>F</td><td>Pop integer index and push parameter/external float array variable value</td></tr>
+<tr><td>0C</td><td>V</td><td>I</td><td>S</td><td>Pop integer index and push parameter/external string array variable value</td></tr>
+<tr><td>0D</td><td>v</td><td>-</td><td>i</td><td>Push local/global integer variable reference</td></tr>
+<tr><td>0E</td><td>v</td><td>-</td><td>f</td><td>Push local/global float variable reference</td></tr>
+<tr><td>0F</td><td>v</td><td>-</td><td>s</td><td>Push local/global string variable reference</td></tr>
+<tr><td>10</td><td>v</td><td>I</td><td>i</td><td>Pop integer index and push local/global integer array variable reference</td></tr>
+<tr><td>11</td><td>v</td><td>I</td><td>f</td><td>Pop integer index and push local/global float array variable reference</td></tr>
+<tr><td>12</td><td>v</td><td>I</td><td>s</td><td>Pop integer index and push local/global string array variable reference</td></tr>
+<tr><td>13</td><td>m</td><td>-</td><td>f</td><td>Push calculator memory reference. Is followed by a byte indicating which of the 10 memories.</td></tr>
+<tr><td>14</td><td>V</td><td>-</td><td>i</td><td>Push parameter/external integer variable reference</td></tr>
+<tr><td>15</td><td>V</td><td>-</td><td>f</td><td>Push parameter/external float variable reference</td></tr>
+<tr><td>16</td><td>V</td><td>-</td><td>s</td><td>Push parameter/external string variable reference</td></tr>
+<tr><td>17</td><td>V</td><td>I</td><td>i</td><td>Pop integer index and push parameter/external integer array variable reference</td></tr>
+<tr><td>18</td><td>V</td><td>I</td><td>f</td><td>Pop integer index and push parameter/external float array variable reference</td></tr>
+<tr><td>19</td><td>V</td><td>I</td><td>s</td><td>Pop integer index and push parameter/external string array variable reference</td></tr>
+<tr><td>1A</td><td>f</td><td>S</td><td>I</td><td>Push file field as integer. Is followed by 1 byte logical file name (0-3 for A-D)</td></tr>
+<tr><td>1B</td><td>f</td><td>S</td><td>F</td><td>Push file field as float. Is followed by 1 byte logical file name (0-3 for A-D)</td></tr>
+<tr><td>1C</td><td>f</td><td>S</td><td>S</td><td>Push file field as string. Is followed by 1 byte logical file name (0-3 for A-D)</td></tr>
+<tr><td>1D</td><td>f</td><td>S</td><td>I</td><td>Push reference of file integer field. Is followed by 1 byte logical file name (0-3 for A-D)</td></tr>
+<tr><td>1E</td><td>f</td><td>S</td><td>F</td><td>Push reference of file float field. Is followed by 1 byte logical file name (0-3 for A-D)</td></tr>
+<tr><td>1F</td><td>f</td><td>S</td><td>S</td><td>Push reference of file string field. Is followed by 1 byte logical file name (0-3 for A-D)</td></tr>
+<tr><td>20</td><td>B</td><td>-</td><td>B</td><td>Push byte literal</td></tr>
+<tr><td>21</td><td>I</td><td>-</td><td>I</td><td>Push word literal (same as integer literal)</td></tr>
+<tr><td>22</td><td>I</td><td>-</td><td>I</td><td>Push integer literal</td></tr>
+<tr><td>23</td><td>F</td><td>-</td><td>F</td><td>Push float literal</td></tr>
+<tr><td>24</td><td>S</td><td>-</td><td>S</td><td>Push string literal</td></tr>
+<tr><td>25</td><td>-</td><td>-</td><td>-</td><td>Special call to machine code. Not used by the organiser's compiler.
+<br>Calls the machine code routine at the address given by the rta_1vct system variable.
+<br>On return, if carry set then error B is raised.</td></tr>
+<tr><td>26</td><td>-</td><td>-</td><td>-</td><td>Calls UT$LEAV, which quits OPL?? Not used by the organiser's compiler.</td></tr>
+<tr><td>27</td><td>-</td><td>II</td><td>I</td><td>&lt;</td></tr>
+<tr><td>28</td><td>-</td><td>II</td><td>I</td><td>&lt;=</td></tr>
+<tr><td>29</td><td>-</td><td>II</td><td>I</td><td>&gt;</td></tr>
+<tr><td>2A</td><td>-</td><td>II</td><td>I</td><td>&gt;=</td></tr>
+<tr><td>2B</td><td>-</td><td>II</td><td>I</td><td>&lt;&gt;</td></tr>
+<tr><td>2C</td><td>-</td><td>II</td><td>I</td><td>=</td></tr>
+<tr><td>2D</td><td>-</td><td>II</td><td>I</td><td>+</td></tr>
+<tr><td>2E</td><td>-</td><td>II</td><td>I</td><td>-</td></tr>
+<tr><td>2F</td><td>-</td><td>II</td><td>I</td><td>*</td></tr>
+<tr><td>30</td><td>-</td><td>II</td><td>I</td><td>/</td></tr>
+<tr><td>31</td><td>-</td><td>II</td><td>I</td><td>**</td></tr>
+<tr><td>32</td><td>-</td><td>I</td><td>I</td><td>- (unary)</td></tr>
+<tr><td>33</td><td>-</td><td>I</td><td>I</td><td>NOT</td></tr>
+<tr><td>34</td><td>-</td><td>II</td><td>I</td><td>AND</td></tr>
+<tr><td>35</td><td>-</td><td>II</td><td>I</td><td>OR</td></tr>
+<tr><td>36</td><td>-</td><td>FF</td><td>I</td><td>&lt;</td></tr>
+<tr><td>37</td><td>-</td><td>FF</td><td>I</td><td>&lt;=</td></tr>
+<tr><td>38</td><td>-</td><td>FF</td><td>I</td><td>&gt;</td></tr>
+<tr><td>39</td><td>-</td><td>FF</td><td>I</td><td>&gt;=</td></tr>
+<tr><td>3A</td><td>-</td><td>FF</td><td>I</td><td>&lt;&gt;</td></tr>
+<tr><td>3B</td><td>-</td><td>FF</td><td>I</td><td>=</td></tr>
+<tr><td>3C</td><td>-</td><td>FF</td><td>F</td><td>+</td></tr>
+<tr><td>3D</td><td>-</td><td>FF</td><td>F</td><td>-</td></tr>
+<tr><td>3E</td><td>-</td><td>FF</td><td>F</td><td>*</td></tr>
+<tr><td>3F</td><td>-</td><td>FF</td><td>F</td><td>/</td></tr>
+<tr><td>40</td><td>-</td><td>FF</td><td>F</td><td>**</td></tr>
+<tr><td>41</td><td>-</td><td>F</td><td>F</td><td>- (unary)</td></tr>
+<tr><td>42</td><td>-</td><td>F</td><td>I</td><td>NOT</td></tr>
+<tr><td>43</td><td>-</td><td>FF</td><td>I</td><td>AND</td></tr>
+<tr><td>44</td><td>-</td><td>FF</td><td>I</td><td>OR</td></tr>
+<tr><td>45</td><td>-</td><td>SS</td><td>I</td><td>&lt;</td></tr>
+<tr><td>46</td><td>-</td><td>SS</td><td>I</td><td>&lt;=</td></tr>
+<tr><td>47</td><td>-</td><td>SS</td><td>I</td><td>&gt;</td></tr>
+<tr><td>48</td><td>-</td><td>SS</td><td>I</td><td>&gt;=</td></tr>
+<tr><td>49</td><td>-</td><td>SS</td><td>I</td><td>&lt;&gt;</td></tr>
+<tr><td>4A</td><td>-</td><td>SS</td><td>I</td><td>=</td></tr>
+<tr><td>4B</td><td>-</td><td>SS</td><td>S</td><td>+</td></tr>
+<tr><td>4C</td><td>-</td><td>II</td><td>-</td><td>AT</td></tr>
+<tr><td>4D</td><td>-</td><td>II</td><td>-</td><td>BEEP</td></tr>
+<tr><td>4E</td><td>-</td><td>-</td><td>-</td><td>CLS</td></tr>
+<tr><td>4F</td><td>O</td><td>-</td><td>-</td><td>CURSOR</td></tr>
+<tr><td>50</td><td>O</td><td>-</td><td>-</td><td>ESCAPE</td></tr>
+<tr><td>51</td><td>D</td><td>-</td><td>-</td><td>GOTO</td></tr>
+<tr><td>52</td><td>-</td><td>-</td><td>-</td><td>OFF</td></tr>
+<tr><td>53</td><td>D</td><td>-</td><td>-</td><td>ONERR</td></tr>
+<tr><td>54</td><td>-</td><td>I</td><td>-</td><td>PAUSE</td></tr>
+<tr><td>55</td><td>-</td><td>II</td><td>-</td><td>POKEB</td></tr>
+<tr><td>56</td><td>-</td><td>II</td><td>-</td><td>POKEW</td></tr>
+<tr><td>57</td><td>-</td><td>I</td><td>-</td><td>RAISE</td></tr>
+<tr><td>58</td><td>-</td><td>F</td><td>-</td><td>RANDOMIZE</td></tr>
+<tr><td>59</td><td>-</td><td>-</td><td>-</td><td>STOP</td></tr>
+<tr><td>5A</td><td>-</td><td>-</td><td>-</td><td>TRAP</td></tr>
+<tr><td>5B</td><td>-</td><td>-</td><td>-</td><td>APPEND</td></tr>
+<tr><td>5C</td><td>-</td><td>-</td><td>-</td><td>CLOSE</td></tr>
+<tr><td>5D</td><td>-</td><td>SS</td><td>-</td><td>COPY</td></tr>
+<tr><td>5E</td><td>f+list</td><td>S</td><td>-</td><td>CREATE</td></tr>
+<tr><td>5F</td><td>-</td><td>S</td><td>-</td><td>DELETE</td></tr>
+<tr><td>60</td><td>-</td><td>-</td><td>-</td><td>ERASE</td></tr>
+<tr><td>61</td><td>-</td><td>-</td><td>-</td><td>FIRST</td></tr>
+<tr><td>62</td><td>-</td><td>-</td><td>-</td><td>LAST</td></tr>
+<tr><td>63</td><td>-</td><td>-</td><td>-</td><td>NEXT</td></tr>
+<tr><td>64</td><td>-</td><td>-</td><td>-</td><td>BACK</td></tr>
+<tr><td>65</td><td>f+list</td><td>S</td><td>-</td><td>OPEN</td></tr>
+<tr><td>66</td><td>-</td><td>I</td><td>-</td><td>POSITION</td></tr>
+<tr><td>67</td><td>-</td><td>SS</td><td>-</td><td>RENAME</td></tr>
+<tr><td>68</td><td>-</td><td>-</td><td>-</td><td>UPDATE</td></tr>
+<tr><td>69</td><td>f</td><td>-</td><td>-</td><td>USE</td></tr>
+<tr><td>6A</td><td>-</td><td>I</td><td>-</td><td>KSTAT</td></tr>
+<tr><td>6B</td><td>-</td><td>s</td><td>-</td><td>EDIT</td></tr>
+<tr><td>6C</td><td>-</td><td>i</td><td>-</td><td>INPUT integer</td></tr>
+<tr><td>6D</td><td>-</td><td>f</td><td>-</td><td>INPUT float</td></tr>
+<tr><td>6E</td><td>-</td><td>s</td><td>-</td><td>INPUT string</td></tr>
+<tr><td>6F</td><td>-</td><td>I</td><td>-</td><td>PRINT integer</td></tr>
+<tr><td>70</td><td>-</td><td>F</td><td>-</td><td>PRINT float</td></tr>
+<tr><td>71</td><td>-</td><td>S</td><td>-</td><td>PRINT string</td></tr>
+<tr><td>72</td><td>-</td><td>-</td><td>-</td><td>PRINT ,</td></tr>
+<tr><td>73</td><td>-</td><td>-</td><td>-</td><td>PRINT newline</td></tr>
+<tr><td>74</td><td>-</td><td>I</td><td>-</td><td>LPRINT integer</td></tr>
+<tr><td>75</td><td>-</td><td>F</td><td>-</td><td>LPRINT float</td></tr>
+<tr><td>76</td><td>-</td><td>S</td><td>-</td><td>LPRINT string</td></tr>
+<tr><td>77</td><td>-</td><td>-</td><td>-</td><td>LPRINT ,</td></tr>
+<tr><td>78</td><td>-</td><td>-</td><td>-</td><td>LPRINT newline</td></tr>
+<tr><td>79</td><td>-</td><td>I/F/S</td><td>-</td><td>RETURN</td></tr>
+<tr><td>7A</td><td>-</td><td>-</td><td>-</td><td>RETURN (integer 0)</td></tr>
+<tr><td>7B</td><td>-</td><td>-</td><td>-</td><td>RETURN (float 0)</td></tr>
+<tr><td>7C</td><td>-</td><td>-</td><td>-</td><td>RETURN (string "")</td></tr>
+<tr><td>7D</td><td>S</td><td>params</td><td>F/I/S</td><td>Procedure call.</td></tr>
+<tr><td>7E</td><td>D</td><td>I</td><td>-</td><td>Branch if false</td></tr>
+<tr><td>7F</td><td>-</td><td>iI</td><td>-</td><td>Assign integer</td></tr>
+<tr><td>80</td><td>-</td><td>fF</td><td>-</td><td>Assign float</td></tr>
+<tr><td>81</td><td>-</td><td>sS</td><td>-</td><td>Assign string</td></tr>
+<tr><td>82</td><td>-</td><td>B</td><td>-</td><td>drop byte from stack</td></tr>
+<tr><td>83</td><td>-</td><td>I</td><td>-</td><td>drop integer from stack</td></tr>
+<tr><td>84</td><td>-</td><td>F</td><td>-</td><td>drop float from stack</td></tr>
+<tr><td>85</td><td>-</td><td>S</td><td>-</td><td>drop string from stack</td></tr>
+<tr><td>86</td><td>-</td><td>I</td><td>F</td><td>autoconversion int to float</td></tr>
+<tr><td>87</td><td>-</td><td>F</td><td>I</td><td>autoconversion float to int</td></tr>
+<tr><td>88</td><td>-</td><td>-</td><td>-</td><td>End of field list for CREATE/OPEN</td></tr>
+<tr><td>89</td><td>code</td><td>-</td><td>-</td><td>Inline assembly.  Not used by the organiser's compiler.
+   <br>Return with carry clear and B=length of code (so that can skip to next qcode), or carry set and B=error code.</td></tr>
+<tr><td>8A</td><td>-</td><td>i/f</td><td>I</td><td>ADDR</td></tr>
+<tr><td>8B</td><td>-</td><td>S</td><td>I</td><td>ASC</td></tr>
+<tr><td>8C</td><td>-</td><td>-</td><td>I</td><td>DAY</td></tr>
+<tr><td>8D</td><td>-</td><td>IS</td><td>I</td><td>DISP</td></tr>
+<tr><td>8E</td><td>-</td><td>-</td><td>I</td><td>ERR</td></tr>
+<tr><td>8F</td><td>-</td><td>S</td><td>I</td><td>FIND</td></tr>
+<tr><td>90</td><td>-</td><td>-</td><td>I</td><td>FREE</td></tr>
+<tr><td>91</td><td>-</td><td>-</td><td>I</td><td>GET</td></tr>
+<tr><td>92</td><td>-</td><td>-</td><td>I</td><td>HOUR</td></tr>
+<tr><td>93</td><td>-</td><td>I</td><td>I</td><td>IABS</td></tr>
+<tr><td>94</td><td>-</td><td>F</td><td>I</td><td>INT</td></tr>
+<tr><td>95</td><td>-</td><td>-</td><td>I</td><td>KEY</td></tr>
+<tr><td>96</td><td>-</td><td>S</td><td>I</td><td>LEN</td></tr>
+<tr><td>97</td><td>-</td><td>SS</td><td>I</td><td>LOC</td></tr>
+<tr><td>98</td><td>-</td><td>S</td><td>I</td><td>MENU</td></tr>
+<tr><td>99</td><td>-</td><td>-</td><td>I</td><td>MINUTE</td></tr>
+<tr><td>9A</td><td>-</td><td>-</td><td>I</td><td>MONTH</td></tr>
+<tr><td>9B</td><td>-</td><td>I</td><td>I</td><td>PEEKB</td></tr>
+<tr><td>9C</td><td>-</td><td>I</td><td>I</td><td>PEEKW</td></tr>
+<tr><td>9D</td><td>-</td><td>-</td><td>I</td><td>RECSIZE</td></tr>
+<tr><td>9E</td><td>-</td><td>-</td><td>I</td><td>SECOND</td></tr>
+<tr><td>9F</td><td>-</td><td>II</td><td>I</td><td>USR</td></tr>
+<tr><td>A0</td><td>-</td><td>II</td><td>I</td><td>VIEW</td></tr>
+<tr><td>A1</td><td>-</td><td>-</td><td>I</td><td>YEAR</td></tr>
+<tr><td>A2</td><td>-</td><td>-</td><td>I</td><td>COUNT</td></tr>
+<tr><td>A3</td><td>-</td><td>-</td><td>I</td><td>EOF</td></tr>
+<tr><td>A4</td><td>-</td><td>S</td><td>I</td><td>EXIST</td></tr>
+<tr><td>A5</td><td>-</td><td>-</td><td>I</td><td>POS</td></tr>
+<tr><td>A6</td><td>-</td><td>F</td><td>F</td><td>ABS</td></tr>
+<tr><td>A7</td><td>-</td><td>F</td><td>F</td><td>ATAN</td></tr>
+<tr><td>A8</td><td>-</td><td>F</td><td>F</td><td>COS</td></tr>
+<tr><td>A9</td><td>-</td><td>F</td><td>F</td><td>DEG</td></tr>
+<tr><td>AA</td><td>-</td><td>F</td><td>F</td><td>EXP</td></tr>
+<tr><td>AB</td><td>-</td><td>F</td><td>F</td><td>FLT</td></tr>
+<tr><td>AC</td><td>-</td><td>F</td><td>F</td><td>INTF</td></tr>
+<tr><td>AD</td><td>-</td><td>F</td><td>F</td><td>LN</td></tr>
+<tr><td>AE</td><td>-</td><td>F</td><td>F</td><td>LOG</td></tr>
+<tr><td>AF</td><td>-</td><td>-</td><td>F</td><td>PI</td></tr>
+<tr><td>B0</td><td>-</td><td>F</td><td>F</td><td>RAD</td></tr>
+<tr><td>B1</td><td>-</td><td>-</td><td>F</td><td>RND</td></tr>
+<tr><td>B2</td><td>-</td><td>F</td><td>F</td><td>SIN</td></tr>
+<tr><td>B3</td><td>-</td><td>F</td><td>F</td><td>SQR</td></tr>
+<tr><td>B4</td><td>-</td><td>F</td><td>F</td><td>TAN</td></tr>
+<tr><td>B5</td><td>-</td><td>S</td><td>F</td><td>VAL</td></tr>
+<tr><td>B6</td><td>-</td><td>-</td><td>F</td><td>SPACE</td></tr>
+<tr><td>B7</td><td>-</td><td>S</td><td>S</td><td>DIR$</td></tr>
+<tr><td>B8</td><td>-</td><td>I</td><td>S</td><td>CHR$</td></tr>
+<tr><td>B9</td><td>-</td><td>-</td><td>S</td><td>DATIM$</td></tr>
+<tr><td>BA</td><td>-</td><td>-</td><td>S</td><td>ERR$</td></tr>
+<tr><td>BB</td><td>-</td><td>FII</td><td>S</td><td>FIX$</td></tr>
+<tr><td>BC</td><td>-</td><td>FI</td><td>S</td><td>GEN$</td></tr>
+<tr><td>BD</td><td>-</td><td>-</td><td>S</td><td>GET$</td></tr>
+<tr><td>BE</td><td>-</td><td>I</td><td>S</td><td>HEX$</td></tr>
+<tr><td>BF</td><td>-</td><td>-</td><td>S</td><td>KEY$</td></tr>
+<tr><td>C0</td><td>-</td><td>SI</td><td>S</td><td>LEFT$</td></tr>
+<tr><td>C1</td><td>-</td><td>S</td><td>S</td><td>LOWER$</td></tr>
+<tr><td>C2</td><td>-</td><td>SII</td><td>S</td><td>MID$</td></tr>
+<tr><td>C3</td><td>-</td><td>FI</td><td>S</td><td>NUM$</td></tr>
+<tr><td>C4</td><td>-</td><td>SI</td><td>S</td><td>RIGHT$</td></tr>
+<tr><td>C5</td><td>-</td><td>SI</td><td>S</td><td>REPT$</td></tr>
+<tr><td>C6</td><td>-</td><td>FII</td><td>S</td><td>SCI$</td></tr>
+<tr><td>C7</td><td>-</td><td>S</td><td>S</td><td>UPPER$</td></tr>
+<tr><td>C8</td><td>-</td><td>II</td><td>S</td><td>USR$</td></tr>
+<tr><td>C9</td><td>-</td><td>s</td><td>I</td><td>ADDR (string)</td></tr>
+<tr><td>CA</td><td>SI</td><td>-</td><td>-</td><td>Used in .LNO files by the Developer Emulator to store procedure debug info.</td></tr>
+<tr><td>CB</td><td>II</td><td>-</td><td>-</td><td>Used in .LNO files by the Developer Emulator to store line and columns number of a statement.</td></tr>
+
+<tr><th colspan=5>&nbsp;<br>LZ only:</th></tr>
+
+<tr><td>CC</td><td>-</td><td>FF</td><td>F</td><td>&lt;%</td></tr>
+<tr><td>CD</td><td>-</td><td>FF</td><td>F</td><td>&gt;%</td></tr>
+<tr><td>CE</td><td>-</td><td>FF</td><td>F</td><td>+%</td></tr>
+<tr><td>CF</td><td>-</td><td>FF</td><td>F</td><td>-%</td></tr>
+<tr><td>D0</td><td>-</td><td>FF</td><td>F</td><td>*%</td></tr>
+<tr><td>D1</td><td>-</td><td>FF</td><td>F</td><td>/%</td></tr>
+<tr><td>D2</td><td>-</td><td>I</td><td>-</td><td>OFFX</td></tr>
+<tr><td>D3</td><td>-</td><td>SS</td><td>-</td><td>COPYW</td></tr>
+<tr><td>D4</td><td>-</td><td>S</td><td>-</td><td>DELETEW</td></tr>
+<tr><td>D5</td><td>-</td><td>IIIIIIIII</td><td>-</td><td>UDG</td></tr>
+<tr><td>D6</td><td>-</td><td>I</td><td>I</td><td>CLOCK</td></tr>
+<tr><td>D7</td><td>-</td><td>III</td><td>I</td><td>DOW</td></tr>
+<tr><td>D8</td><td>-</td><td>S</td><td>I</td><td>FINDW</td></tr>
+<tr><td>D9</td><td>-</td><td>IS</td><td>I</td><td>MENUN</td></tr>
+<tr><td>DA</td><td>-</td><td>III</td><td>I</td><td>WEEK</td></tr>
+<tr><td>DB</td><td>-</td><td>F</td><td>F</td><td>ACOS</td></tr>
+<tr><td>DC</td><td>-</td><td>F</td><td>F</td><td>ASIN</td></tr>
+<tr><td>DD</td><td>-</td><td>III</td><td>F</td><td>DAYS</td></tr>
+<tr><td>DE</td><td>-</td><td>Flist</td><td>F</td><td>MAX</td></tr>
+<tr><td>DF</td><td>-</td><td>Flist</td><td>F</td><td>MEAN</td></tr>
+<tr><td>E0</td><td>-</td><td>Flist</td><td>F</td><td>MIN</td></tr>
+<tr><td>E1</td><td>-</td><td>Flist</td><td>F</td><td>STD</td></tr>
+<tr><td>E2</td><td>-</td><td>Flist</td><td>F</td><td>SUM</td></tr>
+<tr><td>E3</td><td>-</td><td>Flist</td><td>F</td><td>VAR</td></tr>
+<tr><td>E4</td><td>-</td><td>I</td><td>S</td><td>DAYNAME$</td></tr>
+<tr><td>E5</td><td>-</td><td>S</td><td>S</td><td>DIRW$</td></tr>
+<tr><td>E6</td><td>-</td><td>I</td><td>S</td><td>MONTH$</td></tr>
+</table>
+
+<p>For example, PRINT "O"; is translated into QCode consisting of a code to push
+a string literal onto the stack, immediately followed by the string literal "O",
+followed by the code for a print instruction.
+
+<p class=code>   PRINT "O";
+   24 01 4F 71</p>
+
+<p>The expression A%+1, where A% is a locally declared variable (local or global), is translated
+into QCode consisting of a code to push a locally declared integer variable to the stack, followed
+by the address of that variable (as an offset into the variable storage area), a code to push an integer
+followed by the literal integer 1, and finally a code to add two integers.
+
+<p class=code>   A%+1
+   00 FFFC 22 0001 2D</p>
+
+<p>The address of the variable will be different if the procedure declares any global variables,
+parameters, uses any external variables, or declares any other variables before it declares A%.
+
+<p>If A% were an external variable, i.e. a parameter or a global variable declared in a previous
+procedure, then the expression A%+1 would be translated almost the same, except that the code
+to push an external integer variable to the stack is used instead. The rest is the same.
+
+<p class=code>   A%+1
+   07 FFFC 22 0001 2D</p>
+
+<p>If a function is used as a statement, then its return value is explicitly
+removed from the stack afterwards. For example, if GET is used as a statement,
+then it is translated to the code for the GET function, followed by the
+code to drop an integer from the stack.
+
+<p>If at any point a float is needed but there is instead an integer on the stack
+(or vice versa), a code that does that conversion is is used. For example the
+expression ATAN(1) is translated to QCode consisting of a code to push a literal
+integer onto the stack followed by the integer 0001, then a code to convert an
+integer to a float, and finally the code for the ATAN function.
+
+<p class=code>   ATAN(1)
+   22 0001 86 A7</p>
+
+<p>The only QCodes for flow control commands are branch-if-false (code 7E)
+and goto (code 51). There are no QCodes specific to the keywords,
+IF/ELSEIF/ELSE/ENDIF, WHILE/ENDWH, DO/UNTIL, or BREAK/CONTINUE, as these
+can all be expressed using only goto and branch-if-false. The distance to
+jump is given by the two bytes after the instruction. This distance is measured
+relative to the start of those two bytes, so a distance of 0002 would jump to
+the immediately following instruction, effectively doing nothing at all, whereas
+a distance of 0003 would skip over one byte. The distance can be negative, so
+a jump of distance FFFF is an infinite loop.
+
+<p>If the procedure does not end in an explicit RETURN statement, then it will be
+compiled just as if there were a bare RETURN statement there. The qcode
+will therefore always end with one of the qcode instructions 7A, 7B, or 7C,
+depending on the name of the procedure.
+
+<p>Procedures that have been translated for use on the 4-line LZ model have QCode
+that starts with the bytes 59 B2. The first byte is the code for the STOP
+command, so that if it is executed on a 2-line machine it will stop. The
+second byte is the code for the SIN function. No valid source program could ever
+produce these two codes after each other, so if the LZ encounters them at the
+start of the program, it can safely assume that it is a procedure meant for
+the LZ model and start execution at the next byte. Note that the two bytes
+form a neat pun for Stop Sign.
+
+
+<hr>
+
+<a id="example2"></a><h2>6. QCode Examples</h2>
+
+
+<p>This somewhat bogus example shows how flow control structures are translated into qcode.</p>
+
+<p class=program>
+TEST:
+
+IF 1
+ PRINT
+ENDIF
+
+IF 2.
+ PRINT
+ELSE
+ PRINT
+ENDIF
+
+IF 3
+ PRINT
+ELSEIF 4
+ PRINT
+ENDIF
+
+IF 5
+ PRINT
+ELSEIF 6
+ PRINT
+ELSE
+ PRINT
+ENDIF
+
+WHILE 7
+ PRINT
+ BREAK
+ PRINT
+ CONTINUE
+ PRINT
+ENDWH
+
+DO
+ PRINT
+ BREAK
+ PRINT
+ CONTINUE
+ PRINT
+UNTIL 8</p>
+
+<table class=tran summary="">
+<tr><td colspan=2><b>Translated procedure</b></td><td><b>Source Code</b>&nbsp;&nbsp;&nbsp;&nbsp;</td><td><b>Remarks</b></td>
+<tr><th>                </th><td>                               </td><th>TEST:   </th><td></td></tr>
+<tr><th>0000 : 0002     </th><td>Size of variable space         </td><th>         </th><td>It will contain only an empty global variable name table.</td></tr>
+<tr><th>       0062     </th><td>Size of the qcode              </td><th>         </th><td></td></tr>
+<tr><th>       00       </th><td>Number of parameters           </td><th>         </th><td></td></tr>
+<tr><th>       0000     </th><td>Size of global varname table   </td><th>         </th><td></td></tr>
+<tr><th>       0000     </th><td>Size of external varname table </td><th>         </th><td></td></tr>
+<tr><th>       0000     </th><td>Size of string fixup table     </td><th>         </th><td></td></tr>
+<tr><th>       0000     </th><td>Size of array fixup table      </td><th>         </th><td></td></tr>
+<tr><th>                </th><td>                               </td><th>         </th><td></td></tr>
+<tr><th>000D : 59B2     </th><td>Stop sign                      </td><th>         </th><td>The procedure was compiled for LZ/LZ64</td></tr>
+<tr><th>       22 0001  </th><td>Push integer 1                 </td><th>IF 1     </th><td>A bare IF is translated with a single conditional jump</td></tr>
+<tr><th>       7E 0003  </th><td>If non-zero, skip 1 byte       </td><th>         </th><td></td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>                </th><td>                               </td><th>ENDIF    </th><td></td></tr>
+<tr><th>                </th><td>                               </td><th>         </th><td></td></tr>
+<tr><th>0016 : 23 022000</th><td>Push float 2.0                 </td><th>IF 2.    </th><td>Note that when a float is used as a condition, the implicit &lt;&gt;0.0 comparison is added in the translation</td></tr>
+<tr><th>       23 020000</th><td>Push float 0.0                 </td><th>         </th><td></td></tr>
+<tr><th>       3A       </th><td>&lt;&gt;                       </td><th>         </th><td></td></tr>
+<tr><th>       7E 0006  </th><td>If non-zero, skip 4 bytes      </td><th>         </th><td>The conditional branch jumps to the ELSE statement.</td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>       51 0003  </th><td>Skip 1 byte                    </td><th>         </th><td>Every non-final block will end with a jump to the ENDIF.</td></tr>
+<tr><th>                </th><td>                               </td><th>ELSE     </th><td></td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>                </th><td>                               </td><th>ENDIF    </th><td></td></tr>
+<tr><th>                </th><td>                               </td><th>         </th><td></td></tr>
+<tr><th>0027 : 22 0003  </th><td>Push integer 3                 </td><th>IF 3     </th><td></td></tr>
+<tr><th>       7E 0006  </th><td>If non-zero, skip 4 bytes      </td><th>         </th><td>The conditional branch jumps to the next ELSEIF statement.</td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>       51 0009  </th><td>Skip 7 bytes                   </td><th>         </th><td>Every non-final block will end with a jump to the ENDIF.</td></tr>
+<tr><th>       22 0004  </th><td>Push integer 4                 </td><th>ELSEIF 4 </th><td></td></tr>
+<tr><th>       7E 0003  </th><td>If non-zero, skip 1 byte       </td><th>         </th><td>The conditional branch jumps to the ENDIF statement.</td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>                </th><td>                               </td><th>ENDIF    </th><td></td></tr>
+<tr><th>                </th><td>                               </td><th>         </th><td></td></tr>
+<tr><th>0038 : 22 0005  </th><td>Push integer 5                 </td><th>IF 5     </th><td></td></tr>
+<tr><th>       7E 0006  </th><td>If non-zero, skip 4 bytes      </td><th>         </th><td>The conditional branch jumps to the next ELSEIF statement.</td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>       51 000D  </th><td>Skip 11 bytes                  </td><th>         </th><td>Every non-final block will end with a jump to the ENDIF.</td></tr>
+<tr><th>       22 0006  </th><td>Push integer 6                 </td><th>ELSEIF 6 </th><td></td></tr>
+<tr><th>       7E 0006  </th><td>If non-zero, skip 4 bytes      </td><th>         </th><td>The conditional branch jumps to the ELSE statement.</td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>       51 0003  </th><td>Skip 1 byte                    </td><th>         </th><td>Every non-final block will end with a jump to the ENDIF.</td></tr>
+<tr><th>                </th><td>                               </td><th>ELSE     </th><td></td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>                </th><td>                               </td><th>ENDIF    </th><td></td></tr>
+<tr><th>                </th><td>                               </td><th>         </th><td></td></tr>
+<tr><th>004D : 22 0007  </th><td>Push integer 7                 </td><th>WHILE 7  </th><td></td></tr>
+<tr><th>       7E 000E  </th><td>If non-zero, skip 12 bytes     </td><th>         </th><td>The conditional branch jumps to after the ENDWH statement.</td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>       51 000A  </th><td>Skip 8 bytes                   </td><th> BREAK   </th><td>BREAK jumps forward to after the ENDWH statement.</td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>       51 FFF4  </th><td>Skip back 11 bytes             </td><th> CONTINUE</th><td>CONTINUE jumps back to the WHILE condition.</td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>       51 FFF0  </th><td>Skip back 15 bytes             </td><th>ENDWH    </th><td>Jump back to the WHILE condition.</td></tr>
+<tr><th>                </th><td>                               </td><th>         </th><td></td></tr>
+<tr><th>                </th><td>                               </td><th>         </th><td></td></tr>
+<tr><th>                </th><td>                               </td><th>DO       </th><td></td></tr>
+<tr><th>005F : 73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>       51 000D  </th><td>Skip 11 bytes                  </td><th> BREAK   </th><td>BREAK jumps forward to after the UNTIL statement.</td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>       51 0003  </th><td>Skip 1 byte                    </td><th> CONTINUE</th><td>CONTINUE jumps forward to the UNTIL condition.</td></tr>
+<tr><th>       73       </th><td>Print                          </td><th> PRINT   </th><td></td></tr>
+<tr><th>       22 0008  </th><td>Push integer 8                 </td><th>UNTIL 8  </th><td></td></tr>
+<tr><th>       7E FFF3  </th><td>If non-zero, skip back 12 bytes</td><th>         </th><td>The conditional branch jumps to the DO statement.</td></tr>
+<tr><th>                </th><td>                               </td><th>         </th><td></td></tr>
+<tr><th>006E : 7B       </th><td>Return 0.0                     </td><th>         </th><td>Implicit return made explicit</td></tr>
+</table>
+
+<p>&nbsp;</p>
+
+<p>This example shows how all the different types of variable are handled.
+
+<p class=program>TEST2:(P1,P2%,P3$)
+LOCAL L1,L2%,L3$(5)
+LOCAL L4(4),L5%(5),L6$(6,12),L7%
+GLOBAL G1,G2%,G3$(13)
+GLOBAL G4(4),G5%(5),G6$(6,14),G7%
+
+PRINT "PPP";P1;P2%;P3$
+PRINT "LLL";L1;L2%;L3$
+PRINT "LL";L4(4);L5%(5);L6$(6)
+PRINT "GGG";G1;G2%;G3$
+PRINT "GG";G4(4);G5%(5);G6$(6)
+PRINT "EEE";E1;E2%;E3$
+PRINT "EE";E4(4);E5%(5);E6$(6)
+
+L1=234
+L2%=345
+L3$="BCD"
+L4(2)=345
+L5%(3)=456
+L6$(4)="CDE"
+G1=12
+G2%=23
+G3$="DEF"
+G4(3)=34
+G5%(4)=4
+G6$(5)="EFG"
+E1=45
+E2%=56
+E3$="FGH"
+E4(4)=67
+E5%(5)=78
+E6$(6)="GHI"</p>
+
+
+<table class=tran summary="">
+<tr><th>0000 : 017D               </th><td>Size of variable space</td><th>TEST2:(P1,P2%,P3$)</th></tr>
+<tr><th>       014C               </th><td>Size of the qcode</td><th>LOCAL L1,L2%,L3$(5)</th></tr>
+<tr><th>       03                 </th><td>Number of parameters</td><th>LOCAL L4(4),L5%(5),L6$(6,12) L7%</th></tr>
+<tr><th>       02 00 01           </th><td>Parameter types</td><th>GLOBAL G1,G2%,G3$(13)</th></tr>
+<tr><th></th><td></td><th>GLOBAL G4(4),G5%(5),G6$(6,14),G7%</th></tr>
+<tr><th>0008 : 00 2F              </th><td>Size of global varname table</td><td rowspan=31></td></tr>
+<tr><th>       02 47 31    01 FFB3</th><td> G1, float type, address</td></tr>
+<tr><th>       03 47 32 25 00 FFB1</th><td> G2%, integer type, address</td></tr>
+<tr><th>       03 47 33 24 02 FFA3</th><td> G3$, string type, address</td></tr>
+<tr><th>       02 47 34    04 FF80</th><td> G4, float array type, address</td></tr>
+<tr><th>       03 47 35 25 03 FF74</th><td> G5%, integer array type, address</td></tr>
+<tr><th>       03 47 36 24 05 FF18</th><td> G6$, string array type, address</td></tr>
+<tr><th>       03 47 37 25 00 FF15</th><td> G7%, integer type, address</td></tr>
+<tr><th></th><td></td></tr>
+<tr><th>0039 : 0020               </th><td>Size of external varname table</td></tr>
+<tr><th>       02 45 31    01     </th><td> E1, float type</td></tr>
+<tr><th>       03 45 32 25 00     </th><td> E2%, integer type</td></tr>
+<tr><th>       03 45 33 24 02     </th><td> E3$, string type</td></tr>
+<tr><th>       02 45 34    04     </th><td> E4, float array type</td></tr>
+<tr><th>       03 45 35 25 03     </th><td> E5%, integer array type</td></tr>
+<tr><th>       03 45 36 24 05     </th><td> E6$, string array type</td></tr>
+<tr><th>       02 4C 35    04     </th><td> E7%, integer type</td></tr>
+<tr><th></th><td></td></tr>
+<tr><th>005B : 000C               </th><td>Size of string fixups</td></tr>
+<tr><th>       FF04 05            </th><td> Fixup for L3$ maximum string length</td></tr>
+<tr><th>       FE85 0C            </th><td> Fixup for L6$() maximum string length</td></tr>
+<tr><th>       FFA2 0D            </th><td> Fixup for G3$ maximum string length</td></tr>
+<tr><th>       FF17 0E            </th><td> Fixup for G6$() maximum string length</td></tr>
+<tr><th>0069 : 0018               </th><td>Size of array fixups</td></tr>
+<tr><th>       FEE2 0004          </th><td> Fixup for L4() array length</td></tr>
+<tr><th>       FED6 0005          </th><td> Fixup for L5%() array length</td></tr>
+<tr><th>       FE86 0006          </th><td> Fixup for L6$() array length</td></tr>
+<tr><th>       FF80 0004          </th><td> Fixup for G4() array length</td></tr>
+<tr><th>       FF74 0005          </th><td> Fixup for G5%() array length</td></tr>
+<tr><th>       FF18 0006          </th><td> Fixup for G6$() array length</td></tr>
+<tr><td></td><td></td></tr>
+<tr><th>0083 : 59B2           </th><td>Stop sign                           </td><th></th></tr>
+<tr><th>       24 03505050    </th><td>Push "PPP"                          </td><th>PRINT "PPP";P1;P2%;P3$</th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       08 FFCD        </th><td>Push external flt var value P1      </td><th></th></tr>
+<tr><th>       70             </th><td>Print float                         </td><th></th></tr>
+<tr><th>       07 FFCB        </th><td>Push external int var value P2%     </td><th></th></tr>
+<tr><th>       6F             </th><td>Print integer                       </td><th></th></tr>
+<tr><th>       09 FFC9        </th><td>Push external str var value P3$     </td><th></th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       73             </th><td>Print newline                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>0098 : 24 034C4C4C    </th><td>Push "LLL"                          </td><th>PRINT "LLL";L1;L2%;L3$</th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       01 FF0D        </th><td>Push flt var value L1               </td><th></th></tr>
+<tr><th>       70             </th><td>Print float                         </td><th></th></tr>
+<tr><th>       00 FF0B        </th><td>Push int var value L2%              </td><th></th></tr>
+<tr><th>       6F             </th><td>Print integer                       </td><th></th></tr>
+<tr><th>       02 FF05        </th><td>Push str var value L3$              </td><th></th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       73             </th><td>Print newline                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>00AB : 24 024C4C      </th><td>Push "LL"                           </td><th>PRINT "LL";L4(4);L5%(5);L6$(6)</th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       22 0004        </th><td>Push integer 4                      </td><th></th></tr>
+<tr><th>       04 FEE2        </th><td>Push flt arr value L4(.)            </td><th></th></tr>
+<tr><th>       70             </th><td>Print float                         </td><th></th></tr>
+<tr><th>       22 0005        </th><td>Push integer 5                      </td><th></th></tr>
+<tr><th>       03 FED6        </th><td>Push int arr value L5%(.)           </td><th></th></tr>
+<tr><th>       6F             </th><td>Print integer                       </td><th></th></tr>
+<tr><th>       22 0006        </th><td>Push integer 6                      </td><th></th></tr>
+<tr><th>       05 FE86        </th><td>Push str arr value L6$(.)           </td><th></th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       73             </th><td>Print newline                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>00C6 : 24 03474747    </th><td>Push "GGG"                          </td><th>PRINT "GGG";G1;G2%;G3$</th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       01 FFB3        </th><td>Push flt var value G1               </td><th></th></tr>
+<tr><th>       70             </th><td>Print float                         </td><th></th></tr>
+<tr><th>       00 FFB1        </th><td>Push int var value G2%              </td><th></th></tr>
+<tr><th>       6F             </th><td>Print integer                       </td><th></th></tr>
+<tr><th>       02 FFA3        </th><td>Push str var value G3$              </td><th></th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       73             </th><td>Print newline                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>00D9 : 24 024747      </th><td>Push "GG"                           </td><th>PRINT "GG";G4(4);G5%(5);G6$(6)</th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       22 0004        </th><td>Push integer 4                      </td><th></th></tr>
+<tr><th>       04 FF80        </th><td>Push flt arr value G4(.)            </td><th></th></tr>
+<tr><th>       70             </th><td>Print float                         </td><th></th></tr>
+<tr><th>       22 0005        </th><td>Push integer 5                      </td><th></th></tr>
+<tr><th>       03 FF74        </th><td>Push int arr value G5%(.)           </td><th></th></tr>
+<tr><th>       6F             </th><td>Print integer                       </td><th></th></tr>
+<tr><th>       22 0006        </th><td>Push integer 6                      </td><th></th></tr>
+<tr><th>       05 FF18        </th><td>Push str arr value G6$(.)           </td><th></th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       73             </th><td>Print newline                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>00F4 : 24 03454545    </th><td>Push "EEE"                          </td><th>PRINT "EEE";E1;E2%;E3$</th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       08 FFC7        </th><td>Push external flt var value E1      </td><th></th></tr>
+<tr><th>       70             </th><td>Print float                         </td><th></th></tr>
+<tr><th>       07 FFC5        </th><td>Push external int var value E2%     </td><th></th></tr>
+<tr><th>       6F             </th><td>Print integer                       </td><th></th></tr>
+<tr><th>       09 FFC3        </th><td>Push external str var value E3$     </td><th></th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       73             </th><td>Print newline                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>0107 : 24 024545      </th><td>Push "EE"                           </td><th>PRINT "EE";E4(4);E5%(5);E6$(6)</th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       22 0004        </th><td>Push integer 4                      </td><th></th></tr>
+<tr><th>       0B FFC1        </th><td>Push external flt arr value E4(.)   </td><th></th></tr>
+<tr><th>       70             </th><td>Print float                         </td><th></th></tr>
+<tr><th>       22 0005        </th><td>Push integer 5                      </td><th></th></tr>
+<tr><th>       0A FFBF        </th><td>Push external int arr value E5%(.)  </td><th></th></tr>
+<tr><th>       6F             </th><td>Print integer                       </td><th></th></tr>
+<tr><th>       22 0006        </th><td>Push integer 6                      </td><th></th></tr>
+<tr><th>       0C FFBD        </th><td>Push external str arr value E6$(.)  </td><th></th></tr>
+<tr><th>       71             </th><td>Print string                        </td><th></th></tr>
+<tr><th>       73             </th><td>Print newline                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>0122 : 0E FF0D        </th><td>Push flt var ref L1                 </td><th>L1=234</th></tr>
+<tr><th>       22 00EA        </th><td>Push integer 234                    </td><th></th></tr>
+<tr><th>       86             </th><td>Convert int to flt                  </td><th></th></tr>
+<tr><th>       80             </th><td>Assign float                        </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>012A : 0D FF0B        </th><td>Push int var ref L2%                </td><th>L2%=345</th></tr>
+<tr><th>       22 0159        </th><td>Push integer 345                    </td><th></th></tr>
+<tr><th>       7F             </th><td>Assign integer                      </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>0131 : 0F FF05        </th><td>Push str var ref L3$                </td><th>L3$="BCD"</th></tr>
+<tr><th>       24 03424344    </th><td>Push "BCD"                          </td><th></th></tr>
+<tr><th>       81             </th><td>Assign string                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>013A : 22 0002        </th><td>Push integer 2                      </td><th>L4(2)=345</th></tr>
+<tr><th>       11 FEE2        </th><td>Push flt arr ref L4(.)              </td><th></th></tr>
+<tr><th>       22 0159        </th><td>Push integer 345                    </td><th></th></tr>
+<tr><th>       86             </th><td>Convert int to flt                  </td><th></th></tr>
+<tr><th>       80             </th><td>Assign float                        </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>0145 : 22 0003        </th><td>Push integer 3                      </td><th>L5%(3)=456</th></tr>
+<tr><th>       18 FFBB        </th><td>Push int arr ref L5%(.)             </td><th></th></tr>
+<tr><th>       22 01C8        </th><td>Push integer 456                    </td><th></th></tr>
+<tr><th>       86             </th><td>Convert int to flt                  </td><th></th></tr>
+<tr><th>       80             </th><td>Assign float                        </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>0150 : 22 0004        </th><td>Push integer 4                      </td><th>L6$(4)="CDE"</th></tr>
+<tr><th>       12 FE86        </th><td>Push str arr ref L6$(.)             </td><th></th></tr>
+<tr><th>       24 03434445    </th><td>Push "CDE"                          </td><th></th></tr>
+<tr><th>       81             </th><td>Assign string                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>015C : 0E FFB3        </th><td>Push flt var ref G1                 </td><th>G1=12</th></tr>
+<tr><th>       22 000C        </th><td>Push integer 12                     </td><th></th></tr>
+<tr><th>       86             </th><td>Convert int to flt                  </td><th></th></tr>
+<tr><th>       80             </th><td>Assign float                        </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>0164 : 0D FFB1        </th><td>Push int var ref G2%                </td><th>G2%=23</th></tr>
+<tr><th>       22 0017        </th><td>Push integer 23                     </td><th></th></tr>
+<tr><th>       7F             </th><td>Assign integer                      </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>016B : 0F FFA3        </th><td>Push str var ref G3$                </td><th>G3$="DEF"</th></tr>
+<tr><th>       24 03444546    </th><td>Push "DEF"                          </td><th></th></tr>
+<tr><th>       81             </th><td>Assign string                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>0174 : 22 0003        </th><td>Push integer 3                      </td><th>G4(3)=34</th></tr>
+<tr><th>       11 FF80        </th><td>Push flt arr ref G4(.)              </td><th></th></tr>
+<tr><th>       22 0022        </th><td>Push integer 34                     </td><th></th></tr>
+<tr><th>       86             </th><td>Convert int to flt                  </td><th></th></tr>
+<tr><th>       80             </th><td>Assign float                        </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>017F : 22 0004        </th><td>Push integer 4                      </td><th>G5%(4)=45</th></tr>
+<tr><th>       10 FF74        </th><td>Push int arr ref G5%(.)             </td><th></th></tr>
+<tr><th>       22 002D        </th><td>Push integer 45                     </td><th></th></tr>
+<tr><th>       7F             </th><td>Assign integer                      </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>0189 : 22 0005        </th><td>Push integer 5                      </td><th>G6$(5)="EFG"</th></tr>
+<tr><th>       12 FF18        </th><td>Push str arr ref G6$(.)             </td><th></th></tr>
+<tr><th>       24 03454647    </th><td>Push "EFG"                          </td><th></th></tr>
+<tr><th>       81             </th><td>Assign string                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>0195 : 15 FFC7        </th><td>Push ext flt var ref E1             </td><th>E1=45</th></tr>
+<tr><th>       22 002D        </th><td>Push integer 45                     </td><th></th></tr>
+<tr><th>       86             </th><td>Convert int to flt                  </td><th></th></tr>
+<tr><th>       80             </th><td>Assign float                        </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>019D : 14 FFC5        </th><td>Push ext int var ref E2%            </td><th>E2%=56</th></tr>
+<tr><th>       22 0038        </th><td>Push integer 56                     </td><th></th></tr>
+<tr><th>       7F             </th><td>Assign integer                      </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>01A4 : 16 FFC3        </th><td>Push ext str var ref E3$            </td><th>E3$="FGH"</th></tr>
+<tr><th>       24 03464748    </th><td>Push "FGH"                          </td><th></th></tr>
+<tr><th>       81             </th><td>Assign string                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>01AD : 22 0004        </th><td>Push integer 4                      </td><th>E4(4)=67</th></tr>
+<tr><th>       18 FFC1        </th><td>Push ext flt arr ref E4(.)          </td><th></th></tr>
+<tr><th>       22 0043        </th><td>Push integer 67                     </td><th></th></tr>
+<tr><th>       86             </th><td>Convert int to flt                  </td><th></th></tr>
+<tr><th>       80             </th><td>Assign float                        </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>01B8 : 22 0005        </th><td>Push integer 5                      </td><th>E5%(5)=78</th></tr>
+<tr><th>       17 FFBF        </th><td>Push ext int arr ref E5%(.)         </td><th></th></tr>
+<tr><th>       22 004E        </th><td>Push integer 78                     </td><th></th></tr>
+<tr><th>       7F             </th><td>Assign integer                      </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>01C2 : 22 0006        </th><td>Push integer 6                      </td><th>E6$(6)="GHI"</th></tr>
+<tr><th>       19 FFBD        </th><td>Push ext str arr ref E6$(.)         </td><th></th></tr>
+<tr><th>       24 03474849    </th><td>Push "GHI"                          </td><th></th></tr>
+<tr><th>       81             </th><td>Assign string                       </td><th></th></tr>
+<tr><th></th><td></td><td></td></tr>
+<tr><th>01CE : 7B             </th><td>Return 0.0                          </td><th></th></tr>
+</table>
+
+<hr>
+
+<a id="lno"></a><h2>7. LNO files</h2>
+
+<p>The Organiser Developer kit contains an emulator ORG2.EXE. This emulator allows you to translate,
+run, and debug OPL procedures. When it translates a procedure, it produces a file with the file
+extension .LNO, which contains the translated result, similar to an object-only .OB3 file.
+</p>
+
+<p>
+If the procedure is translated in the emulator while its DEBUG mode is OFF, then the LNO file is
+virtually the same as an OB3 file of the same program would be. It differs only in the following aspects:
+</p>
+
+<ul>
+<li>The file type is FE instead of 83, i.e. the last byte of the 6-byte file header is FE rather than 83.
+<li>It has no source code block.
+<li>The length word of the file (the fourth and fifth byte of the 6-byte file header) is two less than
+the length of the OB3 file would be, because it has no source code block at all instead of merely an
+empty one.
+<li>Every two-byte integer within the qcode and the qcode header is stored little-endian, i.e. low byte
+followed by high byte.
+<li>It may have some padding at the end, such as FFFF in the place where the empty source code block would be.
+</ul>
+
+<p>
+Consider for example, the following small test procedure:
+</p>
+
+<p class=program>TEST:
+LOCAL A%
+A%=1234
+AT 4,1 :PRINT A%
+GET</p>
+
+<p>
+Here are the OB3 and non-debug LNO files produced by translating the procedure.
+</p>
+
+
+<table class=tran summary="">
+<tr><td><b>OB3</b></td><td><b>LNO</b></td><td></td></tr>
+<tr><th>4F 52 47  </th><th>4F 52 47  </th><td>"ORG" magic number</td></tr>
+<tr><th>00 29     </th><th><font color=red>00 27</font>     </th><td>File Length word</td></tr>
+<tr><th>83        </th><th><font color=red>FE</font>        </th><td>Block File type</td></tr>
+<tr><th>00 25     </th><th>00 25     </th><td>Block length</td></tr>
+<tr><th>00 04     </th><th><font color=red>04 00</font>     </th><td>Size of variable space</td></tr>
+<tr><th>00 18     </th><th><font color=red>18 00</font>     </th><td>QCode length</td></tr>
+<tr><th>00        </th><th>00        </th><td>Number of parameters</td></tr>
+<tr><th>00 00     </th><th><font color=red>00 00</font>     </th><td>Global varname table</td></tr>
+<tr><th>00 00     </th><th><font color=red>00 00</font>     </th><td>External varname table</td></tr>
+<tr><th>00 00     </th><th><font color=red>00 00</font>     </th><td>String fixups</td></tr>
+<tr><th>00 00     </th><th><font color=red>00 00</font>     </th><td>Array fixups</td></tr>
+<tr><th>59 B2     </th><th>59 B2     </th><td>Stop sign</td></tr>
+<tr><th>0D FF FC  </th><th>0D <font color=red>FC FF</font>  </th><td>A% reference</td></tr>
+<tr><th>22 04 D2  </th><th>22 <font color=red>D2 04</font>  </th><td>1234</td></tr>
+<tr><th>7F        </th><th>7F        </th><td>Assign integer</td></tr>
+<tr><th>22 00 04  </th><th>22 <font color=red>04 00</font>  </th><td>4</td></tr>
+<tr><th>22 00 01  </th><th>22 <font color=red>01 00</font>  </th><td>1</td></tr>
+<tr><th>4C        </th><th>4C        </th><td>AT</td></tr>
+<tr><th>00 FF FC  </th><th>00 <font color=red>FC FF</font>  </th><td>A% value</td></tr>
+<tr><th>6F        </th><th>6F        </th><td>PRINT integer   </td></tr>
+<tr><th>73        </th><th>73        </th><td>PRINT newline   </td></tr>
+<tr><th>91        </th><th>91        </th><td>GET</td></tr>
+<tr><th>83        </th><th>83        </th><td>Discard integer</td></tr>
+<tr><th>7B        </th><th>7B        </th><td>RETURN</td></tr>
+<tr><th>00 00     </th><th><font color=red>FF FF</font>     </th><td>Source code block / padding</td></tr>
+</table>
+
+<p>
+An LNO file that is created while DEBUG mode is ON will have extra debugging information
+incorporated into the file, such as the names of all the local variables and parameters,
+as well as the line number of each statement.
+</p>
+
+<p>
+The QCodes CA and CB are used to encode some of this information. The first QCode after the
+QCode header (or after the stop sign if present) is CA, which is followed by a string literal
+containing the procedure name, followed by a length word which is 4 plus the length of the
+remaining QCode. Every section of QCode that represents a single source code statement is
+preceded by 5 bytes - the CB QCode, a word containing the source line number of the statement
+(where the top line containing the procedure name is line 1) and the column number of the
+statement (where column 0 means the start of the line).
+</p>
+
+<p>
+Information about the variables is stored after the QCode block, where in an OB3 file the source
+code block would be. It starts with a word containing the number of variables that follow, and then
+data for each variable in turn. That data consists of:</p>
+
+<ol>
+<li>A string containing the variable's name.
+<li>A word containing the address of the variable (the usual offset into the variable space)
+<li>A byte which is 00 for external variables, 01 for parameter variables, 02 for global variables,
+and 03 for local variables.
+<li>A variable type byte - which is the usual 00 for an integer, 01 for a floating point, 02 for a string, 03 for
+an integer array, 04 for a floating point array, and 05 for a string array.
+</ol>
+
+<p>The previous TEST program translated in DEBUG mode is as follows:</p>
+
+<table class=tran summary="">
+<tr><td><b>LNO, no debug</b></td><td><b>LNO, debug</b></td><td></td></tr>
+<tr><th>4F 52 47     </th><th>4F 52 47  </th><td>"ORG" magic number</td></tr>
+<tr><th>0027     </th><th><font color=red>0051     </font></th><td>File Length word</td></tr>
+<tr><th>FE        </th><th>FE        </th><td>Block File type</td></tr>
+<tr><th>0025     </th><th><font color=red>004f     </font></th><td>Block length</td></tr>
+<tr><th>0400     </th><th>0400     </th><td>Size of variable space</td></tr>
+<tr><th>1800     </th><th><font color=red>3900     </font></th><td>QCode length</td></tr>
+<tr><th>00        </th><th>00        </th><td>Number of parameters</td></tr>
+<tr><th>0000     </th><th>0000     </th><td>Global varname table</td></tr>
+<tr><th>0000     </th><th>0000     </th><td>External varname table</td></tr>
+<tr><th>0000     </th><th>0000     </th><td>String fixups</td></tr>
+<tr><th>0000     </th><th>0000     </th><td>Array fixups</td></tr>
+<tr><th>59 B2     </th><th>59 B2     </th><td>Stop sign</td></tr>
+<tr><th>          </th><th><font color=red>CA        </font></th><td>Procedure debug info</td></tr>
+<tr><th>          </th><th><font color=red>04 54 45 53 54  </font></th><td>"TEST"</td></tr>
+<tr><th>          </th><th><font color=red>3300     </font></th><td>Length</td></tr>
+<tr><th>          </th><th><font color=red>CB 0200 0000</font></th><td>Line 2 column 0</td></tr>
+<tr><th>0D FCFF 22 D204 7F  </th><th>0D FCFF 22 D204 7F  </th><td>A%=1234</td></tr>
+<tr><th>          </th><th><font color=red>CB 0300 0000</font></th><td>Line 3 column 0</td></tr>
+<tr><th>22 0400 22 0100 4C  </th><th>22 0400 22 0100 4C  </th><td>AT 1,4</td></tr>
+<tr><th>          </th><th><font color=red>CB 0300 0800</font></th><td>Line 3 column 8</td></tr>
+<tr><th>00 FCFF 6F 73  </th><th>00 FCFF 6F 73  </th><td>PRINT A%</td></tr>
+<tr><th>          </th><th><font color=red>CB 0400 0000</font></th><td>Line 4 column 0</td></tr>
+<tr><th>91 83     </th><th>91 83     </th><td>GET</td></tr>
+<tr><th>          </th><th><font color=red>CB 0500 0000</font></th><td>Line 5 column 0</td></tr>
+<tr><th>7B        </th><th>7B        </th><td>RETURN</td></tr>
+<tr><th>FF FF     </th><th><font color=red>0100     </font></th><td>Padding / Number of variables</td></tr>
+<tr><th>          </th><th><font color=red>02 41 25  </font></th><td>"A%"</td></tr>
+<tr><th>          </th><th><font color=red>FCFF     </font></th><td>Address of A%</td></tr>
+<tr><th>          </th><th><font color=red>03        </font></th><td>Local variable</td></tr>
+<tr><th>          </th><th><font color=red>00        </font></th><td>Integer variable</td></tr>
+</table>
+
+<hr>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

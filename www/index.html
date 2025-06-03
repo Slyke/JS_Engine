@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang='en' data-theme='dark' data-font='system-stack' data-content-width='full'>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>JS Emulator</title>
+    <script type='module' src='./browser-bootstrap.js?v=20260706-zx80-plus-key' data-manifest='/emulator/platforms/midway-8080-arcade.json5'></script>
+    <style>
+      :root,
+      html[data-theme='dark'] {
+        color-scheme: dark;
+        --font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, Monaco, 'Cascadia Mono', 'Cascadia Code', Consolas, 'Lucida Console', 'Roboto Mono', 'Droid Sans Mono', 'Noto Sans Mono', 'Ubuntu Mono', 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace;
+        --color-bg: #040506;
+        --color-bg-elevated: #090b0f;
+        --color-panel: #0c1014;
+        --color-panel-strong: #10161c;
+        --color-border: #202835;
+        --color-border-strong: #364255;
+        --color-text: #eef6ff;
+        --color-text-muted: #a4b0c2;
+        --color-text-faint: #667388;
+        --color-start: #00b6ff;
+        --color-start-soft: rgba(0, 182, 255, 0.2);
+        --color-start-border: rgba(0, 182, 255, 0.62);
+        --color-start-fill: rgba(0, 182, 255, 0.18);
+        --color-start-fill-strong: rgba(0, 182, 255, 0.28);
+        --color-start-ink: #d8f9ff;
+        --color-mid: #39ff79;
+        --color-mid-soft: rgba(57, 255, 121, 0.18);
+        --color-mid-border: rgba(57, 255, 121, 0.62);
+        --color-mid-fill: rgba(57, 255, 121, 0.16);
+        --color-mid-fill-strong: rgba(57, 255, 121, 0.22);
+        --color-mid-ink: #e0ffe8;
+        --color-warning: #ffbc3a;
+        --color-warning-soft: rgba(255, 188, 58, 0.2);
+        --color-warning-border: rgba(255, 188, 58, 0.5);
+        --color-warning-fill: rgba(255, 188, 58, 0.16);
+        --color-warning-ink: #fff0d2;
+        --color-danger: #ff1f5a;
+        --color-danger-soft: rgba(255, 31, 90, 0.28);
+        --color-danger-border: rgba(255, 31, 90, 0.72);
+        --color-danger-fill: rgba(255, 31, 90, 0.24);
+        --color-danger-ink: #ffe0e8;
+        --color-accent-alpha: #b86cff;
+        --color-accent-alpha-fill: rgba(184, 108, 255, 0.14);
+        --color-accent-alpha-border: rgba(184, 108, 255, 0.58);
+        --color-accent-neutral-fill: rgba(208, 215, 226, 0.08);
+        --color-pre-bg: #07090c;
+        --color-pre-text: #c7f6ff;
+        --color-inline-code-bg: rgba(0, 182, 255, 0.12);
+        --color-inline-code-text: #c4f6ff;
+        --shadow-panel: 0 18px 40px rgba(0, 0, 0, 0.34);
+        --shadow-hover: 0 0 0 1px rgba(0, 182, 255, 0.2);
+        --shadow-focus: 0 0 0 3px rgba(255, 188, 58, 0.28);
+        --shadow-control-rest: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 -2px 0 rgba(0, 0, 0, 0.42);
+        --shadow-control-hover: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -2px 0 rgba(0, 0, 0, 0.48);
+        --shadow-control-active: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 2px 6px rgba(0, 0, 0, 0.34), inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+        --color-control-top-glint: rgba(255, 255, 255, 0.18);
+        --color-control-bottom-shade: rgba(0, 0, 0, 0.28);
+        --radius-sm: 0.35rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.5rem;
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-5: 1.5rem;
+        --transition: 60ms ease-out;
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      html { font-family: var(--font-mono); background: var(--color-bg); }
+      body {
+        margin: 0;
+        height: 100vh;
+        min-height: 100vh;
+        overflow: hidden;
+        background: var(--color-bg);
+        color: var(--color-text);
+        font-family: inherit;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      button, input, select, textarea { font: inherit; }
+      button, input, select, .panel, .swatch, pre { transition: background-color var(--transition), border-color var(--transition), box-shadow var(--transition), color var(--transition), transform var(--transition); }
+      .app {
+        display: grid;
+        grid-template-columns: minmax(var(--stage-min-width, 220px), 1fr) minmax(var(--debugger-pane-min-width, 360px), var(--debugger-pane-width, 58vw));
+        height: 100vh;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .app.debugger-pane-collapsed {
+        grid-template-columns: minmax(0, 1fr) var(--debugger-pane-collapsed-size, 3.25rem);
+      }
+      .stage, .debugger { min-width: 0; min-height: 0; padding: var(--space-4); }
+      .stage {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        gap: var(--space-4);
+        border-right: 1px solid var(--color-border);
+        overflow-y: auto;
+        background: var(--color-bg);
+      }
+      .toolbar, .inputs, .hotkey-row, .editor-row, .search-row, .stage-bottom-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-3);
+        align-items: center;
+      }
+      .button {
+        --button-bg: var(--color-panel-strong);
+        --button-border: var(--color-border-strong);
+        --button-text: var(--color-text);
+        --button-hover-bg: var(--color-start-soft);
+        --button-hover-border: var(--color-start);
+        --button-active-bg: var(--color-mid-soft);
+        --button-active-border: var(--color-mid);
+        appearance: none;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        overflow: hidden;
+        min-height: 2.75rem;
+        border: solid var(--button-border);
+        border-width: 1px 1px 0.24rem;
+        border-radius: var(--radius-md);
+        padding: 0.68rem 0.9rem 0.62rem;
+        background: var(--button-bg);
+        color: var(--button-text);
+        font-weight: 700;
+        letter-spacing: 0;
+        box-shadow: var(--shadow-control-rest);
+        cursor: pointer;
+        transform: translateY(0);
+      }
+      .button::before {
+        content: '';
+        position: absolute;
+        top: 0.22rem;
+        right: 0.55rem;
+        left: 0.55rem;
+        height: 1px;
+        border-radius: 999px;
+        background: var(--color-control-top-glint);
+        pointer-events: none;
+      }
+      .button::after {
+        content: '';
+        position: absolute;
+        right: 0.5rem;
+        bottom: 0.18rem;
+        left: 0.5rem;
+        height: 1px;
+        border-radius: 999px;
+        background: var(--color-control-bottom-shade);
+        pointer-events: none;
+      }
+      .button:hover { border-color: var(--button-hover-border); background: var(--button-hover-bg); box-shadow: var(--shadow-control-hover), var(--shadow-hover); transform: translateY(-0.06rem); }
+      .button:disabled,
+      .button[aria-disabled=true] {
+        opacity: 0.45;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+      }
+      .button:disabled:hover,
+      .button[aria-disabled=true]:hover {
+        border-color: var(--button-border);
+        background: var(--button-bg);
+        box-shadow: none;
+        transform: none;
+      }
+      .button-small { min-height: 2.35rem; padding: 0.48rem 0.72rem 0.44rem; margin-bottom: 0.12rem; }
+      .button:focus-visible, input:focus-visible, select:focus-visible, #screen:focus-visible { outline: none; border-color: var(--color-warning); box-shadow: var(--shadow-control-rest), var(--shadow-focus); }
+      .button:active { border-color: var(--button-active-border); background: var(--button-active-bg); box-shadow: var(--shadow-control-active); transform: translateY(0.16rem); }
+      .button.active, .button[aria-pressed='true'] { --button-bg: var(--color-mid-fill-strong); --button-border: var(--color-mid-border); --button-text: var(--color-mid-ink); box-shadow: var(--shadow-control-active); transform: translateY(0.1rem); }
+      .button-primary { --button-bg: var(--color-start-fill-strong); --button-border: var(--color-start-border); --button-text: var(--color-start-ink); }
+      .button-secondary { --button-bg: var(--color-mid-fill-strong); --button-border: var(--color-mid-border); --button-text: var(--color-mid-ink); }
+      .button-warning { --button-bg: var(--color-warning-fill); --button-border: var(--color-warning-border); --button-text: var(--color-warning-ink); }
+      .button-danger { --button-bg: var(--color-danger-fill); --button-border: var(--color-danger-border); --button-text: var(--color-danger-ink); }
+      .button-ghost { --button-bg: #07090c; --button-border: var(--color-border); }
+      .keycap {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.45rem;
+        min-height: 1.35rem;
+        padding: 0 0.35rem;
+        border-radius: 999px;
+        border: 1px solid var(--color-start-border);
+        background: var(--color-start-fill);
+        color: var(--color-start-ink);
+        font-size: 0.72rem;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .keycap:empty { display: none; }
+      .choice {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        min-height: 2.75rem;
+        padding: 0.55rem 0.75rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-panel-strong);
+        color: var(--color-text-muted);
+        cursor: pointer;
+      }
+      .choice input { accent-color: var(--color-mid); }
+      .choice:hover { border-color: var(--color-start-border); box-shadow: var(--shadow-hover); }
+      .choice-small {
+        min-height: 2.2rem;
+        padding: 0.36rem 0.55rem;
+        font-size: 0.72rem;
+      }
+      input:not([type='checkbox']), select {
+        min-width: 7rem;
+        height: 2.55rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-panel-strong);
+        color: var(--color-text);
+        padding: 0 0.85rem;
+      }
+      input:not([type='checkbox']):hover, select:hover { border-color: var(--color-start-border); box-shadow: var(--shadow-hover); }
+      select { appearance: none; padding-right: 2rem; background-image: linear-gradient(45deg, transparent 50%, var(--color-text-muted) 50%), linear-gradient(135deg, var(--color-text-muted) 50%, transparent 50%); background-position: calc(100% - 1rem) 1.05rem, calc(100% - 0.68rem) 1.05rem; background-size: 0.32rem 0.32rem, 0.32rem 0.32rem; background-repeat: no-repeat; }
+      input[type="file"] { min-width: 13rem; padding: 0.42rem 0.65rem; line-height: 1.35rem; }
+      input[type="file"]::file-selector-button {
+        height: 1.62rem;
+        margin: 0 0.7rem 0 0;
+        border: 1px solid var(--color-start-border);
+        border-radius: var(--radius-sm);
+        background: var(--color-start-fill);
+        color: var(--color-start-ink);
+        font: inherit;
+      }
+      .field {
+        display: flex;
+        flex: 1 1 8rem;
+        min-width: 7.5rem;
+        flex-direction: column;
+        gap: 0.34rem;
+      }
+      .file-field { flex-basis: 15rem; }
+      .platform-field { flex: 0 1 14rem; min-width: 12rem; }
+      .filterable-dropdown { position: relative; }
+      .platform-current { position: relative; width: 100%; min-width: 7rem; height: 2.55rem; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-panel-strong); color: var(--color-text); box-shadow: var(--shadow-control-rest); padding: 0 2rem 0 0.85rem; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+      .platform-current::after { content: ""; position: absolute; top: 1.05rem; right: 0.82rem; border-right: 0.32rem solid transparent; border-left: 0.32rem solid transparent; border-bottom: 0.4rem solid var(--color-text-muted); pointer-events: none; }
+      .platform-current:hover { border-color: var(--color-start-border); box-shadow: var(--shadow-control-hover), var(--shadow-hover); }
+      .platform-current:focus-visible { outline: none; border-color: var(--color-warning); box-shadow: var(--shadow-control-rest), var(--shadow-focus); }
+      .filterable-dropdown-list { position: absolute; z-index: 40; right: 0; bottom: calc(100% + 0.25rem); left: 0; display: grid; gap: 0.25rem; max-height: min(16rem, 55vh); overflow: auto; border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); background: var(--color-panel-strong); box-shadow: var(--shadow-panel); padding: 0.25rem; }
+      .filterable-dropdown-list[hidden] { display: none; }
+      .platform-filter-input { width: 100%; min-width: 0; }
+      .platform-options { display: grid; gap: 0.15rem; }
+      .filterable-dropdown-option { display: block; width: 100%; min-height: 2rem; border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent; color: var(--color-text); padding: 0.36rem 0.5rem; text-align: left; cursor: pointer; }
+      .filterable-dropdown-option:hover, .filterable-dropdown-option[aria-selected="true"] { border-color: var(--color-start-border); background: var(--color-start-fill); }
+      .filterable-dropdown-option[aria-current="true"] { color: var(--color-start-ink); }
+      .filterable-dropdown-empty { padding: 0.55rem; color: var(--color-text-muted); }
+      .rom-select-field { flex: 1 1 16rem; min-width: 13rem; }
+      .rom-offset-field { flex: 0 1 8.5rem; min-width: 8rem; }
+      .field span {
+        color: var(--color-text-muted);
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .field input { width: 100%; }
+      .labelled-row { align-items: flex-end; }
+      .editor-choice { align-self: flex-end; min-height: 2.35rem; }
+      .stage-bottom-controls {
+        align-self: end;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-2);
+        align-items: flex-start;
+        padding-top: var(--space-3);
+        border-top: 1px solid var(--color-border);
+      }
+      .stage-bottom-main {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: var(--space-3);
+        min-width: 0;
+      }
+      .stage-bottom-controls .button,
+      .stage-bottom-controls .choice {
+        align-self: flex-end;
+      }
+      .stage-bottom-controls .button {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+      .rom-loader-group {
+        display: contents;
+      }
+      .rom-advanced-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: var(--space-3);
+        width: 100%;
+        min-width: 0;
+      }
+      .rom-loader-group[hidden], .rom-advanced-controls[hidden] { display: none; }
+      .editor-search-row {
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: minmax(0, 1fr) minmax(340px, 0.78fr);
+        gap: var(--space-4);
+        align-items: start;
+      }
+      .editor-panel, .search-panel { height: auto; }
+      .hotkey-row { gap: var(--space-2); }
+      .inputs .button, .inputs .keycap { transition: none; }
+      .advanced-input-toggle {
+        margin-left: 0;
+      }
+      .advanced-inputs {
+        display: flex;
+        flex: 1 0 100%;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        align-items: center;
+        padding-top: var(--space-1);
+      }
+      .advanced-inputs[hidden] {
+        display: none;
+      }
+      .screen-wrap {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 224 / 256;
+        align-self: start;
+        justify-self: center;
+        background: #000;
+        border: 1px solid var(--color-border-strong);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-panel);
+        overflow: hidden;
+      }
+      .screen-wrap:focus-within { border-color: var(--color-warning); box-shadow: var(--shadow-panel), var(--shadow-focus); }
+      .app.debugger-pane-collapsed .stage {
+        overflow: hidden;
+      }
+      .app.debugger-pane-collapsed .screen-wrap {
+        width: auto;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        align-self: center;
+        justify-self: center;
+      }
+      #screen { display: block; width: 100%; height: 100%; border: 0; image-rendering: pixelated; cursor: crosshair; }
+      .debugger {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: var(--space-4);
+        overflow: hidden;
+        background: var(--color-bg-elevated);
+      }
+      .debugger-resize-handle {
+        position: absolute;
+        z-index: 30;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 10px;
+        cursor: col-resize;
+        touch-action: none;
+      }
+      .debugger-resize-handle::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 1px;
+        background: transparent;
+        transition: background-color var(--transition), box-shadow var(--transition);
+      }
+      .debugger-resize-handle:hover::before,
+      .debugger-resize-handle:active::before,
+      body.debugger-pane-resizing .debugger-resize-handle::before {
+        background: var(--color-start-border);
+        box-shadow: 0 0 0 1px var(--color-start-soft);
+      }
+      body.debugger-pane-resizing,
+      body.debugger-pane-resizing * {
+        cursor: col-resize !important;
+        user-select: none;
+      }
+      .debugger-toolbar {
+        display: grid;
+        gap: var(--space-4);
+        align-items: stretch;
+      }
+      .debugger-toolbar {
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        min-height: 2.6rem;
+      }
+      .debugger-toolbar h1 {
+        margin: 0;
+        color: var(--color-text-faint);
+        font-size: 0.82rem;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .debugger-card-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        grid-auto-flow: row;
+        grid-auto-rows: auto;
+        align-content: start;
+        gap: var(--space-4);
+        min-height: 0;
+        overflow: auto;
+        scrollbar-gutter: stable;
+      }
+      .app.debugger-pane-collapsed .debugger {
+        padding: var(--space-2);
+      }
+      .app.debugger-pane-collapsed .debugger-card-grid,
+      .app.debugger-pane-collapsed .debugger-toolbar h1,
+      .app.debugger-pane-collapsed #btn-debug-reset-defaults,
+      .app.debugger-pane-collapsed .debugger-resize-handle {
+        display: none;
+      }
+      .app.debugger-pane-collapsed .debugger-toolbar {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+      .panel {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background: var(--color-panel);
+        box-shadow: var(--shadow-panel);
+        padding: var(--space-4);
+      }
+      .panel:hover { border-color: var(--color-start-border); box-shadow: var(--shadow-panel), var(--shadow-hover); }
+      .panel h2 {
+        margin: 0 0 var(--space-3);
+        color: var(--color-text-faint);
+        font-size: 0.78rem;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .panel-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: var(--space-2);
+        margin-bottom: 0.35rem;
+      }
+      .panel-title-row h2 { margin: 0; }
+      .panel-content {
+        display: flex;
+        min-height: 0;
+        flex: 1 1 auto;
+        flex-direction: column;
+        gap: var(--space-3);
+        overflow: auto;
+      }
+      .panel.panel-collapsed {
+        align-self: start;
+        padding-top: 0.32rem;
+        padding-bottom: 0.32rem;
+      }
+      .panel.panel-collapsed .panel-title-row { margin-bottom: 0; }
+      .panel.panel-collapsed .panel-content { display: none; }
+      .panel-title-actions, .section-title-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--space-2);
+      }
+      .panel-title-actions { margin-left: auto; }
+      .section-title-row { justify-content: space-between; }
+      .map-panel, .disasm-panel, .status-panel { display: flex; flex-direction: column; }
+      .disasm-panel .panel-content { overflow: hidden; }
+      .compact-panel { padding: var(--space-3); }
+      .debugger-card-grid > .panel {
+        padding-top: 0.55rem;
+        padding-bottom: 0.65rem;
+      }
+      .debugger-card-grid > .panel.panel-collapsed {
+        align-self: start;
+        min-height: 0 !important;
+        margin-bottom: var(--space-3);
+        padding-top: 0.32rem;
+        padding-bottom: 0.32rem;
+      }
+      .compact-panel h2 { margin-bottom: var(--space-2); font-size: 0.72rem; }
+      .compact-panel .panel-title-row h2 { margin: 0; }
+      .panel-title-row .button-small {
+        min-height: 1.75rem;
+        border-bottom-width: 0.12rem;
+        padding: 0.22rem 0.55rem 0.18rem;
+        margin-bottom: 0;
+      }
+      .panel-title-row .choice-small {
+        min-height: 1.75rem;
+        padding: 0.2rem 0.48rem;
+      }
+      .platform-card-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        align-items: center;
+      }
+      .platform-card-controls-compact { align-items: flex-start; }
+      .platform-card-message {
+        color: var(--color-text-muted);
+        font-size: 0.78rem;
+      }
+      .button.debugger-layout-button {
+        width: 1.1rem;
+        min-width: 1.1rem;
+        height: 1rem;
+        min-height: 1rem;
+        border-width: 1px;
+        padding: 0;
+        margin: 0;
+        align-self: center;
+        font-size: 0.68rem;
+        line-height: 1;
+        box-shadow: none;
+      }
+      .button.debugger-layout-button::before,
+      .button.debugger-layout-button::after {
+        display: none;
+      }
+      .panel-collapse-button {
+        flex: 0 0 auto;
+      }
+      .button.debugger-pane-toggle {
+        position: fixed;
+        top: 0.75rem;
+        right: 0.75rem;
+        z-index: 80;
+      }
+      .registers, .flags, .ports { display: grid; grid-template-columns: repeat(4, minmax(74px, 1fr)); gap: var(--space-2); }
+      .cpu-panel .registers { grid-template-columns: repeat(6, minmax(54px, 1fr)); }
+      .flags-panel .flags { grid-template-columns: repeat(5, minmax(52px, 1fr)); }
+      .ports-panel .ports {
+        grid-template-columns: repeat(4, minmax(58px, 1fr));
+        gap: 0.42rem;
+      }
+      .kv {
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        background: var(--color-panel-strong);
+        padding: 0.5rem;
+        color: var(--color-pre-text);
+      }
+      .compact-panel .kv { padding: 0.35rem 0.45rem; }
+      .ports-panel .kv { padding: 0.32rem 0.42rem; }
+      .kv b { display: block; margin-bottom: 0.1rem; color: var(--color-text-muted); font-size: 0.7rem; letter-spacing: 0; text-transform: uppercase; }
+      .compact-panel .kv b { font-size: 0.62rem; }
+      .ports-panel .kv b { font-size: 0.6rem; }
+      .kv-edit {
+        display: flex;
+        flex-direction: column;
+        gap: 0.22rem;
+        padding: 0.28rem 0.38rem;
+      }
+      .kv-edit input {
+        min-width: 0;
+        width: 100%;
+        height: 1.75rem;
+        padding: 0 0.4rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.78rem;
+      }
+      .flag-edit {
+        width: 100%;
+        min-height: 1.72rem;
+        padding: 0.12rem 0.3rem;
+        margin: 0;
+      }
+      .flag-on { color: var(--color-mid-ink); border-color: var(--color-mid-border); background: var(--color-mid-fill); }
+      .flag-off { color: var(--color-text-muted); }
+      .wide { grid-column: 1 / -1; }
+      .map-canvas {
+        display: block;
+        cursor: zoom-in;
+        width: auto;
+        height: clamp(280px, calc(33vh - 2.2rem), 440px);
+        max-width: 100%;
+        aspect-ratio: 1 / 1;
+        align-self: center;
+        image-rendering: pixelated;
+        border: 1px solid var(--color-border-strong);
+        border-radius: var(--radius-md);
+        background: #000;
+      }
+      .swatch-row { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+      .swatch {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 1.7rem;
+        padding: 0.18rem 0.55rem;
+        border-radius: 999px;
+        border: 1px solid var(--color-border);
+        background: var(--color-accent-neutral-fill);
+        color: var(--color-text-muted);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .swatch::before { content: ''; width: 0.55rem; height: 0.55rem; border-radius: 999px; background: var(--swatch-dot, var(--color-border-strong)); }
+      .swatch-rom { --swatch-dot: var(--color-warning); border-color: var(--color-warning-border); color: var(--color-warning-ink); }
+      .swatch-ram { --swatch-dot: var(--color-accent-alpha); border-color: var(--color-accent-alpha-border); }
+      .swatch-video { --swatch-dot: var(--color-start); border-color: var(--color-start-border); color: var(--color-start-ink); }
+      .swatch-pc { --swatch-dot: var(--color-mid); border-color: var(--color-mid-border); color: var(--color-mid-ink); }
+      .swatch-sp { --swatch-dot: #5aa7ff; border-color: rgba(90, 167, 255, 0.62); }
+      pre {
+        margin: 0;
+        overflow: auto;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-pre-bg);
+        color: var(--color-pre-text);
+        padding: var(--space-3);
+        font-family: inherit;
+        white-space: pre-wrap;
+      }
+      .disasm { flex: 1 1 auto; min-height: 0; overflow: hidden; white-space: pre; }
+      .status { flex: 1 1 auto; min-height: 0; color: var(--color-text-muted); }
+      .hex-dump {
+        min-height: 150px;
+        max-height: 260px;
+        overflow: auto;
+        white-space: pre;
+      }
+      .search-results { max-height: 220px; overflow: auto; }
+      .breakpoint-tools { margin-top: var(--space-3); gap: var(--space-2); }
+      .breakpoint-tools .field { flex-basis: 9rem; }
+      .watch-list { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); min-height: 2.35rem; }
+      .watch-list .button { min-height: 2rem; padding: 0.35rem 0.55rem; margin: 0; }
+      .watch-log { margin-top: var(--space-3); max-height: 120px; min-height: 72px; color: var(--color-text-muted); }
+      .error { color: var(--color-danger-ink); border-color: var(--color-danger-border); background: var(--color-danger-fill); }
+      .search-results .button { min-height: 2rem; padding: 0.35rem 0.55rem; margin: 0 0.35rem 0.35rem 0; }
+      .map-modal[hidden] { display: none; }
+      .map-modal {
+        position: fixed;
+        z-index: 20;
+        display: grid;
+        padding: var(--space-4);
+        pointer-events: none;
+      }
+      .map-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(4, 5, 6, 0.62);
+        pointer-events: auto;
+      }
+      .map-modal-panel {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto auto;
+        gap: var(--space-2);
+        height: 100%;
+        min-height: 0;
+        border: 1px solid var(--color-border-strong);
+        border-radius: var(--radius-lg);
+        background: var(--color-panel);
+        box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.62);
+        padding: var(--space-3);
+        pointer-events: auto;
+      }
+      .map-modal-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 2.4rem; }
+      .map-modal-header h2 { margin: 0; color: var(--color-text-faint); font-size: 0.78rem; text-transform: uppercase; }
+      .map-modal-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: flex-end; }
+      .map-canvas-frame {
+        display: grid;
+        place-items: center;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .map-readout {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-2);
+      }
+      .map-readout .kv { min-height: 2.35rem; padding: 0.35rem 0.45rem; }
+      .map-readout .kv b { font-size: 0.6rem; }
+      .map-modal .swatch-row { margin-top: 0; gap: 0.4rem; }
+      .map-modal .swatch { min-height: 1.45rem; padding: 0.1rem 0.45rem; font-size: 0.62rem; }
+      .map-footer { display: grid; gap: var(--space-2); }
+      .map-legend .swatch {
+        justify-content: flex-start;
+        min-width: 9rem;
+        border-radius: var(--radius-sm);
+        white-space: nowrap;
+      }
+      .map-canvas-large {
+        display: block;
+        width: min(100%, 640px);
+        height: min(100%, 640px);
+        aspect-ratio: 1 / 1;
+        image-rendering: pixelated;
+        border: 1px solid var(--color-border-strong);
+        border-radius: var(--radius-md);
+        background: #000;
+        cursor: crosshair;
+      }
+      .editor-modal-panel {
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+      .editor-modal-grid {
+        --expanded-editor-extra-height: 11lh;
+        --expanded-editor-card-min-height: calc(min(58vh, 40rem) + var(--expanded-editor-extra-height));
+        --expanded-editor-search-results-height: calc(min(22vh, 15rem) + 2lh);
+        --expanded-editor-pc-min-height: calc(16rem + 1lh);
+        --expanded-editor-websocket-min-height: calc(14rem + 4lh);
+        display: grid;
+        grid-template-columns: minmax(380px, 1.12fr) minmax(340px, 0.88fr);
+        grid-template-rows: minmax(var(--expanded-editor-card-min-height), auto) minmax(var(--expanded-editor-pc-min-height), auto) auto;
+        grid-template-areas:
+          "memory search"
+          "pc pc"
+          "websocket websocket";
+        gap: var(--space-3);
+        align-items: stretch;
+        min-height: 0;
+        overflow: auto;
+      }
+      .editor-modal-section {
+        display: flex;
+        min-width: 0;
+        min-height: 0;
+        flex-direction: column;
+        gap: var(--space-3);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-panel-strong);
+        padding: var(--space-3);
+        overflow: auto;
+      }
+      .editor-modal-section[hidden] {
+        display: none;
+      }
+      .editor-modal-memory-section {
+        grid-area: memory;
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+      }
+      .editor-modal-search-section {
+        grid-area: search;
+      }
+      .editor-modal-memory-section,
+      .editor-modal-search-section {
+        min-height: var(--expanded-editor-card-min-height);
+      }
+      .editor-modal-section h3 {
+        margin: 0;
+        color: var(--color-text-faint);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+      }
+      .editor-modal-section .editor-row,
+      .editor-modal-section .search-row {
+        gap: var(--space-2);
+      }
+      .hex-dump-large {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        overflow: auto;
+      }
+      .hex-dump-large.hex-dump-y-overflow {
+        overflow-y: auto;
+      }
+      .search-results-large {
+        flex: 1 1 var(--expanded-editor-search-results-height);
+        min-height: 12rem;
+        max-height: none;
+        overflow: auto;
+      }
+      .editor-modal-search-section .rule-tool-section {
+        align-self: stretch;
+        flex: 0 0 auto;
+        min-height: 0;
+        max-height: none;
+        overflow: auto;
+      }
+      .editor-modal-search-section .breakpoint-tools,
+      .editor-modal-search-section .watch-list,
+      .editor-modal-search-section .watch-log {
+        margin-top: 0;
+      }
+      .rule-tool-section {
+        display: grid;
+        gap: var(--space-2);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-panel);
+        padding: var(--space-3);
+      }
+      .rule-tool-section h4 {
+        margin: 0;
+        color: var(--color-text-muted);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+      }
+      .rule-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        align-items: center;
+      }
+      .rule-list-large {
+        max-height: 120px;
+        overflow: auto;
+      }
+      .watch-log-large {
+        max-height: 120px;
+        min-height: 72px;
+      }
+      .rules-modal-panel {
+        grid-template-rows: auto minmax(0, 1fr) auto;
+      }
+      .rules-json {
+        width: 100%;
+        min-height: 0;
+        resize: none;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-pre-bg);
+        color: var(--color-pre-text);
+        padding: var(--space-3);
+        font-family: inherit;
+        white-space: pre;
+      }
+      .pc-hook-section {
+        grid-area: pc;
+        grid-column: 1 / -1;
+        min-height: var(--expanded-editor-pc-min-height);
+      }
+      .help-panel {
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-pre-bg);
+        color: var(--color-text-muted);
+        padding: var(--space-3);
+        font-size: 0.72rem;
+      }
+      .help-panel[hidden] { display: none; }
+      .pc-rule-groups {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-3);
+      }
+      .pc-rule-card {
+        display: grid;
+        gap: var(--space-3);
+        min-width: 0;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-panel);
+        padding: var(--space-3);
+      }
+      .pc-rule-card h4 {
+        margin: 0;
+        color: var(--color-text-muted);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+      }
+      .pc-hook-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-2);
+        align-items: end;
+      }
+      .pc-hook-grid .field { min-width: 0; }
+      .pc-hook-grid .button { justify-self: start; }
+      .pc-hook-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        min-height: 2.35rem;
+      }
+      .pc-hook-list .button { min-height: 2rem; padding: 0.35rem 0.55rem; margin: 0; }
+      .websocket-rule-section {
+        grid-area: websocket;
+        grid-column: 1 / -1;
+        min-height: var(--expanded-editor-websocket-min-height);
+      }
+      .websocket-rule-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-2); align-items: end; }
+      .websocket-rule-grid .field { min-width: 0; }
+      @media (max-width: 1180px) {
+        body { overflow: auto; }
+        .app, .app.debugger-pane-collapsed { grid-template-columns: 1fr; height: auto; min-height: 100vh; overflow: visible; }
+        .stage,
+        .app.debugger-pane-collapsed .stage { height: auto; border-right: 0; border-bottom: 1px solid var(--color-border); overflow: visible; }
+        .app.debugger-pane-collapsed .screen-wrap {
+          width: 100%;
+          height: auto;
+          max-width: 100%;
+          align-self: start;
+          justify-self: stretch;
+        }
+        .debugger { overflow: visible; }
+        .debugger-resize-handle { display: none; }
+        .debugger-card-grid {
+          grid-template-columns: 1fr;
+          grid-template-rows: none;
+          grid-auto-rows: auto;
+          height: auto;
+          overflow: visible;
+        }
+        .debugger-card-grid > .panel {
+          grid-column: 1 !important;
+          grid-row: auto !important;
+          min-height: 0;
+        }
+        .app.debugger-pane-collapsed .debugger {
+          min-height: 3.75rem;
+        }
+        .debugger-toolbar, .map-readout, .editor-modal-grid, .pc-hook-grid, .pc-rule-groups, .websocket-rule-grid { grid-template-columns: 1fr; }
+        .editor-modal-grid {
+          grid-template-rows:
+            minmax(var(--expanded-editor-card-min-height), auto)
+            minmax(var(--expanded-editor-card-min-height), auto)
+            minmax(var(--expanded-editor-pc-min-height), auto)
+            auto;
+          grid-template-areas:
+            "memory"
+            "search"
+            "pc"
+            "websocket";
+        }
+        .editor-modal-grid { overflow: auto; }
+        .map-canvas { height: min(420px, 72vw); }
+        .map-modal { padding: var(--space-3); }
+        .disasm { min-height: 18rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class='app' id='app-shell'>
+      <section class='stage' id='play-zone'>
+        <div class='toolbar'>
+          <button class='button button-secondary' id='btn-run-toggle' type='button' aria-pressed='true'><span id='run-toggle-label'>Pause</span><kbd class='keycap' data-hotkey-label='pause'></kbd></button>
+          <button class='button button-ghost' id='btn-step' type='button'><span>Step</span><kbd class='keycap' data-hotkey-label='step'></kbd></button>
+          <button class='button button-warning' id='btn-reset' type='button'><span>Reset</span><kbd class='keycap' data-hotkey-label='reset'></kbd></button>
+          <button class='button button-ghost' id='btn-save-state' type='button'><span>Save State</span><kbd class='keycap' data-hotkey-label='saveState'></kbd></button>
+          <button class='button button-ghost' id='btn-load-state' type='button'><span>Load State</span><kbd class='keycap' data-hotkey-label='loadState'></kbd></button>
+          <button class='button button-ghost' id='btn-load-state-disk' type='button'><span>Load State From Disk</span><kbd class='keycap' data-hotkey-label='loadStateFromDisk'></kbd></button>
+          <input id='state-file' type='file' accept='application/json,.json' hidden>
+          <label class='choice' for='autopause'>
+            <input id='autopause' type='checkbox' checked>
+            <span>Autopause</span>
+          </label>
+        </div>
+        <div class='inputs' id='input-buttons'>
+          <button class='button button-ghost' data-input='coin' type='button' aria-pressed='false'><span>Coin</span><kbd class='keycap'></kbd></button>
+          <button class='button button-ghost' data-input='start1' type='button' aria-pressed='false'><span>Start 1</span><kbd class='keycap'></kbd></button>
+          <button class='button button-ghost' data-input='start2' type='button' aria-pressed='false'><span>Start 2</span><kbd class='keycap'></kbd></button>
+          <button class='button button-ghost' data-input='left' type='button' aria-pressed='false'><span>Left</span><kbd class='keycap'></kbd></button>
+          <button class='button button-ghost' data-input='right' type='button' aria-pressed='false'><span>Right</span><kbd class='keycap'></kbd></button>
+          <button class='button button-ghost' data-input='shoot' type='button' aria-pressed='false'><span>Shoot</span><kbd class='keycap'></kbd></button>
+        </div>
+        <div class='screen-wrap' id='screen-wrap'><canvas id='screen' width='224' height='256' tabindex='0' aria-label='Midway 8080 arcade display. Click to focus keyboard controls.'></canvas></div>
+        <div class='stage-bottom-controls'>
+          <div class='stage-bottom-main'>
+            <div class='field platform-field filterable-dropdown' id='platform-picker'><span>Platform</span><button class='platform-current' id='platform-current' type='button' aria-haspopup='true' aria-expanded='false' aria-controls='platform-option-list'>Midway 8080 Arcade</button><div id='platform-option-list' class='filterable-dropdown-list' hidden><input class='platform-filter-input' id='platform-filter' type='text' role='searchbox' aria-label='Search platforms' aria-controls='platform-options' autocomplete='off'><div id='platform-options' class='platform-options' role='listbox'></div></div></div>
+            <div class='rom-loader-group' id='rom-catalog-controls'>
+              <label class='field rom-select-field' for='rom-select'><span>ROMs</span><select id='rom-select'></select></label>
+              <button class='button button-ghost button-small' id='btn-refresh-roms' type='button'>Refresh</button>
+              <button class='button button-primary button-small' id='btn-load-catalog-rom' type='button'>Load ROM</button>
+            </div>
+            <div class='rom-loader-group' id='rom-disk-controls' hidden>
+              <label class='field file-field'>
+                <span>Load From Disk</span>
+                <input id='rom-file' type='file' multiple aria-label='ROM or memory file'>
+              </label>
+              <button class='button button-secondary button-small' id='btn-load-rom' type='button'>Load Disk</button>
+            </div>
+            <button class='button button-ghost button-small' id='btn-rom-mode-toggle' type='button'>Load From Disk</button>
+            <button class='button button-ghost button-small' id='btn-rom-advanced-toggle' type='button' aria-expanded='false'>Advanced</button>
+          </div>
+          <div class='rom-advanced-controls' id='rom-advanced-controls' hidden>
+            <label class='field rom-offset-field'>
+              <span>ROM Offset</span>
+              <input id='rom-offset' value='0x0000' aria-label='ROM load offset'>
+            </label>
+            <label class='choice editor-choice' for='rom-reset'>
+              <input id='rom-reset' type='checkbox' checked>
+              <span>Reset first</span>
+            </label>
+            <label class='choice editor-choice' for='rom-autorun'>
+              <input id='rom-autorun' type='checkbox' checked>
+              <span>Autorun on load</span>
+            </label>
+          </div>
+        </div>
+      </section>
+      <section class='debugger' id='debugger-pane'>
+        <div class='debugger-resize-handle' id='debugger-pane-resize-handle' aria-hidden='true'></div>
+        <div class='debugger-toolbar'>
+          <h1>Debugger</h1>
+          <button class='button button-ghost button-small' id='btn-debug-reset-defaults' type='button'>Reset Debugger Defaults</button>
+          <button class='button button-ghost button-small debugger-layout-button debugger-pane-toggle' id='btn-debugger-pane-toggle' type='button' aria-label='Collapse debugger pane' aria-expanded='true' title='Collapse debugger pane'>&gt;</button>
+        </div>
+        <div class='debugger-card-grid' id='debugger-card-grid'>
+          <div class='panel map-panel' data-debugger-card='memory-map'>
+            <h2>Memory Map</h2>
+            <canvas id='memory-map' class='map-canvas' width='256' height='256'></canvas>
+            <div class='swatch-row' aria-label='Memory map legend'>
+              <span class='swatch swatch-rom'>ROM</span>
+              <span class='swatch swatch-ram'>RAM</span>
+              <span class='swatch swatch-video'>VRAM</span>
+              <span class='swatch swatch-pc'>PC</span>
+              <span class='swatch swatch-sp'>SP</span>
+            </div>
+          </div>
+          <div class='panel disasm-panel' data-debugger-card='disassembly'>
+            <h2>Disassembly</h2>
+            <pre id='disasm' class='disasm'></pre>
+          </div>
+          <div class='panel compact-panel cpu-panel' data-debugger-card='cpu'>
+            <h2>CPU</h2>
+            <div id='registers' class='registers'></div>
+          </div>
+          <div class='panel compact-panel flags-panel' data-debugger-card='flags'>
+            <h2>Flags</h2>
+            <div id='flags' class='flags'></div>
+          </div>
+          <div class='panel status-panel' data-debugger-card='status'>
+            <h2>Status</h2>
+            <pre id='status' class='status'></pre>
+          </div>
+          <div class='panel ports-panel' data-debugger-card='ports'>
+            <h2>Ports</h2>
+            <div id='ports' class='ports'></div>
+          </div>
+          <div class='panel editor-panel' data-debugger-card='memory-editor'>
+            <div class='panel-title-row'>
+              <h2>Memory Editor</h2>
+              <div class='panel-title-actions'>
+                <label class='choice choice-small' for='mem-auto-read'>
+                  <input id='mem-auto-read' type='checkbox'>
+                  <span>Auto read</span>
+                </label>
+                <label class='choice choice-small' for='mem-auto-pause-only'>
+                  <input id='mem-auto-pause-only' type='checkbox'>
+                  <span>Pause only</span>
+                </label>
+                <button class='button button-ghost button-small' id='btn-editor-expand' type='button'>Expand</button>
+              </div>
+            </div>
+            <div class='editor-row labelled-row'>
+              <label class='field'>
+                <span>View From</span>
+                <input id='mem-address' value='0x2400' aria-label='View memory from address'>
+              </label>
+              <label class='field'>
+                <span>Byte Count</span>
+                <input id='mem-length' value='0x40' aria-label='Memory read length'>
+              </label>
+              <button class='button button-ghost button-small' id='btn-read-memory' type='button'>Read</button>
+            </div>
+            <pre id='hex-dump' class='hex-dump'></pre>
+            <div class='editor-row labelled-row'>
+              <label class='field'>
+                <span>Write Address</span>
+                <input id='patch-address' value='0x2400' aria-label='Patch address'>
+              </label>
+              <label class='field'>
+                <span>Byte Value</span>
+                <input id='patch-value' value='0x00' aria-label='Patch value'>
+              </label>
+              <button class='button button-secondary button-small' id='btn-write-memory' type='button'>Write Byte</button>
+            </div>
+          </div>
+          <div class='panel search-panel' data-debugger-card='search'>
+            <h2>Search</h2>
+            <div class='search-row labelled-row'>
+              <label class='field'>
+                <span>Find Byte</span>
+                <input id='search-value' value='0x00' aria-label='Search value'>
+              </label>
+              <label class='field'>
+                <span>Start Offset</span>
+                <input id='search-start' value='0x0000' aria-label='Search start'>
+              </label>
+              <label class='field'>
+                <span>End Offset</span>
+                <input id='search-end' value='0x10000' aria-label='Search end'>
+              </label>
+              <button class='button button-primary button-small' id='btn-search' type='button'>Search</button>
+              <button class='button button-ghost button-small' id='btn-clear-search' type='button'>Clear Results</button>
+            </div>
+            <div id='search-results' class='search-results'></div>
+            <div class='breakpoint-tools search-row labelled-row'>
+              <label class='field'>
+                <span>Access Address</span>
+                <input id='break-address' value='0x2400' aria-label='Memory access breakpoint address'>
+              </label>
+              <button class='button button-ghost button-small' id='btn-break-read' type='button'>Break Read</button>
+              <button class='button button-ghost button-small' id='btn-break-write' type='button'>Break Write</button>
+              <button class='button button-warning button-small' id='btn-find-writer' type='button'>Find Writer</button>
+            </div>
+            <div id='breakpoint-list' class='watch-list'></div>
+            <pre id='watch-log' class='watch-log'></pre>
+          </div>
+        </div>
+
+        <div id='map-modal' class='map-modal' hidden>
+          <div class='map-modal-backdrop' data-map-close></div>
+          <div class='map-modal-panel' role='dialog' aria-modal='false' aria-labelledby='map-modal-title'>
+            <div class='map-modal-header'>
+              <h2 id='map-modal-title'>Memory Map</h2>
+              <div class='map-modal-actions'>
+                <button class='button button-secondary button-small' id='btn-map-preload' type='button' disabled>Use Selected Cell</button>
+                <button class='button button-ghost button-small' id='btn-map-close' type='button'>Close</button>
+              </div>
+            </div>
+            <div id='memory-map-large-frame' class='map-canvas-frame'><canvas id='memory-map-large' class='map-canvas-large' width='256' height='256'></canvas></div>
+            <div class='map-readout'>
+              <div class='kv'><b>Hovered Cell</b><span id='map-hover-readout'>-</span></div>
+              <div class='kv'><b>Selected Cell</b><span id='map-selected-readout'>-</span></div>
+            </div>
+            <div class='map-footer'>
+              <div id='map-legend' class='swatch-row map-legend' aria-label='Memory map legend'>
+                <span class='swatch swatch-rom'>ROM</span>
+                <span class='swatch swatch-ram'>RAM</span>
+                <span class='swatch swatch-video'>VRAM</span>
+                <span class='swatch swatch-pc'>PC</span>
+                <span class='swatch swatch-sp'>SP</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id='editor-modal' class='map-modal editor-modal' hidden>
+          <div class='map-modal-backdrop' data-editor-close></div>
+          <div class='map-modal-panel editor-modal-panel' role='dialog' aria-modal='false' aria-labelledby='editor-modal-title'>
+            <div class='map-modal-header'>
+              <h2 id='editor-modal-title'>Memory Editor</h2>
+              <div class='map-modal-actions'>
+                <button class='button button-ghost button-small' id='btn-editor-close' type='button'>Close</button>
+              </div>
+            </div>
+            <div class='editor-modal-grid'>
+              <section class='editor-modal-section editor-modal-memory-section'>
+                <div class='section-title-row'>
+                  <h3>Memory</h3>
+                  <div class='panel-title-actions'>
+                    <label class='choice choice-small' for='mem-expanded-auto-read'>
+                      <input id='mem-expanded-auto-read' type='checkbox'>
+                      <span>Auto read</span>
+                    </label>
+                    <label class='choice choice-small' for='mem-expanded-auto-pause-only'>
+                      <input id='mem-expanded-auto-pause-only' type='checkbox'>
+                      <span>Pause only</span>
+                    </label>
+                  </div>
+                </div>
+                <div class='editor-row labelled-row'>
+                  <label class='field'>
+                    <span>View From</span>
+                    <input id='mem-expanded-address' value='0x2400' aria-label='Expanded view memory from address'>
+                  </label>
+                  <label class='field'>
+                    <span>Byte Count</span>
+                    <input id='mem-expanded-length' value='0x100' aria-label='Expanded memory read length'>
+                  </label>
+                  <label class='field'>
+                    <span>Bytes Per Row</span>
+                    <select id='mem-expanded-row-bytes' aria-label='Expanded memory bytes per row'>
+                      <option value='8'>8</option>
+                      <option value='16' selected>16</option>
+                      <option value='32'>32</option>
+                      <option value='64'>64</option>
+                    </select>
+                  </label>
+                  <button class='button button-ghost button-small' id='btn-expanded-read-memory' type='button'>Read</button>
+                </div>
+                <pre id='hex-dump-large' class='hex-dump hex-dump-large'></pre>
+                <div class='editor-row labelled-row'>
+                  <label class='field'>
+                    <span>Write Address</span>
+                    <input id='patch-expanded-address' value='0x2400' aria-label='Expanded patch address'>
+                  </label>
+                  <label class='field'>
+                    <span>Byte Value</span>
+                    <input id='patch-expanded-value' value='0x00' aria-label='Expanded patch value'>
+                  </label>
+                  <button class='button button-secondary button-small' id='btn-expanded-write-memory' type='button'>Write Byte</button>
+                </div>
+              </section>
+              <section class='editor-modal-section editor-modal-search-section'>
+                <div class='section-title-row'>
+                  <h3>Search</h3>
+                </div>
+                <div class='search-row labelled-row'>
+                  <label class='field'>
+                    <span>Find Byte</span>
+                    <input id='search-expanded-value' value='0x00' aria-label='Expanded search value'>
+                  </label>
+                  <label class='field'>
+                    <span>Start Offset</span>
+                    <input id='search-expanded-start' value='0x0000' aria-label='Expanded search start'>
+                  </label>
+                  <label class='field'>
+                    <span>End Offset</span>
+                    <input id='search-expanded-end' value='0x10000' aria-label='Expanded search end'>
+                  </label>
+                  <button class='button button-primary button-small' id='btn-expanded-search' type='button'>Search</button>
+                  <button class='button button-ghost button-small' id='btn-expanded-clear-search' type='button'>Clear Results</button>
+                </div>
+                <div id='search-results-large' class='search-results search-results-large'></div>
+                <div class='rule-tool-section'>
+                  <div class='section-title-row'>
+                    <h4>Access Breakpoint Rules</h4>
+                    <div class='rule-actions'>
+                      <button class='button button-ghost button-small' id='btn-access-copy' type='button'>Copy JSON</button>
+                      <button class='button button-ghost button-small' id='btn-access-import' type='button'>Import</button>
+                      <button class='button button-warning button-small' id='btn-access-clear' type='button'>Clear Access</button>
+                    </div>
+                  </div>
+                  <div class='breakpoint-tools search-row labelled-row'>
+                    <label class='field'>
+                      <span>Access Address</span>
+                      <input id='break-expanded-address' value='0x2400' aria-label='Expanded memory access breakpoint address'>
+                    </label>
+                    <button class='button button-ghost button-small' id='btn-expanded-break-read' type='button'>Break Read</button>
+                    <button class='button button-ghost button-small' id='btn-expanded-break-write' type='button'>Break Write</button>
+                    <button class='button button-warning button-small' id='btn-expanded-find-writer' type='button'>Find Writer</button>
+                  </div>
+                  <div id='breakpoint-list-large' class='watch-list rule-list-large'></div>
+                  <pre id='watch-log-large' class='watch-log watch-log-large'></pre>
+                </div>
+
+              </section>
+              <section class='editor-modal-section pc-hook-section'>
+                <div class='section-title-row'>
+                  <h3>PC Rules</h3>
+                  <div class='rule-actions'>
+                    <button class='button button-ghost button-small' id='btn-pc-help' type='button' aria-expanded='false' aria-controls='pc-hook-help'>Help</button>
+                    <button class='button button-ghost button-small' id='btn-pc-copy' type='button'>Copy JSON</button>
+                    <button class='button button-ghost button-small' id='btn-pc-import' type='button'>Import</button>
+                    <button class='button button-warning button-small' id='btn-pc-clear' type='button'>Clear PC</button>
+                    <button class='button button-warning button-small' id='btn-rules-clear-all' type='button'>Clear All Rules</button>
+                  </div>
+                </div>
+                <div id='pc-hook-help' class='help-panel' hidden>
+                  PC rules run before the instruction at the matching PC address executes. A register rule forces one CPU register; a memory rule writes one byte. Rules stay active until removed below.
+                </div>
+                <div class='pc-rule-groups'>
+                  <div class='pc-rule-card'>
+                    <h4>Set Register When PC Matches</h4>
+                    <div class='pc-hook-grid'>
+                  <label class='field'>
+                    <span>PC Address</span>
+                    <input id='hook-register-pc-address' value='0x0000' aria-label='PC rule register match address'>
+                  </label>
+                  <label class='field'>
+                    <span>CPU Register</span>
+                    <select id='hook-register-name' aria-label='PC rule register'></select>
+                  </label>
+                  <label class='field'>
+                    <span>Register Value</span>
+                    <input id='hook-register-value' value='0x00' aria-label='PC rule register value'>
+                  </label>
+                      <button class='button button-secondary button-small' id='btn-add-register-hook' type='button'>Add Register Rule</button>
+                    </div>
+                  </div>
+                  <div class='pc-rule-card'>
+                    <h4>Set Memory When PC Matches</h4>
+                    <div class='pc-hook-grid'>
+                      <label class='field'>
+                        <span>PC Address</span>
+                        <input id='hook-memory-pc-address' value='0x0000' aria-label='PC rule memory match address'>
+                      </label>
+                      <label class='field'>
+                        <span>Memory Address</span>
+                        <input id='hook-memory-address' value='0x2400' aria-label='PC rule memory address'>
+                      </label>
+                  <label class='field'>
+                    <span>Memory Value</span>
+                    <input id='hook-memory-value' value='0x00' aria-label='PC rule memory value'>
+                  </label>
+                      <button class='button button-secondary button-small' id='btn-add-memory-hook' type='button'>Add Memory Rule</button>
+                    </div>
+                  </div>
+                </div>
+                <div id='pc-hook-list' class='pc-hook-list'></div>
+              </section>
+              <section class='editor-modal-section websocket-rule-section' id='websocket-controls' hidden>
+                <div class='section-title-row'>
+                  <h3>WebSocket Rules</h3>
+                  <div class='rule-actions'>
+                    <select id='websocket-endpoint' aria-label='WebSocket endpoint'></select>
+                    <input id='websocket-url' aria-label='WebSocket URL'>
+                    <button class='button button-ghost button-small' id='btn-websocket-connect' type='button'>Connect</button>
+                    <button class='button button-ghost button-small' id='btn-websocket-copy' type='button'>Copy JSON</button>
+                    <button class='button button-ghost button-small' id='btn-websocket-import' type='button'>Import</button>
+                    <button class='button button-warning button-small' id='btn-websocket-clear' type='button'>Clear WS</button>
+                  </div>
+                </div>
+                <pre id='websocket-status' class='watch-log watch-log-large'></pre>
+                <div class='websocket-rule-grid'>
+                  <label class='field'><span>Endpoint</span><select id='websocket-rule-endpoint' aria-label='WebSocket rule endpoint'></select></label>
+                  <label class='field'><span>Access</span><select id='websocket-rule-access' aria-label='WebSocket rule access'><option value='write'>Write</option><option value='read'>Read</option><option value='any'>Any</option></select></label>
+                  <label class='field'><span>Address</span><input id='websocket-rule-address' value='0x2400' aria-label='WebSocket rule address'></label>
+                  <label class='field'><span>Value</span><input id='websocket-rule-value' placeholder='any' aria-label='WebSocket rule value'></label>
+                  <label class='choice choice-small' for='websocket-rule-pause'><input id='websocket-rule-pause' type='checkbox'><span>Pause</span></label>
+                  <button class='button button-secondary button-small' id='btn-add-websocket-rule' type='button'>Add WS Rule</button>
+                </div>
+                <div id='websocket-rule-list' class='pc-hook-list'></div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <div id='rules-modal' class='map-modal' hidden>
+          <div class='map-modal-backdrop' data-rules-close></div>
+          <div class='map-modal-panel rules-modal-panel' role='dialog' aria-modal='false' aria-labelledby='rules-modal-title'>
+            <div class='map-modal-header'>
+              <h2 id='rules-modal-title'>Import Rules</h2>
+              <div class='map-modal-actions'>
+                <button class='button button-ghost button-small' id='btn-rules-close' type='button'>Close</button>
+              </div>
+            </div>
+            <textarea id='rules-json' class='rules-json' spellcheck='false' placeholder='{&#10;  &quot;0x2400&quot;: [&quot;read&quot;],&#10;  &quot;0x1234&quot;: [&quot;read&quot;, &quot;write&quot;]&#10;}'></textarea>
+            <div class='map-modal-actions'>
+              <button class='button button-primary button-small' id='btn-rules-load' type='button'>Load JSON</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

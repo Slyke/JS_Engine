@@ -1,0 +1,1476 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 11 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech11.htm", "name": "Chapter 11" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 11</li>
+</ol>
+
+
+<PRE>                                CHAPTER 11
+
+                           ____________________
+                           EXTERNAL INTERFACING
+
+
+
+     The Organiser II has been designed to be extended in a number of ways
+
+     1.  Adding extra software services.
+
+     2.  Adding extra hardware interfaces.
+
+
+     In both cases an extension to the  operating  system  is  known  as  a
+"DEVICE".   As  far  as the operating system is concerned a "DEVICE" can be
+just an extra software service, or both an extra software  service  and  an
+hardware interface.
+
+     In general if an extra device is added, it will probably  be  designed
+to  interface  to the top slot.  However there is no reason why it need not
+be designed to run in one of the side  slots.   In  fact  it  is  perfectly
+possible  to  design  an  adaptor  board  which  will  allow any of PSION's
+interfaces to run in one of the side slots.
+
+
+
+      ____________________
+<a id="p11.1">11.1</a>  SOFTWARE INTERFACING
+
+     Built into the operating system is a service DV$BOOT which  will  load
+devices into the operating system.  This service will scan each slot in the
+machine for a normal datapack of any kind (i.e.  8K,16K,32K,64K,128K)  which
+has  the  NOBOOT  bit  clear in the first byte on the datapack.  Packs with
+this bit clear are called "BOOTABLE" packs.
+
+     Bootable packs have a special header which contains  the  information,
+the DV$BOOT service requires, to load the device into RAM.
+
+     Hardware interfaces like the RS232 adaptor have an 8K  datapack  built
+into  them  as  well  as  the  interface  hardware.  Together they form the
+device.
+
+
+
+        _________________________
+<a id="p11.1.1">11.1.1</a>  BOOTABLE PACK DESCRIPTION
+
+     A pack which is BOOTABLE must have the following header information in
+the first six bytes of the pack:
+
+    ADDRESS     DESCRIPTION
+
+       0        DATAPACK_CONTROL_BYTE
+       1        DATAPACK_SIZE_BYTE
+       2        DEVICE_OR_CODE_BYTE
+       3        DEVICE_NUMBER_BYTE
+       4        DEVICE_VERSION_BYTE
+       5        DEVICE_PRIORITY_BYTE
+       6        DEVICE_CODE_ADDRESS_WORD
+
+
+
+          _____________________
+<a id="p11.1.1.1">11.1.1.1</a>  DATAPACK_CONTROL_BYTE
+
+     This byte is used by the datapack handling services  to  hold  various
+bits  of  information  about  the  datapack.   See  section  <a href="tech09.htm#p9.4.3">9.4.3</a> for more
+information.
+
+     Each bit in the byte has a particular function as follows:
+
+    BIT NO.     BIT NAME        DESCRIPTION
+
+        0       N/A             This is clear for a valid MKII
+                                Organiser pack.
+        1       EPROM           This is set if the pack is an eprom
+                                pack (cleared if it is a ram pack).
+        2       PGCPK           This is set if the pack is page counted.
+
+        3       RDWRT           This is cleared if the pack is write
+                                protected.
+        4       NOBOOT          This is cleared if the pack is bootable.
+
+        5       COPYPK          This is set if the pack is copyable.
+
+        6       NYIMPL          This is normally set as it is reserved
+                                for future expansion.
+
+        7       MK1PAK          This is set if the pack is a MKI
+                                Organiser pack.
+
+
+
+     Hence BIT 4 of the DATAPACK_CONTROL_BYTE must be cleared  to  indicate
+that  the  datapack  contains a device to be loaded into the machine.  Some
+examples of valid DATAPACK_CONTROL_BYTEs are as follows:
+
+     1.  8K and 16K DATAPACKS - $6A i.e.  EPROM device,  NOT  page  counted,
+         writeable, copyable and bootable.
+
+     2.  32K, 64K and 128K DATAPACKS - $6E i.e.  EPROM device, page counted,
+         writeable, copyable and bootable.
+
+     3.  32K RAMPACK    - $6C i.e.  RAM  device,  page  counted,  writeable,
+         copyable and bootable.
+
+
+
+
+          __________________
+<a id="p11.1.1.2">11.1.1.2</a>  DATAPACK_SIZE_BYTE
+
+     This byte contains the number of 8K blocks in the datapack.   It  will
+have one of the following values:
+
+     1.    8K - 1
+
+     2.   16K - 2
+
+     3.   32K - 4
+
+     4.   64K - 8
+
+     5.  128K - 16
+
+
+
+
+          ___________________
+<a id="p11.1.1.3">11.1.1.3</a>  DEVICE_OR_CODE_BYTE
+
+     This byte is used for descriptive purposes only.  It should be set  to
+0  the  device  is  a  software  application  with  no additional hardware,
+otherwise it should be set to 1.
+
+
+
+          __________________
+<a id="p11.1.1.4">11.1.1.4</a>  DEVICE_NUMBER_BYTE
+
+     This byte contains the device number of the code extension or hardware
+device.
+
+     As more than one device can be "BOOTED" into the operating system,  it
+is  necessary to have a mechanism to identify each of the devices currently
+booted.  This is accomplished by having a unique  device  number  for  each
+device.
+
+     The device number is a value in the  range  $01  to  $FF.   However  a
+number of these are reserved by Psion and should not be used.  The reserved
+numbers are in the range $80 to $C0 and $01 to $40.  Psion already supplies
+a number of devices whose device numbers are as follows:
+
+     1.  RS232 INTERFACE - $C0
+
+     2.  BAR CODE INTERFACE - $BF
+
+     3.  SWIPE READER INTERFACE - $BE
+
+     4.  CONCISE OXFORD SPELLING CHECKER - $0A
+
+
+     By convention devices which do not  have  an  hardware  interface  are
+allocated  device  numbers  in  the  range  $01  to  $40 and devices with a
+hardware interface are allocated device numbers in the range $80 to $C0.
+
+
+
+          ___________________
+<a id="p11.1.1.5">11.1.1.5</a>  DEVICE_VERSION_BYTE
+
+     This byte contains the release version number  of  the  device.   This
+byte  is  not  used  by  the  operating  system and is only for documentary
+purposes.
+
+     By convention version numbers are N.M and the byte is  formed  by  the
+following:
+
+     VERSION_BYTE = N*16+M
+
+     Thus for a version number of 2.3 the  byte  will  have  the  value  35
+($23).
+
+
+
+          ____________________
+<a id="p11.1.1.6">11.1.1.6</a>  DEVICE_PRIORITY_BYTE
+
+     This byte determines the  order  in  which  devices  are  booted  into
+memory.
+
+     The priority byte may have any value in the  range  $1  to  $FF.   The
+higher the value the higher the priority of the device.  Thus a device with
+priority $FF will be booted before a device with priority $FE.
+
+     The DV$BOOT service  scans  all  the  slots  and  builds  a  table  of
+priorities from all the bootable packs.  The priorities are then sorted and
+each device is loaded in turn.  In the event of a  tie  in  priorities  the
+devices will be loaded in the following order:
+
+     1.  SIDE SLOT B - SLOT 1
+
+     2.  SIDE SLOT C - SLOT 2
+
+     3.  TOP SLOT - SLOT 3
+
+
+     By convention priorities are the same as the device number.  Thus  the
+priorities of Psion's devices are as follows:
+
+     1.  RS232 INTERFACE - $C0
+
+     2.  BAR CODE INTERFACE - $BF
+
+     3.  SWIPE READER INTERFACE - $BE
+
+     4.  CONCISE OXFORD SPELLING CHECKER - $0A
+
+
+     By this convention hardware  devices  will  always  be  booted  before
+software-only applications such as the concise oxford spelling checker etc.
+
+
+
+          ________________________
+<a id="p11.1.1.7">11.1.1.7</a>  DEVICE_CODE_ADDRESS_WORD
+
+     This word contains the address on the datapack of the device  code  to
+be booted into the operating system.
+
+     If the device code immediately  follows  the  8  byte  header  on  the
+datapack  then  this  address  will be 8.  However it is often desirable to
+have other information on the datapack before the device code and  as  such
+this word allows the device code to be anywhere on the datapack.
+
+
+
+        ___________________________________
+<a id="p11.1.2">11.1.2</a>  RELOCATABLE OBJECT CODE DESCRIPTION
+
+     As device code can be loaded anywhere  in  memory,  depending  on  the
+machine type (CM, XP or LA etc.), and on how many devices are loaded, it is
+mandatory that the code to  be  loaded  is  in  a  relocatable  form.   The
+operating system provides a service DV$LOAD which will load the relocatable
+code into the machine and apply the relocation fix-ups.
+
+     The code pointed to by the DEVICE_CODE_ADDRESS_WORD must be in Psion's
+relocatable  object  code format.  The relocatable object code format is as
+follows:
+
+
+     1.  A word containing the number of bytes of code to be loaded.
+
+     2.  The block of code to be loaded.
+
+     3.  A word containing the checksum of the preceding block of code.
+
+     4.  A word containing the number of fix-up addresses.
+
+     5.  One word for each fix-up address.
+
+     6.  A word containing the checksum of the preceding fix-up table.
+
+     Psion will be supplying an assembler which will automatically generate
+object   code  in  the  relocatable  format.   However  to  illustrate  the
+relocatable object code format, the  following  simulates  the  relocatable
+object code format using a normal assembler.
+
+                .ORG    0
+0000 0011       .WORD   CEND-CBASE              ; SIZE OF CODE
+                .ORG    0
+0000            CBASE:
+0000 CE 2188            LDX     #RTT_BF         ; RUN TIME BUFFER
+0003 86 20              LDA     A,#$20          ; SPACE CHARACTER
+0005 C6 14              LDA     B,#10           ; DO 10 TIMES
+0007            LOOP:
+0007 A7 00              STA     A,0,X           ; STORE SPACE IN BUFFER
+0009 08                 INX                     ; GO ON TO NEXT BYTE
+000A 5A                 DEC     B               ; DECREASE COUNT
+000B 26 03              BNE     LEND            ; FINISHED ?
+000D 7E 0007    FIX1:   JMP     LOOP            ; NO - SO LOOP
+0010            LEND:
+0010 39                 RTS                     ; EXIT ROUTINE
+0011            CEND:
+0011 04E9               .WORD   $4E9            ; CHECKSUM OF CODE BLOCK
+0013 0001               .WORD   &lt;FIXEN-FIXST&gt;/2 ; NUMBER OF FIXUPS
+0015            FIXST:
+0015 000E               .WORD   FIX1+1          ; ADDRESS IN CODE BLOCK
+0017            FIXEN:
+0017 000E               .WORD   $E              ; CHECKSUM OF FIXUPS
+
+
+     The code must be assembled at address 0 as this produces  the  correct
+relative addresses to the start of the code (i.e.  CBASE in this case).
+
+     All checksums are calculated by accumulating  each  byte  in  a  word.
+Overflow  is  ignored.   The following code fragment will checksum the code
+between CBASE and CEND.
+
+        LDX     #CBASE          ; START ADDRESS
+        CLR     A
+        CLR     B
+        STD     UTW_S0:         ; START CHECKSUM AS 0
+LOOP:
+        CLR     A
+        LDA     B,0,X           ; GET BYTE
+        ADDD    UTW_S0:         ; ADD CHECKSUM
+        STD     UTW_S0:         ; SAVE IT
+        INX
+        CPX     #CEND           ; ALL DONE
+        BNE     LOOP            ; NO - SO DO MORE
+        ; UTW_S0 NOW HAS THE CHECKSUM
+
+
+     Each entry in the fix-up table is the word-offset of  a  word  in  the
+code  which  requires  relocation.   After  the  code  block is loaded, the
+DV$LOAD service adds the load address to all relative addresses in the code
+which are mentioned in the fix-up table.
+
+     If for example the above code segment was loaded at address $2000 then
+the  fix-up of $E in the fix-up table, would result in $2000 being added to
+the code block at address $2000+$E in memory.  This would  change  $7E  $00
+$07 to being $7E $20 $07, the correct absolute address of LOOP.
+
+
+
+        _______________________
+<a id="p11.1.3">11.1.3</a>  DEVICE CODE DESCRIPTION
+
+     Just loading the code from a device into memory is insufficient as the
+code  itself  must  interface  to  the  operating  system.   The  following
+describes the component parts of the interface between the device code  and
+the operating system:
+
+CODE_START:
+        .WORD   0               ; FILLED IN BY DV$BOOT
+BOOT_DEVICE:
+        .BYTE   0               ; FILLED IN BY DV$BOOT
+DEVICE_NUMBER:
+        .BYTE   12              ; AS IN THE DATAPACK HEADER
+VERSION_NUMBER:
+        .BYTE   $10             ; AS IN THE DATAPACK HEADER
+MAX_VECTOR_NUMBER:
+        .BYTE   3               ; NUMBER OF VECTORS PROVIDED
+VECTABLE:
+        .WORD   INSTALL         ; INSTALL VECTOR
+        .WORD   REMOVE          ; REMOVE VECTOR
+        .WORD   LANG            ; LANGUAGE VECTOR
+INSTALL:
+        ; THE INSTALL CODE
+REMOVE:
+        ; THE REMOVE CODE
+LANG:
+        ; THE LANG CODE
+
+
+     When the device is booted into memory DV$BOOT will load  the  size  of
+the  code into the word at CODE_START.  This is necessary for DV$VECT to be
+able to walk the list of device drivers in memory.  At the  same  time  the
+slot  that the code was loaded from will be placed in BOOT_DEVICE.  This is
+to allow the device to know which slot it has been booted from.  Thus if  a
+device  wants  to  access  the  datapack  from which it has been booted the
+following code fragment can be used:
+
+        CLR     A               ; REPORT PACK CHANGED ERROR
+        LDA     B,BOOT_DEVICE   ; SLOT DEVICE WAS BOOTED FROM
+        OS      PK$SETP         ; SELECT THE SLOT
+
+     The DEVICE_NUMBER byte and the VERSION_NUMBER byte  are  the  same  as
+those  on  the  datapack  header.   DV$VECT  uses the DEVICE_NUMBER byte to
+select the right device from the list in memory.  The  VERSION_NUMBER  byte
+is purely for documentary purposes.
+
+     The MAX_VECTOR_NUMBER is to allow DV$VECT to  check  that  the  device
+service  exists.   Thus  if  DV$VECT  were  used  to call the device in the
+example above to perform vector  number  3,  it  would  fail,  as  it  only
+provides vectors 0,1 and 2.
+
+     There follows a list of vectors which are used to jump to  appropriate
+parts  of the code in the device.  DV$VECT is called with the device number
+in the A register and the vector number to be called  in  the  B  register.
+DV$VECT will scan the devices in memory to see if the device is present and
+if it is, it will then jump to the appropriate vector.   All  devices  must
+provide vectors 0,1 and 2, and may provide up to 255.
+
+
+
+        ______________
+<a id="p11.1.4">11.1.4</a>  DEVICE VECTORS
+
+     Every device which is loaded into the operating system  has  a  vector
+table  which directs the operating system to the appropriate code to handle
+that "VECTOR SERVICE".  The  first  3  "VECTOR  SERVICES"  have  a  defined
+meaning as follows:
+
+
+
+          _________________________________
+<a id="p11.1.4.1">11.1.4.1</a>  VECTOR SERVICE 0 - INSTALL VECTOR
+
+     Whenever the DV$BOOT service loads a device it will call  the  INSTALL
+vector immediately after loading the device.  This will give the device the
+opportunity to initialise itself.
+
+     For example the RS232 interface installs the COMMS menu item into  the
+top level menu at this stage by calling the system service TL$ADDI.
+
+     On completing the required INSTALL code the device  should  clear  the
+carry flag and then do an RTS instruction.
+
+     If for any reason the INSTALL  code  decides  the  device  cannot  run
+properly  (i.e.   not  enough memory), then the carry flag should be set and
+the device will not be installed (and no RAM  will  be  allocated  for  the
+device).
+
+     A device need not return from this vector, in which case it will  have
+effectively taken control of the machine.
+
+     NOTE:  The DV$BOOT service uses the first 4 bytes of RTT_FF  to  build
+the priorities table and as such the install vector should preserve these 4
+bytes if there is any danger of them being corrupted.  See the  description
+of DV$BOOT for more details.
+
+
+
+          ________________________________
+<a id="p11.1.4.2">11.1.4.2</a>  VECTOR SERVICE 1 - REMOVE VECTOR
+
+     When DV$BOOT is called, it first calls DV$CLER, which calls the REMOVE
+vector  for  each device.  DV$BOOT then zeroes the permanent cell (and also
+resets DVA_TOP in LA/OS) effectively discarding all  devices.   The  REMOVE
+code  can  then tidy up anything that needs to be done before the device is
+thrown out of memory.  For example the RS232 interface  removes  the  COMMS
+menu  item  from  the main menu in its REMOVE code.  The REMOVE code should
+terminate with the carry clear and an  RTS  instruction,  even  though  any
+errors are ignored.
+
+
+
+          __________________________________
+<a id="p11.1.4.3">11.1.4.3</a>  VECTOR SERVICE 2 - LANGUAGE VECTOR
+
+     This vector service is required by the OPL language and  provides  the
+mechanism by which the language can be extended.
+
+     For any procedure called in an OPL program, the  language  will  first
+call  the  DV$LKUP service to see if any devices are prepared to handle the
+procedure.  To do this DV$LKUP calls each device's LANGUAGE vector with the
+X  register  pointing to a leading count-byte string containing the name of
+the procedure.  If none of the devices are prepared to handle the procedure
+then  the  language  will  search packs A,B,C and D for an OPL procedure of
+that name.
+
+     If a device is prepared to handle the procedure then  it  will  return
+its  device  number  in  the A register and the vector service number which
+will handle the procedure in  the  B  register.   The  language  will  then
+immediately call the DV$VECT service which will call the vector service.
+
+     For example the RS232 interface provides a language procedure LINPUT$:
+and as such the LANGUAGE vector code can be coded as follows:
+LANGUAGE_VECTOR:
+        LDD     0,X             ; GET SIZE AND FIRST LETTER
+        SUBD    #&lt;7*256&gt;+'L'    ; COMPARE
+        BNE     NOT_LINPUT      ; NOT A MATCH
+        LDD     2,X             ; GET NEXT TWO LETTERS
+        SUBD    #&lt;^A'I'*256&gt;+'N'        ; COMPARE
+        BNE     NOT_LINPUT
+        LDD     4,X             ; GET NEXT TWO LETTERS
+        SUBD    #&lt;^A'P'*256&gt;+'U'        ; COMPARE
+        BNE     NOT_LINPUT
+        LDD     6,X             ; GET NEXT TWO LETTERS
+        SUBD    #&lt;^A'T'*256&gt;+'$'        ; COMPARE
+        BNE     NOT_LINPUT
+        LDA     A,#$C0          ; RS232 DEVICE NUMBER
+        LDA     B,#4            ; VECTOR NUMBER TO HANDLE LINPUT$
+        CLC
+        RTS
+NOT_LINPUT:                     ; NOT LINPUT$ - SO NOT PREPARED TO
+        SEC                     ; HANDLE THE PROCEDURE
+        RTS
+
+NOTE:  As the LANGUAGE vector code is called every time an OPL procedure is
+executed,  it  is  important  that  the  LANGUAGE vector code be as fast as
+possible.  Clearly a device can handle as many procedures as  necessary  by
+just  chaining  the name matches or by searching a list of procedures.  See
+the chapter on the language as to  how  OPL  passes  parameters  to  device
+procedure handlers and how devices pass back their results.
+
+
+
+        _______
+<a id="p11.1.5">11.1.5</a>  BOOTING
+
+     The system service DV$BOOT is responsible  for  loading  and  removing
+devices.   The  area in which devices are loaded in the operating system is
+one of the pre-allocated cells, known as the PERMANENT cell.  This  cell  is
+the  first allocated cell and has the unique property that it will never be
+moved by the allocator (i.e.  it always has the same base address).  This is
+obviously  crucial  as once the code has been relocated in memory it can no
+longer be moved,  as  all  addresses  have  been  converted  from  relative
+addresses to absolute addresses.
+
+     LA/OS also uses the RAM from $0400 to $2000 ('low'  RAM)  for  loading
+device  code,  in  preference to the permanent cell.  This means that while
+devices occupy less than 7k in total, the full 24k will  be  available  for
+the  user.   Note that INFO will only show devices which are occupying high
+memory - i.e.  any devices which have overflowed the 7k.  For  example  with
+an  RS232,  a barcode reader, and a concise oxford spelling checker booted,
+only the spelling checker will be loaded into the permanent  cell  in  high
+memory,  so  INFO  will  report  DEVICES  xxx%.   The addresses DVA_BOT and
+DVA_TOP mark the  lower  and  upper  limits  of  low  memory.   DVA_TOP  is
+increased as devices are loaded into low memory.  DVA_BOT is initialised to
+$0400 at cold startup.
+
+     The operations performed by DV$BOOT are as follows:
+
+     1.  Run the DV$CLER service, which will call  the  REMOVE  service  of
+         each  device  currently  in  memory.   DV$BOOT  will then zero the
+         PERMANENT cell.  LA/OS will also clear the low memory  by  setting
+         DVA_TOP to DVA_BOT.
+
+     2.  Scan the three slots for datapacks which are bootable.
+
+     3.  Build a table of the priorities of each device in RTT_FF.
+
+     4.  Scan the table for the highest priority device.
+
+     5.  Grow the PERMANENT cell by the size of the device at  the  end  of
+         the PERMANENT cell (see below for LA/OS).
+
+     6.  Load the code into the area just allocated.
+
+     7.  Store the size of the code into the first word.
+
+     8.  Store the slot number that the code was loaded from in  the  third
+         byte of the device code.
+
+     9.  Call DV$VECT to execute the INSTALL vector of the device.
+
+    10.  Zero the priority in the table in RTT_FF.
+
+    11.  Repeat the above until all priorities in the table are zero.
+
+
+LA/OS only :
+
+     In LA/OS, the device code is loaded into 'low' memory  from  $0400  to
+$2000  ,  and  the address of the byte after the code is stored in DVA_TOP.
+If there is not enough room in low memory, the device code and any  further
+devices will be loaded into the permanent cell.
+
+     The DV$BOOT service is called by the  operating  system  when  a  cold
+start is required.  Thereafter it is only ever called when the ON/CLEAR key
+is pressed when in the main menu (i.e.  at the top level).  Thus to  load  a
+device  into  the  operating  system  the  device  must be plugged into the
+machine and the ON/CLEAR key pressed until the main menu is reached.   Then
+one  further key press will execute the DV$BOOT service and load the device
+driver.  There is no problem in booting the device drivers  any  number  of
+times.
+
+     To remove a device from memory, simply  remove  the  device  from  the
+machine  and  repeat  the  above  procedure  (i.e.  perform a boot).  As the
+device is no longer present and as DV$BOOT always throws  out  all  devices
+before performing the boot procedure the device will be effectively removed
+from memory.
+
+     NOTE:  As DV$BOOT always throws all devices out of memory,  no  device
+can  call  the  DV$BOOT service.  In order for a device to call the DV$BOOT
+service it must copy a routine to call DV$BOOT into some  safe  portion  of
+memory  and  then  jump to that code.  The code can then either get back to
+device, which will have been reloaded, through a known  vector  service  or
+just simply return from whence it came.
+
+     Opl programs, because they are running in a different area  of  memory
+can easily call the DV$BOOT service as follows:
+
+REBOOT:
+REM BOOTS ANY DEVICES INTO MEMORY
+LOCAL I%,CODE$(4)
+I%=ADDR(CODE$)+1 : REM SKIP THE SIZE BYTE OF THE STRING
+POKEB I%,$3F : REM THE SWI INSTRUCTION
+POKEB I%+1,23 : REM THE DV$BOOT VECTOR NUMBER
+POKEB I%+2,$39 : REM A RETURN INSTRUCTION
+USR(I%,0) : REM CALL THE MACHINE CODE
+
+     This procedure when called will execute the DV$BOOT service.
+
+The following procedure will remove all devices from memory :
+
+        OS      DV$CLER         ; run 'remove' vector of all devices
+        LDX     DVA_BOT         ; reset low memory (harmless on non-LA/OS)
+        STX     DVA_TOP
+        LDX     #$2000          ; zero the permanent cell
+        OS      AL$ZERO
+
+
+     In LA/OS, the user can reserve an area of low memory from $400 upwards
+as follows :
+
+        LDA     A,$FFE8         ; TEST OS/VERSION
+        BIT     A,#1            ; BIT 1 IS SET IF LA/OS
+        BEQ     NOT_LA
+                                ; LA/OS ONLY ...
+        OS      DV$CLER         ; RUN 'REMOVE' VECTOR OF ALL DEVICES
+        LDX     #$2000          ; AND KILL ANY DEVICES IN HIGH MEMORY
+        OS      AL$ZERO         ; SO THAT THEY CANNOT BE ACCESSED AFTER THEIR
+                                ; REMOVE VECTORS HAVE BEEN CALLED
+        LDX     #SPACE_REQUIRED+$400
+        STX     DVA_BOT         ; SET BASE ADDRESS FOR FUTURE DEVICE LOADING
+        STX     DVA_TOP         ; SET TOP= NEW BOTTOM
+                                ; RAM NOW AVAILABLE from $0400 - DVA_BOT-1
+
+
+
+
+      ___________________
+<a id="p11.2">11.2</a>  HARDWARE INTERFACES
+
+     The Organiser has three slots available in which  hardware  interfaces
+can be fitted.  The TOP slot (slot 3) is the preferred slot for interfacing
+to external hardware as it has been especially designed for  this  purpose.
+However  there  is  no reason why one of the two SIDE slots (slots 1 and 2)
+cannot be used.  There are however  a  number  of  fundamental  differences
+between the top slot and the side slots.
+
+     In general though the 16 way connectors  from  the  Organiser  to  the
+outside  world  constitute a proprietary BUS and as such there are a number
+of rules from a  hardware  and  software  point  of  view  with  regard  to
+interfacing on this BUS.
+
+     In the following sections the BUS components which are common  to  all
+slots  are  described  followed by a section on the differences between the
+TOP slot and the SIDE slots.
+
+
+
+        ___________
+<a id="p11.2.1">11.2.1</a>  BUS SIGNALS
+
+    ___________    ___________
+    SIGNAL NAME -  DESCRIPTION
+    SD0         - Data Bit 0
+    SD1         - Data Bit 1
+    SD2         - Data Bit 2
+    SD3         - Data Bit 3
+    SD4         - Data Bit 4
+    SD5         - Data Bit 5
+    SD6         - Data Bit 6
+    SD7         - Data Bit 7
+    SOE_B       - Output Enable (active low)
+    SMR         - Master Reset (active high)
+    SCLK        - CLocK
+    SSS_B       - Slot Select (active low)
+    SVCC        - + 5 Volts
+    SGND        - 0 Volts
+
+
+     This common set of signals comprise the Psion proprietary  BUS.   This
+BUS  was  designed to allow Psion's removable DATAPACKS to be interfaced to
+the Organiser.  In order to understand the following description of the BUS
+it  is necessary to have read and understood the chapter on DATAPACKS.  All
+Psion's hardware interfaces consist of both a  DATAPACK  and  the  hardware
+interface itself.  The DATAPACK is used to provide the DEVICE code which is
+loaded  into  the  operating  system,  thereby   providing   the   software
+interfacing to the OPL language and the operating system itself.
+
+     While it is possible to build hardware interfaces without  a  DATAPACK
+on  board,  it is strongly recommended that this is not done.  The DATAPACK
+not only provides a mechanism for adding extra  code  associated  with  the
+hardware,  it  also  provides  a  means  whereby the code can tell that the
+interface is still plugged  into  the  machine  by  reading  the  on  board
+DATAPACK.
+
+
+
+          _____
+<a id="p11.2.1.1">11.2.1.1</a>  SSS_B
+
+     This signal is the SLOT select  signal  and  is  used  to  select  the
+hardware  plugged  into that slot.  At no time should an external interface
+try to control any of the signals on the BUS until SSS_B goes  low.   There
+is obviously one SSS_B signal for each slot in the machine.
+
+     It is also mandatory that none of  the  control  signals  on  the  BUS
+should be changed while SSS_B is active.  The control signals are SOE_B,SMR
+and SCLK.  Thus to change a signal, SSS_B should be raised high,  then  the
+signal changed and finally SSS_B can be lowered again.
+
+     This signal should always be pulled up through a resistor to SVCC.
+
+
+
+          _____
+<a id="p11.2.1.2">11.2.1.2</a>  SOE_B
+
+     The SOE_B signal is  used  to  select  between  the  DATAPACK  on  the
+interface  and  the  external  hardware.   With SOE_B low (i.e.  active) the
+DATAPACK should output its contents onto the DATABUS.  With SOE_B high then
+the hardware interface circuitry should control the DATABUS.
+
+     This signal should always be pulled down through a resistor to 0 volts
+
+
+
+          ___
+<a id="p11.2.1.3">11.2.1.3</a>  SMR
+
+     The SMR signal is used to reset the counters on the DATAPACK to 0.  It
+is  also  used  in  a  number  of  combinations with SOE_B high.  These are
+explained in a table later on.
+
+     This signal should always be pulled down through a resistor to 0 volts
+
+
+
+          ____
+<a id="p11.2.1.4">11.2.1.4</a>  SCLK
+
+     The SCLK signal is used to clock the counters on the DATAPACK.  It can
+also  be  used  in  a  number  of  combinations  with  SMR high.  These are
+explained in a table later.
+
+     This signal should always be pulled down through a resistor to 0 volts
+
+
+
+          ____
+<a id="p11.2.1.5">11.2.1.5</a>  SVCC
+
+     This is the +5 Volt rail to external hardware interfaces.  It  can  be
+used  to  supply  power  to  the  hardware  interface.   Note that when the
+Organiser is switched  off,  this  voltage  will  no  longer  be  supplied.
+Instead  a small amount of current can be drawn from the SSS_B signal as it
+is supplied from a different power rail.  See Chapter 3 for more details.
+
+
+
+          ____
+<a id="p11.2.1.6">11.2.1.6</a>  SGND
+
+     This is the 0 Volt signal to the interface.
+
+
+
+          _______
+<a id="p11.2.1.7">11.2.1.7</a>  SD0-SD7
+
+     These 8 signals represent an 8 bit DATABUS between  the  hardware  and
+the  Organiser.   Since  it  is  possible  to  both  read from and write to
+hardware interfaces, this bus is BI-DIRECTIONAL.  However  the  rest  state
+when not in use is always INPUT to the Organiser.  i.e.  The PORT2 direction
+register should be set to 0 so that all bits of PORT2 are  input.   If  the
+direction  of  these  bits are ever changed to OUTPUT they must be reset to
+INPUT before control is  passed  back  to  the  operating  system,  as  the
+operating system assumes that PORT2 is always configured as all INPUT.
+
+     All these signals are pulled down internally to  the  Organiser  to  0
+Volts.  Thus if no interface is present in a slot the Organiser will always
+read a 0.  This is used by the operating system to determine that a pack is
+not present in the slot.
+
+
+
+        __________________
+<a id="p11.2.2">11.2.2</a>  SIGNAL TRUTH TABLE
+
+     The following truth table represents the rules by which the  interface
+should respond to various states of the BUS control signals.  In the table,
+HIGH stands for +5 Volts, LOW stands for 0 Volts and  X  stands  for  don't
+care.
+
+    _____ _____ _____ ___   ____  ___________
+    STATE SSS_B SOE_B SMR   SCLK  DESCRIPTION
+
+      0   HIGH   X     X     X    All interfaces de-selected.
+      1   LOW   HIGH  HIGH   X    128K datapack device segment select.
+      2   LOW   HIGH  LOW    X    Hardware interface select.
+      3   LOW   LOW   HIGH  HIGH  Ram datapack ID 1 select.
+      4   LOW   LOW   HIGH  LOW   Ram datapack ID 0 select.
+      5   LOW   LOW   LOW    X    Datapack read select.
+
+    When the operating system selects a slot using the PK$SETP service, it
+will place the control signals in a number of these states. However the top
+slot is treated slightly differently, in that the operating system will not
+support 128K datapacks or RAM packs. Thus the following states can occur
+for the various slots:
+
+    _____    ______     ___________
+    STATE    SLOT 3     SLOTS 1 &amp; 2
+      0        Yes          Yes
+      1        No           Yes
+      2        No           No
+      3        No           Yes
+      4        No           Yes
+      5        Yes          Yes
+
+
+
+          _______
+<a id="p11.2.2.1">11.2.2.1</a>  STATE 0
+
+    SSS_B  - HIGH
+    SOE_B  - X
+    SMR    - X
+    SCLK   - X
+
+
+     This state is the rest state for all interfaces.  When SSS_B  is  high
+no  interface should be trying to control the databus or any of the control
+signals.
+
+
+
+          _______
+<a id="p11.2.2.2">11.2.2.2</a>  STATE 1
+
+    SSS_B  - LOW
+    SOE_B  - HIGH
+    SMR    - HIGH
+    SCLK   - X
+
+
+     This state is used by the operating system to select the  16K  segment
+in  128K  datapack devices.  Note that PK$SETP selects segment 0 every time
+it is called regardless of the device fitted in the slot.  As the operating
+system  does  not  support  128K datapack in the top slot this state can be
+used to select devices in a hardware interface to be used in the top slot.
+
+
+
+          _______
+<a id="p11.2.2.3">11.2.2.3</a>  STATE 2
+
+    SSS_B  - LOW
+    SOE_B  - HIGH
+    SMR    - LOW
+    SCLK   - X
+
+
+     This state is used to write data to either datapacks or RAM  packs  in
+the  slots.   However  if the RDWRT bit in the ID byte of the pack is clear
+then the operating system will never place state 2 on the control lines.
+
+     This state is the only state that can be used safely to  select  other
+devices than the datapack on interfaces intended for use in the side slots.
+
+
+
+          _______
+<a id="p11.2.2.4">11.2.2.4</a>  STATE 3
+
+    SSS_B  - LOW
+    SOE_B  - LOW
+    SMR    - HIGH
+    SCLK   - HIGH
+
+
+     This state is used by the operating system  to  select  the  RAM  pack
+hardware  ID  1.   Note  that PK$SETP uses this state to determine if a RAM
+pack is plugged into a slot.  If so, it will output an  ID  byte  of  1  in
+response  to this state.  Note that datapacks output byte 1 of the EPROM in
+response to this state.
+
+     As the operating system does not support RAM packs  in  the  top  slot
+this state can be used to select devices in a hardware interface to be used
+in the top slot.
+
+
+
+          _______
+<a id="p11.2.2.5">11.2.2.5</a>  STATE 4
+
+    SSS_B  - HIGH
+    SOE_B  - X
+    SMR    - X
+    SCLK   - X
+
+
+     This state is used by the operating system  to  select  the  RAM  pack
+hardware  ID  0.   Note  that PK$SETP uses this state to determine if a RAM
+pack is plugged into a slot.  If so, it will output an  ID  byte  of  1  in
+response  to this state.  Note that datapacks output byte 0 of the EPROM in
+response to this state.
+
+     As the operating system does not support RAM packs  in  the  top  slot
+this state can be used to select devices in a hardware interface to be used
+in the top slot.
+
+
+
+          _______
+<a id="p11.2.2.6">11.2.2.6</a>  STATE 5
+
+    SSS_B  - HIGH
+    SOE_B  - LOW
+    SMR    - LOW
+    SCLK   - X
+
+
+     This state is used by the operating  system  to  read  data  from  the
+datapack circuitry on interfaces.  The byte, corresponding to the currently
+selected address on the datapack counters, is  output  on  the  databus  in
+response to this state.
+
+
+
+        _______
+<a id="p11.2.3">11.2.3</a>  EXAMPLE
+
+     Take as an example the BARCODE interface for the top slot, as supplied
+by Psion.
+
+     The interface has two discrete interface circuits:
+
+     1.  The datapack circuitry.
+
+     2.  The BARCODE input signal buffer circuitry.
+
+
+     State 5 is used to enable the  EPROM  in  the  datapack  circuitry  to
+output its contents on the databus.
+
+     States 1 and 2 are used to enable  the  BARCODE  input  signal  buffer
+circuitry.  i.e.  SSS_B - low,SOE_B - high,SMR - X,SCLK - X.
+
+     Thus to select the  BARCODE  datapack  circuitry  the  following  code
+fragment can be used:
+
+SELECT_PACK:
+        CLR     A
+        LDA     B,#PAKD
+        OS      PK$SETP
+        ; THE DATAPACK IS NOW SELECTED
+        ; THE CONTROL LINES ARE IN STATE 5
+
+
+     To select the BARCODE input signal buffer circuitry the following code
+fragment can be used:
+
+SELECT_BARCODE:
+        CLR     A
+        LDA     B,#PAKD
+        OS      PK$SETP                 ; SELECT DATAPACK AS NORMAL
+        OIM     #CS3,POB_PORT6          ; DESELECT THE SLOT
+        OIM     #OE,POB_PORT6           ; SET SOE_B HIGH
+        AIM     #^C&lt;CS3&gt;,POB_PORT6      ; SELECT THE SLOT AGAIN
+        ; BARCODE HARDWARE NOW SELECTED
+        ; THE CONTROL LINES ARE IN STATE 1 OR 2
+
+
+     NOTE:  Before control can be returned to the operating system, STATE 5
+must  be  re-established  on  the  control  lines.  This can be achieved as
+follows:
+
+DESELECT_BARCODE:
+        OIM     #CS3,POB_PORT6          ; DESELECT THE SLOT
+        AIM     #^C&lt;OE&gt;,POB_PORT6       ; SET SOE_B LOW
+        OIM     #^C&lt;CS3&gt;,POB_PORT6      ; SELECT THE SLOT AGAIN
+
+
+     NOTE:  Control lines should only ever change state  when  the  control
+lines are in STATE 0, i.e.  the interface is de-selected.
+
+
+
+      _______________
+<a id="p11.3">11.3</a>  SYSTEM SERVICES
+
+        _______
+<a id="p11.3.1">11.3.1</a>  DV$BOOT
+
+VECTOR NUMBER:          023
+INPUT PARAMETERS:       None
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+
+     Will boot all devices plugged into the Organiser.
+
+     Any errors occurring during the boot are reported directly through the
+ER$MESS  service.   However  the  screen  is  saved  before  the message is
+displayed and restored immediately  afterwards.   This  is  done  with  the
+DP$SAVE  and  DP$REST  services.  Thus the screen is preserved if any error
+messages are reported.
+
+ERRORS:                 None
+
+
+        _______
+<a id="p11.3.2">11.3.2</a>  DV$LOAD
+
+VECTOR NUMBER:          026
+INPUT PARAMETERS:       D register - Address to load the overlay.
+                        X register - Address on pack of overlay.
+                        UTW_S0     - Relocation address.
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+
+     This service will load  code  from  a  pack  which  is  in  the  Psion
+relocatable  object format.  It loads the code into memory and then applies
+any fix-ups that are required, thus relocating the code to the  address  as
+specified in UTW_S0.
+
+     The D register has the address in memory  where  the  code  is  to  be
+loaded.   This  can be anywhere that the code will be safe from overwriting
+but will normally be in the PERMANENT cell or above the LANGUAGE stack.
+
+     The X register has the address on the pack at  which  the  relocatable
+object  code starts.  The first two bytes of the relocatable object code is
+of course the size of the code block.
+
+     UTW_S0 has the address  at  which  to  relocate  the  code  (i.e.   the
+intended  execution  address.  For code produced by the Psion assembler and
+in almost all cases this address will be the same as the address passed  in
+the D register.
+
+     This routine assumes that the correct slot has already  been  selected
+with the PK$SETP service.
+
+EXAMPLE
+
+
+     Assume that there is a device to be loaded from a pack in slot  B  and
+that  the  code  starts  at  address $2400 on the pack.  This device can be
+added to the other devices in the PERMANENT CELL with  the  following  code
+fragment:
+
+        CLR     A               ; DONT REPORT PACK CHANGED
+        LDA     B,#PAKB         ; SELECT SLOT B
+        OS      PK$SETP
+        BCS     ERROR           ; PACK ERROR
+        CLR     B
+        LDX     #$2400          ; ADDRESS $2400 ON PACK
+        OS      PK$SADD
+        OS      PK$RWRD         ; READ THE SIZE OF THE CODE
+        STD     UTW_R1:         ; SAVE THE CODE SIZE
+        LDX     #ALT_BASE       ; TAG OF PERMANENT CELL
+        PSHX                    ; SAVE IT
+        OS      AL$SIZE         ; GET THE CURRENT SIZE
+        STD     UTW_S0:         ; GROW AT END OF CELL
+        STD     UTW_R0:         ; SAVE THE CURRENT CELL SIZE
+        LDD     UTW_R1:         ; GET THE CODE SIZE
+        PULX                    ; RESTORE IT
+        OS      AL$GROW         ; GROW THE CELL
+        BCS     ERROR           ; NOT ENOUGH MEMORY
+        LDD     UTW_R0:         ; GET OLD CELL SIZE
+        ADDD    ALT_BASE        ; ADD THE BASE OF THE CELL
+        STD     UTW_R0:         ; SAVE THE LOAD ADDRESS
+        STD     UTW_S0:         ; RELOCATE ADDRESS
+        LDX     #$2400          ; ADDRESS ON PACK
+        OS      DV$LOAD         ; LOAD THE CODE
+        BCS     ERROR           ; FAILED TO LOAD
+        LDX     UTW_R0:         ; BASE ADDRESS OF CODE
+        LDD     UTW_R1:         ; SIZE OF CODE BLOCK
+        STD     0,X             ; PATCH THE DEVICE CODE
+        LDA     A,#PAKB         ; DEVICE LOADED FROM
+        STA     A,2,X           ; PATCH THE DEVICE CODE
+        ; DEVICE NOW LOADED INTO MEMORY
+
+ERRORS:                 ER_DV_CS - CODE CHECKSUM ERROR
+                        ER_PK_NP - NO PACK IN SLOT
+                        ER_PK_DV - BAD DEVICE NAME
+                        ER_PK_CH - PACK CHANGED
+                        ER_PK_IV - UNKNOWN PACK TYPE
+                        ER_PK_BR - PACK BAD READ ERROR
+
+
+        _______
+<a id="p11.3.3">11.3.3</a>  DV$VECT
+
+VECTOR NUMBER:          027
+INPUT PARAMETERS:       A register - DEVICE NUMBER TO CALL.
+                        B register - VECTOR NUMBER.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+
+     This service will search the devices  in  the  PERMANENT  cell  for  a
+device whose device number matches that in the A register.  If no device is
+found then the ER_DV_NP error is returned.
+
+     Then the service checks that the vector number in the  B  register  is
+not  greater than the maximum vector number supported by the device.  If it
+is, then an error ER_DV_CA is returned.  Otherwise the  appropriate  vector
+is loaded from the device vector table and a JMP is done to the vector.
+
+     DV$VECT passes the X register and the scratch register UTW_S0  through
+to  the  vectored  routine, so that these may be used to pass parameters to
+the device vector routine.  It is up to  the  device  to  specify  what  is
+passed  and  what  is  returned.   DV$VECT  returns  the same things as the
+vectored routine.
+
+EXAMPLE
+
+     To send a string in the X  register  using  the  RS232  interface  the
+following code fragment can be used:
+
+CALL_LPRINT:
+        PSHX                            ; SAVE THE STRING TO BE PRINTED
+        LDX     #LPRINT_NAME            ; POINT TO LPRINT
+        OS      DV$LKUP                 ; SEARCH FOR RS232 DEVICE
+        PULX                            ; RESTORE THE STRING
+        BCS     ERROR                   ; UNABLE TO HANDLE LPRINT
+        OS      DV$VECT                 ; EXECUTE THE LPRINT SERVICE
+        BCS     ERROR                   ; SERVICE FAILED
+        RTS                             ; STRING NOW PRINTED
+LPRINT_NAME:
+        .BYTE   6
+        .ASCII  "LPRINT"
+
+
+     The LPRINT handler in the RS232 interface requires the  string  to  be
+printed  to  be  a  leading byte count string and the address of the string
+must be in the X register.
+
+ERRORS:                 ER_DV_CA - VECTOR NUMBER NOT SUPPORTED.
+                        ER_DV_NP - DEVICE NOT PRESENT.
+                        ANY OTHERS THE DEVICE MAY RETURN.
+
+
+        _______
+<a id="p11.3.4">11.3.4</a>  DV$LKUP
+
+VECTOR NUMBER:          025
+INPUT PARAMETERS:       X register - ADDRESS OF NAME STRING.
+OUTPUT VALUES:          A register - DEVICE NUMBER.
+                        B register - VECTOR NUMBER.
+
+DESCRIPTION
+
+
+     This service will call the LANGUAGE vector of all  devices  in  memory
+and  pass them the value in the X register.  If a device signals that it is
+prepared to handle the procedure whose name is pointed to by the X register
+then  the  service  will  return  with the A register containing the device
+number and the B register containing the  vector  number  of  the  code  to
+handle the procedure.
+
+EXAMPLE
+
+     To determine the device number and vector number of the RS232  service
+which  is  prepared  to  handle  the  LINPUT$  procedure the following code
+fragment can be used.
+
+        LDX     #LINPUT_NAME            ; POINT TO LINPUT$
+        OS      DV$LKUP                 ; SEARCH FOR RS232 DEVICE
+        BCS     ERROR                   ; UNABLE TO HANDLE LINPUT$
+        STD     LVECT                   ; SAVE A&amp;B FOR LATER USE
+        RTS                             ; WITH DV$VECT
+LINPUT_NAME:
+        .BYTE   7
+        .ASCII  "LINPUT$"
+LVECT:
+        .WORD   0
+
+ERRORS:                 ER_DV_NP - DEVICE NOT PRESENT.
+
+
+        _______
+<a id="p11.3.5">11.3.5</a>  DV$CLER
+
+VECTOR NUMBER:          024
+INPUT PARAMETERS:       None
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+
+     This service calls the REMOVE vector  for  all  devices  currently  in
+memory.
+
+     It is usually called by DV$BOOT just before zeroing the permanent cell
+in preparation to booting.
+
+ERRORS:                 None
+
+
+
+        _______
+<a id="p11.3.6">11.3.6</a>  EXAMPLE
+
+     Below is an example of a device to allow the operating system services
+to  be  called from OPL procedures.  The device is a procedure called SWI%:
+and it takes as its argument an integer specifying which service should  be
+invoked.
+
+     Most functions also require values in the A,B(D) or X register as well
+and so the function requires 2 global variables X% and D% to be declared by
+the OPL procedure.  Any values to be passed in UTW_S0 or UTW_S1 can be  set
+with POKEW before calling SWI%:.
+
+     SWI%:(FUNCTION%)
+
+     If carry is clear after the call to the operating system  SWI%:   will
+return 0 and if it is set, SWI%:  will return -1 and D% will have the error
+number.
+
+     If SWI%:  signals success D% and X% will  be  set  directly  from  the
+machine registers D and X.
+
+     NOTE:  The D register is actually made up of the A register and the  B
+register so that D = A*256 + B.  The global variable D% mimics this.  So if
+a routine requires A = 1 and B = 3 this can be passed as D =  1*256+3.   On
+return the values of A and B can be determined from D% as follows:
+
+     A% = (D%/256)
+
+     B% = (D% AND 255)
+
+     The following is the full code listing for the routine.
+
+0000                    TTL     EXSWI
+0000           ;
+0000           ; DEVICE EXTENSION TO INTERFACE SWI
+0000           ; CALLS TO THE OPL LANGUAGE
+0000           ;
+0000 =00E0     D_ADDR           EQU     ^XE0
+0000 =00E2     X_ADDR           EQU     ^XE2
+0000 =00A5     RTA_SP    EQU    ^XA5
+0000 =00A7     RTA_FP    EQU    ^XA7
+0000 =2187     RTB_BL    EQU    ^X2187
+0000 =0041     UTW_S0    EQU    ^X41
+0000 =00CC     ER_RT_UE  EQU    204
+0000 =00CD     ER_RT_NP  EQU    205
+0000 =00E0     ER_EX_TV  EQU    224
+0000 =00F7     ER_FN_BA  EQU    247
+               ;
+0000                ORG         ^X241b-25
+2402           XX:
+2402 6A            .BYTE        ^X6A            ; DATAPACK BOOTABLE
+2403 02            .BYTE        ^X02            ; 16K DATAPACK
+2404 00            .BYTE        0               ; NO HARDWARE
+2405 02            .BYTE        2               ; DEVICE NUMBER
+2406 10            .BYTE        ^X10            ; VERSION NUMBER (1.0)
+2407 02            .BYTE        2               ; PRIORITY
+2408 0000-         .WORD        %ROOT-2         ; ROOT OVERLAY ADDRESS
+240A FF            .BYTE        ^XFF
+240B FF            .BYTE        ^XFF
+240C 09            .BYTE        ^X09
+240D 81            .BYTE        ^X81
+240E 4D 41         .ASCII       "MAIN    "
+2410 49 4E
+2410 20 20
+2412 20 20
+2416 90            .BYTE        ^X90
+2417 02            .BYTE        ^X02
+2418 80            .BYTE        ^X80
+2419 0000-         .WORD        %PRGEND-%ROOT+2 ; SIZE OF CODE
+241B           ;
+241B           ; START ROOT OVERLAY
+241B           ; ==================
+241B           ;
+241B               .OVER        ROOT
+241B           CODELEN:
+241B 0000          .WORD        0000            ; SET BY DV$BOOT
+241D           BDEVICE:
+241D 00            .BYTE        00              ; SET BY DV$BOOT
+241E           DEVNUM:
+241E 02            .BYTE        2               ; DEVICE NUMBER
+241F           VERNUM:
+241F 10            .BYTE        ^X10            ; VERSION 1.0
+2420           MAXVEC:
+2420 00-           .BYTE        &lt;ENDVEC-VECTABLE&gt;/2 ; NUMBER OF VECTORS
+2421           VECTABLE:
+2421 0000-         .WORD        INSTALL         ; INSTALL VECTOR
+2423 0000-         .WORD        REMOVE          ; REMOVE VECTOR
+2425 0000-         .WORD        LANG            ; LANGUAGE VECTOR
+2427 0000-         .WORD        DO_SWI          ; HANDLE SWI%: VECTOR
+2429           ENDVEC:
+2429           ;
+2429           ; INSTALL VECTOR - DOES NOTHING
+2429           ; ==============
+2429           ;
+2429           INSTALL:
+2429 0C            CLC                  ; SIGNAL SUCCESS
+242A 39            RTS
+242B           ;
+242B           ; REMOVE VECTOR - DOES NOTHING
+242B           ; =============
+242B           ;
+242B           REMOVE:
+242B 0C            CLC                  ; SIGNAL SUCCESS
+242C 39            RTS
+242D           ;
+242D           ; LANGUAGE VECTOR - RECOGNIZES 'SWI%:'
+242D           ; ===============
+242D           ;
+242D           LANG:
+242D EC 00         LDD  0,X
+242F 83 0453       SUBD #&lt;4*256&gt;+^A'S'
+2432 26 00-        BNE  NOT_SWI
+2434 EC 02         LDD  2,X
+2436 83 5749       SUBD #&lt;^A'W'*256&gt;+^A'I'
+2439 26 00-        BNE  NOT_SWI
+243B A6 04         LDA  A,4,X
+243D 81 25         CMP  A,#^A'%'
+243F 26 00-        BNE  NOT_SWI
+2441 86 02         LDA  A,#2            ; DEVICE 2
+2443 C6 03         LDA  B,#3            ; DO_SWI VECTOR SERVICE NUMBER
+2445 0C            CLC                  ; SIGNAL SUCCESS
+2446 39            RTS
+2447           NOT_SWI:
+2447 0D            SEC                  ; SIGNAL NOT PREPARED TO HANDLE
+2448 39            RTS                  ; REQUEST
+               ;
+               ; DO_SWI VECTOR - ACTUALLY DOES THE SWI%:
+               ; =============
+               ;
+2449           DO_SWI:
+2449 DE A5         LDX  RTA_SP:         ; GET LANGUAGE STACK
+244B A6 00         LDA  A,0,X           ; GET NUMBER OF ARGUMENTS
+244D 4A            DEC  A               ; CHECK IF 1
+244E 27 00-        BEQ  ARG_OK          ; YES - SO CORRECT ARG COUNT
+2450 C6 CD         LDA  B,#ER_RT_NP     ; SIGNAL WRONG NUMBER OF ARGUMENTS
+2452           BAD_EXIT:
+2452 0D            SEC                  ; SIGNAL BAD CALL
+2453 39            RTS
+2454           ARG_OK:
+2454 A6 01         LDA  A,1,X           ; GET ARGUMENT TYPE
+2456 27 00-        BEQ  ARG_INT         ; ZERO - SO ARG IS INTEGER
+2458 C6 E0         LDA  B,#ER_EX_TV     ; SIGNAL TYPE VIOLATION
+245A 20 F6         BRA  BAD_EXIT
+245C           ARG_INT:
+245C EC 02         LDD  2,X             ; GET SWI FUNCTION TO DO
+245E 83 0080       SUBD #^X80           ; MAXIMUM FUNCTION + 1
+2461 25 00-        BCS  FUNCTION_OK     ; GOOD FUNCTION RANGE 0-127
+2463 C6 F7         LDA  B,#ER_FN_BA     ; SIGNAL BAD FUNCTION ARGUMENT
+2465 20 EB         BRA  BAD_EXIT
+2467           FUNCTION_OK:
+2467 CB 80         ADD  B,#^X80         ; GET BACK THE FUNCTION NUMBER
+2469 F7 0000-      STA  B,SWI_FUNC      ; PATCH THE CODE TO DO SWI FUNCTION
+246C           ;
+246C           ; LOOKUP THE GLOBALS D% AND X% IN THE CALLING PROCEDURE
+246C           ; EXTERNALS ARE STORE AS LENGTH OF NAME FOLLOWED BY NAME
+246C           ; FOLLOWED BY TYPE FOLLOWED BY 2 BYTE ADDRESS
+246C           ;
+246C CC 0000       LDD  #0
+246F DD E0         STD  D_ADDR:         ; MARK D NOT FOUND
+2471 DD E2         STD  X_ADDR:         ; MARK X NOT FOUND
+2473 DE A7         LDX  RTA_FP:         ; GET THE FRAME POINTER
+2475 09            DEX
+2476 09            DEX
+2477 DF 41         STX  UTW_S0:         ; SAVE END OF GLOBALS TABLE
+2479 EE 00         LDX  0,X             ; ADDRESS OF BASE OF GLOBALS TABLE
+247B           LOOP:
+247B 9C 41         CPX  UTW_S0:         ; SEARCHED WHOLE TABLE YET
+247D 27 00-        BEQ  TEST_OK         ; FINISHED
+247F EC 00         LDD  0,X
+2481 83 0244       SUBD #&lt;2*256&gt;+^A'D'  ; CHECK IF D%
+2484 26 00-        BNE  CHECK_X         ; NO - SO CHECK X
+2486 EC 02         LDD  2,X
+2488 83 2500       SUBD #&lt;^A'%'*256&gt;    ; CHECK IF D%
+248B 26 00-        BNE  CHECK_X         ; NO - SO CHECK X
+248D EC 04         LDD  4,X             ; ADDRESS OF D
+248F DD E0         STD  D_ADDR:         ; SAVE IT AWAY
+2491 20 00-        BRA  NEXT_EXT        ; GO LOOK UP THE OTHERS
+2493           CHECK_X:
+2493 EC 00         LDD  0,X
+2495 83 0258       SUBD #&lt;2*256&gt;+^A'X'  ; CHECK IF X%
+2498 26 00-        BNE  NEXT_EXT        ; NO - SO CHECK NEXT
+249A EC 02         LDD  2,X
+249C 83 2500       SUBD #&lt;^A'%'*256&gt;    ; CHECK IF X%
+249F 26 00-        BNE  NEXT_EXT        ; NO - SO CHECK NEXT
+24A1 EC 04         LDD  4,X             ; ADDRESS OF X%
+24A3 DD E2         STD  X_ADDR:         ; SAVE IT AWAY
+24A5           NEXT_EXT:
+24A5 E6 00         LDA  B,0,X           ; GET LENGTH OF NAME
+24A7 CB 04         ADD  B,#4            ; SKIP TO NEXT NAME
+24A9 3A            ABX
+24AA 20 CF         BRA  LOOP
+24AC           TEST_OK:
+24AC DE E2         LDX  X_ADDR:         ; GET X'S ADDRESS
+24AE 26 00-        BNE  X_FOUND
+24B0 C6 58         LDA  B,#^A'X'        ; SIGNAL X% NOT DECLARED
+24B2           SET_MISS:
+24B2 86 02         LDA  A,#2
+24B4 FD 2187       STD  RTB_BL
+24B7 86 25         LDA  A,#^A'%'
+24B9 B7 2189       STA  A,RTB_BL+2      ; USED WHEN REPORTING MISSING EXTERNALS
+24BC C6 CC         LDA  B,#ER_RT_UE     ; SIGNAL UNDEFINED EXTERNALS
+24BE 20 92         BRA  BAD_EXIT
+24C0           X_FOUND:
+24C0 DE E0         LDX  D_ADDR:         ; GET D'S ADDRESS
+24C2 26 00-        BNE  D_FOUND
+24C4 C6 44         LDA  B,#^A'D'        ; SIGNAL D% NOT DECLARED
+24C6 20 EA         BRA  SET_MISS
+24C8           D_FOUND:
+24C8 EC 00         LDD  0,X             ; GET VALUE FOR D
+24CA DE E2         LDX  X_ADDR:
+24CC EE 00         LDX  0,X             ; GET VALUE FOR X
+24CE 3F            SWI
+24CF           SWI_FUNC:
+24CF 00            .BYTE 0              ; PATCHED HIGHER UP
+24D0 24 00-        BCC  NO_ERR          ; ALL OK
+24D2 4F            CLR  A
+24D3 DE E0         LDX  D_ADDR:         ; GET D'S ADDRESS
+24D5 ED 00         STD  0,X             ; SAVE ERROR IN D
+24D7 CC FFFF       LDD  #^XFFFF         ; SIGNAL FAILURE
+24DA 20 00-        BRA  EXIT            ; RETURN SWI%:'S VALUE
+24DC           NO_ERR:
+24DC 3C            PSHX                 ; SAVE X
+24DD DE E0         LDX  D_ADDR:         ; GET D'S ADDRESS
+24DF ED 00         STD  0,X             ; SAVE D'S VALUE
+24E1 DE E2         LDX  X_ADDR:         ; GET X'S ADDRESS
+24E3 32            PUL  A               ; GET BACK X IN D
+24E4 33            PUL  B
+24E5 ED 00         STD  0,X             ; SAVE X'S VALUE
+24E7 4F            CLR  A
+24E8 5F            CLR  B               ; SIGNAL SUCCESS
+24E9           EXIT:
+24E9 DE A5         LDX  RTA_SP:         ; GET STACK ADDRESS
+24EB 09            DEX
+24EC 09            DEX                  ; LEAVE ROOM FOR INT RESULT
+24ED ED 00         STD  0,X
+24EF DF A5         STX  RTA_SP:         ; UPDATE STACK POINTER
+24F1 0C            CLC                  ; SIGNAL SUCCESS
+24F2 39            RTS
+24F3               .EOVER
+241B               .OVER        PRGEND  ; TO MARK END OF CODE
+241B               .EOVER
+241B               .END
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech10.htm">Ch. 10</a></li>
+<li class=navactive>Ch. 11</li>
+<li><a href="tech12.htm">Ch. 12</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

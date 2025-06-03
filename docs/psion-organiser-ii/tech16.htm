@@ -1,0 +1,299 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 16 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech16.htm", "name": "Chapter 16" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 16</li>
+</ol>
+
+
+<PRE>                                CHAPTER 16
+
+                                   _____
+                                   MENUS
+
+
+
+This chapter describes the operating system menu-handling facility, and the
+how  the  top  level  menu  may  be  customised.   Using this, menus can be
+displayed, and menu items selected, in the same way as  in  the  top  level
+control routines of the operating system.
+
+
+
+      _______________
+<a id="p16.1">16.1</a>  SYSTEM SERVICES
+
+        _______
+<a id="p16.1.1">16.1.1</a>  MN$DISP
+
+VECTOR NUMBER:          080
+INPUT PARAMETERS:       D register - Terminating bit-mask.
+                        X register - Address of menu-list.
+OUTPUT VALUES:          A register - Flag to indicate the type of contents
+                                     in the X register.
+                                     If A register equals 0
+                                        X has the address of the subroutine
+                                        associated with the item selected,
+                                     else
+                                        X points to the name of the
+                                        selected item in the menu-list.
+                        X register - Depends on value of A register.
+                        B register - Terminating key press.
+                        UTW_S0     - Number of the menu item selected (0
+                                     for first item).
+
+
+DESCRIPTION
+
+    Displays a menu according to the specified menu-list at X, allowing the
+    user to scroll through the menu using the arrow keys or by pressing the
+    first letter of the item to be selected.
+
+    The menu-list consists of item names (with  leading  byte-count),  each
+    followed by the address of an associated subroutine, or by 0.  The list
+    is terminated by a name of length 0.  The maximum name  length  is  16.
+    The  items  are  displayed  (and  numbered) in the same order as in the
+    menu-list.  The first item is displayed at  the  top  left-hand  corner
+    (HOME position) of the LCD display.  The display is filled from left to
+    right until an item is too long to fit, in which case  a  new  line  is
+    started.
+    The error ER_RT_ME is returned when
+
+    1.  the menu-list is so large  that  the  total  number  of  characters
+        displayed  (including the spaces inserted for padding) exceeds 254,
+        or
+
+    2.  the menu has no items (i.e.  0 in the first byte of the menu-list).
+
+
+    In the terminating mask, the  nth  bit  set  corresponds  to  allowing
+    termination  on  pressing  key  value  n+1.   For  instance,  bit 0 set
+    corresponds to allowing termination on pressing the ON/CLEAR key, which
+    has value 1.  See section <a href="tech07.htm#p7.1">7.1</a> for values of control keys).
+
+    MN$DISP exits when the user either
+
+    1.  presses any of the keys specified by the bit-mask, or
+
+    2.  selects by pressing its first letter, an item with a  unique  first
+        letter,  but  only  when  the  EXE  key  is  also  specified in the
+        terminating bit-mask.  (In this case,  the  terminating  key  press
+        returned  in  B will be EXE, since MN$DISP forces an exit <u>as if</u> EXE
+        has been pressed too).
+
+
+    When the routine terminates,  it  returns  in  X  the  address  of  the
+    subroutine  corresponding  to the item selected, unless this address is
+    0.  If it <u>is</u> 0 then the routine returns in X the address of the  item's
+    name in the menu-list.  The B register is returned with the terminating
+    key press, (or with EXE when terminating on pressing an item's  initial
+    letter).   The  A  register  is  returned  with  0  if  the item had an
+    associated subroutine address (non-zero), and  otherwise  A  equals  1.
+    UTW_S0  is returned with the number of the menu item, where 0 specifies
+    the first item.
+
+EXAMPLE:
+
+    Displays and gets the selection from a menu that has three items. Calls
+    the subroutine associated with the item if specified in the menu-list,
+    and otherwise runs the language procedure which has the name of the
+    selected item.
+
+MENU_LIST:
+        .ASCIC  "FIRST"                 ; First item (item number 0)
+        .WORD   FIRST_SUBROUTINE        ; Address of subroutine to be
+                                        ;   called on selecting FIRST
+        .ASCIC  "SECOND"                ; Second item (item number 1)
+        .WORD   0                       ; No associated subroutine
+        .ASCIC  "THIRD"                 ; Third item (item number 2)
+        .WORD   THIRD_SUBROUTINE        ; Address of subroutine to be
+                                        ;   called on selecting THIRD
+        .BYTE   0                       ; Terminate the list
+
+DO_MENU:
+        LDX     MENU_LIST               ; Point to the menu-list
+        LDD     #$1002                  ; Terminate on EXE or MODE i.e. 2
+                                        ;    or 13, so set bits 1 and 12
+        OS      MN$DISP                 ; Call the service
+        CMP     B,#K_EXE                ; EXE pressed?
+        BNE     MODE                    ; No, so MODE was pressed
+        TST     A                       ; Was there a subroutine address?
+        BNE     2$
+        JMP     0,X                     ; Yes, so run the subroutine
+2$:
+        CLR     B
+        OS      RM$RUNP                 ; No, so run language procedure
+                                        ;   (B=0 for not in the calculator)
+        BCS     ERROR                   ; Handle error
+        RTS
+MODE:                                   ; Here if MODE was pressed
+
+
+ERRORS:                 ER_RT_ME - menu error
+
+BUGS
+
+    If the D register is passed as 0 then the routine will  never  exit  as
+    there will be no valid terminating character.
+    Also note that this routine puts the keyboard state into alpha shift.
+
+
+
+      ______________
+<a id="p16.2">16.2</a>  TOP LEVEL MENU
+
+     The top level menu is held in RAM in the second allocator cell,  whose
+address  is  at  $2002.   See  chapter  6 for information about the storage
+allocator.  The structure of menus is described in  the  previous  section.
+Either  OPL  procedures  or  machine  code  programs may be called from the
+top-level menu.
+
+The menu can be manipulated by the system services TL$ADDI, TL$DELI.
+
+
+
+        _______
+<a id="p16.2.1">16.2.1</a>  TL$ADDI
+
+VECTOR NUMBER:          101
+
+INPUT PARAMETERS:       B register - position in menu-list
+
+OUTPUT VALUES:          NONE
+
+
+DESCRIPTION
+
+     Inserts a given menu item into the top-level menu at position B.  B  =
+0  means  insert  at  the  start, B = 1 means after the first item, B = $FF
+means insert before the "OFF".
+
+     The menu item to be inserted is placed  at  address  RTBBL.   It  must
+consist of :
+
+     length of item name (byte)
+
+     item name
+
+     execution address, or zero
+
+     The length of the item name may not be zero.  The first  character  of
+the   item  name  must  be  a  letter,  the  following  characters  may  be
+alphanumeric, or  "$"  or  "%",  otherwise  error  BAD  PROCEDURE  NAME  is
+returned.   Note  that  the  item  is not necessarily a legal OPL procedure
+name.  No error will be returned for items names  such  as  "A$$$",  "A " or
+names longer than eight characters.
+
+The item name is followed by an execution address.  When the menu  item  is
+selected by the user, the operating system will treat the menu item name as
+an OPL procedure if the execution address is zero.   The  operating  system
+will otherwise call a machine code routine at the execution address.
+
+     TL$ADDI is called after the "INSERT ITEM" prompt when the MODE key  is
+pressed  at  the  top  level.   In this case the execution address is zero.
+Note that TL$ADDI does not recognise the standard  menu  items  FIND,  SAVE
+etc.  as special.  This allows the user to replace the standard system menu
+items with different routines.
+
+EXAMPLES
+
+;       CODE USED IN THE RS232 TO INSERT "COMMS" INTO TOP LEVEL MENU
+;       BEFORE "OFF"
+
+        LDX     #COMMS_STRING   ; COPY MENU ITEM FROM COMMS_STRING
+        LDD     #END_COMMS-COMMS_STRING
+        STD     UTW_S0:         ; NUMBER OF BYTES TO COPY
+        LDD     #RTB_BL         ; INTO WORKSPACE FOR TL$ADDI
+        OS      UT$CPYB
+
+        LDA     B,#^XFF         ; B = WHERE TO INSERT THE ITEM
+        OS      TL$ADDI         ; INSERT IT
+        RTS
+
+COMMS_STRING:
+        .BYTE   COMMS1-COMMS_STRING
+                                ; LENGTH OF "COMMS"
+        .ASCII  "COMMS"         ; NAME OF MENU ITEM TO BE INSERTED
+COMMS1: .WORD   COMMS_START     : START ADDRESS OF COMMS CODE
+END_COMMS:
+
+ERRORS
+
+    ER_LG_BN    197     BAD PROC NAME   - see above
+    ER_RT_ME    202     MENU TOO BIG
+    ER_AL_NR    254     OUT OF MEMORY
+
+
+
+            _______
+<a id="p16.2.2">16.2.2</a>  TL$DELI
+
+    VECTOR NUMBER:              103
+
+    INPUT PARAMETERS:   X register - address of item name to be deleted
+
+    OUTPUT VALUES:              NONE
+
+
+    DESCRIPTION
+
+         Deletes the item named at X from the top level menu.  The item  at
+    X is a leading count byte string.
+
+    EXAMPLE
+
+    ;   CODE USED IN THE RS232 TO DELETE "COMMS" FROM TOP LEVEL MENU
+
+        LDX     #COMMS_STRING
+        OS      TL$DELI
+        RTS
+
+    COMMS_STRING:
+        .BYTE   5               ; LENGTH OF "COMMS"
+        .ASCII  "COMMS"         ; NAME OF MENU ITEM TO BE INSERTED
+
+    ERRORS
+        NONE
+
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech15.htm">Ch. 15</a></li>
+<li class=navactive>Ch. 16</li>
+<li><a href="tech17.htm">Ch. 17</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

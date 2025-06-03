@@ -1,0 +1,302 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Models and Version Numbers - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="stylesheet" type="text/css" href="psiongal.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<style type="text/css">
+td, th {
+  padding-right:10px;
+}
+</style>
+<script language="JavaScript1.1" type="text/javascript" src="../insertemail.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "models.htm", "name": "Models and Version Numbers" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li>Models and Version Numbers</li>
+</ol>
+
+<h1>Psion Organiser II Models and Version Numbers</h1>
+
+<p>
+There are several different models of Psion Organiser II, and even more
+versions of the operating system in its ROM. This page will tell you how
+to find out which model and version you have.
+</p>
+
+<hr>
+
+<h2>Consumer Models</h2>
+
+<p>
+The first Series II models came out in 1986, and had a 2-line display. The model CM
+had an 8K RAM, and the model XP 16K. The XP was almost immediately upgraded to 32K Ram, and
+although the casing was still labelled as XP, it is often referred to as the model LA.
+All these models had a 32K ROM.
+</p>
+
+<p>
+Most of the Organisers produced were English, i.e. the menus and error messages were all
+in the English language. Other single language versions were made too, in particular French
+and German versions. Eventually a multi-lingual XP model was made that had a choice of 11
+languages. Its ROM was extended by two 16K banks to 64K to store this extra data.
+</p>
+
+<p>
+In 1989 Psion started producing models with a 4-line display. The model LZ had 32K Ram,
+and the LZ64 had 64K (32K plus two 16K Ram banks). It looks virtually the same as the older
+models, except that the screen is slightly taller. They were all multi-lingual, with a choice
+of English and two other languages, usually French and German. The Scandinavian model had
+English, Swedish, and Danish language choices.
+</p>
+
+<h3>Finding Out The Model</h3>
+
+<p>
+To know which model you have, you can select the CALCulator option in the main menu
+and type:
+</p>
+
+<p class=indent><span class=screen>CALC:PEEKB(-24)&nbsp;
+                </span></p>
+
+<p>
+When you press EXE it will display a number that is different for most base models.
+</p>
+
+<p>
+The following table shows most possibilities:
+</p>
+
+<table summary="" class=indent>
+<tr><th>PEEKB(-24)</th><th>Model              </th><th>ROM</th><th>RAM</th><th>Display</th></tr>
+<tr><td>0         </td><td>CM                 </td><td>32K</td><td>8K </td><td>2x16   </td></tr>
+<tr><td>1         </td><td>XP                 </td><td>32K</td><td>16K</td><td>2x16   </td></tr>
+<tr><td>2         </td><td>XP(LA)             </td><td>32K</td><td>32K</td><td>2x16   </td></tr>
+<tr><td>2         </td><td>Multilingual XP(LA)</td><td>64K</td><td>32K</td><td>2x16   </td></tr>
+<tr><td>14        </td><td>LZ                 </td><td>64K</td><td>32K</td><td>4x20   </td></tr>
+<tr><td>13        </td><td>LZ64               </td><td>64K</td><td>64K</td><td>4x20   </td></tr>
+</table>
+
+<h3>Language</h3>
+
+<p>
+To check the language options, you can enter PEEKB(-25) in the calculator. This
+setting was not used in earliest versions.
+</p>
+
+<table summary="" class=indent>
+<tr><th>PEEKB(-25)</th><th>Language</th></tr>
+<tr><td>255         </td><td>Not set</td></tr>
+<tr><td>0           </td><td>English only (CM/XP/LA)</td></tr>
+<tr><td>1           </td><td>French only (CM/XP/LA)</td></tr>
+<tr><td>2           </td><td>German only (CM/XP/LA)</td></tr>
+<tr><td>128         </td><td>11 languages (Multilingual LA)</td></tr>
+<tr><td>129         </td><td>3 languages; English, French, German (LZ/LZ64)</td></tr>
+<tr><td>130         </td><td>3 languages; English, Italian, Spanish (LZ/LZ64)</td></tr>
+<tr><td>131         </td><td>3 languages; English, Swedish, Danish (LZ/LZ64)</td></tr>
+</table>
+
+<h3>ROM version</h3>
+
+<p>
+The version of the operating system in the ROM can be discovered by evaluating
+PEEKB(-23). This is a binary-coded-decimal number, so if it contains the hexadecimal
+number $46 for example then the ROM has version number 4.6 etc. Here is a table with
+the version numbers with most common ones shown in bold type:
+</p>
+
+<table summary="" class=indent>
+<tr><th>PEEKB(-23)</th><th>Version</th></tr>
+<tr><td>36</td><td>2.4 (CM/XP*)</td></tr>
+<tr><td>37</td><td>2.5 (CM*/XP*)</td></tr>
+<tr><td>38</td><td>2.6 (CM/XP)</td></tr>
+<tr><td>48</td><td>3.0 (CM*/LA)</td></tr>
+<tr><td>49</td><td>3.1 (CM*/LA*)</td></tr>
+<tr><td>50</td><td>3.2 (CM*/LA*)</td></tr>
+<tr><th>51</th><th>3.3 (CM/LA)</th></tr>
+<tr><td>52</td><td>3.4 (CM*/LA*)</td></tr>
+<tr><td>53</td><td>3.5 (CM*/LA*)</td></tr>
+<tr><th>54</th><th>3.6 (CM/LA)</th></tr>
+<tr><td>55</td><td>3.7 (Multilingual LA)</td></tr>
+<tr><td>56</td><td>3.8 (POS350)</td></tr>
+<tr><td>66</td><td>4.2 (LZ/LZ64*)</td></tr>
+<tr><td>67</td><td>4.3 (LZ*/LZ64)</td></tr>
+<tr><th>68</th><th>4.4 (LZ/LZ64)</th></tr>
+<tr><td>69</td><td>4.5 (LZ/LZ64)</td></tr>
+<tr><th>70</th><th>4.6 (LZ/LZ64)</th></tr>
+</table>
+
+<p>If you have any of the versions marked with an asterisk, a version in an
+non-English language or one not listed here, I would like to have a copy of
+its ROM contents to add to the <a href="roms.htm">ROM Image</a> page.
+<br>You can contact me at <span class="email">psion a t jaapsch d o t net</span>.
+
+<hr>
+
+<h2>POS Models</h2>
+
+<p>
+There are several variants produced for use in industry and retail. These variants are
+normally called POS (Point-Of-Sale) models. When switched on, a POS model does not supply
+a menu, but instead looks on the packs for a procedure named BOOT and runs it. If no
+such procedure is found, it displays &quot;PACK?&quot; or &quot;INSERT PACK?&quot; for a moment and then
+switches off. These models often have unusual keyboards.
+</p>
+
+<p>
+There are POS variants of the LZ/LZ64 models too. I don't know if these were produced with
+non-standard keyboards.
+</p>
+
+<table summary="" class=indent>
+<tr><th>PEEKB(-24)</th><th>Model</th><th>ROM</th><th>RAM</th><th>Display</th><th>Keyboard</th></tr>
+<tr><td>129</td><td>POS 200      </td><td>32K</td><td>16K</td><td>2x16</td><td>Numeric</td></tr>
+<tr><td>130</td><td>POS 200      </td><td>32K</td><td>32K</td><td>2x16</td><td>Numeric</td></tr>
+<tr><td>65 </td><td>Alpha POS 200</td><td>32K</td><td>16K</td><td>2x16</td><td>Alpha-numeric</td></tr>
+<tr><td>66 </td><td>Alpha POS 200</td><td>32K</td><td>32K</td><td>2x16</td><td>Alpha-numeric</td></tr>
+<tr><td>17 </td><td>P 250        </td><td>32K</td><td>16K</td><td>2x16</td><td>Full</td></tr>
+<tr><td>18 </td><td>P 250        </td><td>32K</td><td>32K</td><td>2x16</td><td>Full</td></tr>
+<tr><td>20 </td><td>P 350        </td><td>32K</td><td>96K</td><td>2x16</td><td>Full</td></tr>
+<tr><td>30 </td><td>P 432        </td><td>64K</td><td>32K</td><td>4x20</td><td>Full</td></tr>
+<tr><td>29 </td><td>P 464        </td><td>64K</td><td>64K</td><td>4x20</td><td>Full</td></tr>
+</table>
+
+<hr>
+
+<h2>Devices and Packs</h2>
+
+<p>
+Many devices such as the Comms Link have internal software that is loaded
+into the Organiser. Such software has a version number that can be read
+out. Connect the device, switch the organiser on, and in the main menu
+press ON/CLEAR to make sure the software is loaded. In the calculator,
+evaluate PEEKB(8441).
+</p>
+
+<p>
+Certain software packs also have version numbers. Insert the pack, switch
+the organiser on, and in the main menu press ON/CLEAR to make sure the
+software is loaded. In the calculator, evaluate PEEKB(8421) for slot B:
+or PEEKB(8431) for slot C:. Note however that only bootable packs have
+a version number, and that many software packs use the standard boot loader
+version 1.0 that Psion supplied with the Organiser Developer package.
+On packs without a version number the peek will give a meaningless number.
+</p>
+
+<p>
+You can also find out the size of a pack by using the calculator to
+evaluate 8*PEEKB(8418) or 8*PEEKB(8428) for the pack in slot B: or C:
+respectively.
+</p>
+
+<table summary="" class=indent>
+<tr><td>
+
+<table summary="">
+<tr><th>PEEKB  </th><th>Version</th></tr>
+<tr><td>0      </td><td>0.0    </td></tr>
+<tr><td>1      </td><td>0.1    </td></tr>
+<tr><td>2      </td><td>0.2    </td></tr>
+<tr><td>3      </td><td>0.3    </td></tr>
+<tr><td>4      </td><td>0.4    </td></tr>
+<tr><td>5      </td><td>0.5    </td></tr>
+<tr><td>6      </td><td>0.6    </td></tr>
+<tr><td>7      </td><td>0.7    </td></tr>
+<tr><td>8      </td><td>0.8    </td></tr>
+<tr><td>9      </td><td>0.9    </td></tr>
+<tr><td>16     </td><td>1.0    </td></tr>
+<tr><td>17     </td><td>1.1    </td></tr>
+<tr><td>18     </td><td>1.2    </td></tr>
+<tr><td>19     </td><td>1.3    </td></tr>
+<tr><td>20     </td><td>1.4    </td></tr>
+<tr><td>21     </td><td>1.5    </td></tr>
+<tr><td>22     </td><td>1.6    </td></tr>
+<tr><td>23     </td><td>1.7    </td></tr>
+<tr><td>24     </td><td>1.8    </td></tr>
+<tr><td>25     </td><td>1.9    </td></tr>
+</table>
+
+</td><td>
+
+<table summary="">
+<tr><th>PEEKB</th><th>Version</th></tr>
+<tr><td>32   </td><td>2.0    </td></tr>
+<tr><td>33   </td><td>2.1    </td></tr>
+<tr><td>34   </td><td>2.2    </td></tr>
+<tr><td>35   </td><td>2.3    </td></tr>
+<tr><td>36   </td><td>2.4    </td></tr>
+<tr><td>37   </td><td>2.5    </td></tr>
+<tr><td>38   </td><td>2.6    </td></tr>
+<tr><td>39   </td><td>2.7    </td></tr>
+<tr><td>40   </td><td>2.8    </td></tr>
+<tr><td>41   </td><td>2.9    </td></tr>
+<tr><td>48   </td><td>3.0    </td></tr>
+<tr><td>49   </td><td>3.1    </td></tr>
+<tr><td>50   </td><td>3.2    </td></tr>
+<tr><td>51   </td><td>3.3    </td></tr>
+<tr><td>52   </td><td>3.4    </td></tr>
+<tr><td>53   </td><td>3.5    </td></tr>
+<tr><td>54   </td><td>3.6    </td></tr>
+<tr><td>55   </td><td>3.7    </td></tr>
+<tr><td>56   </td><td>3.8    </td></tr>
+<tr><td>57   </td><td>3.9    </td></tr>
+</table>
+
+</td><td>
+
+<table summary="">
+<tr><th>PEEKB</th><th>Version</th></tr>
+<tr><td>64   </td><td>4.0    </td></tr>
+<tr><td>65   </td><td>4.1    </td></tr>
+<tr><td>66   </td><td>4.2    </td></tr>
+<tr><td>67   </td><td>4.3    </td></tr>
+<tr><td>68   </td><td>4.4    </td></tr>
+<tr><td>69   </td><td>4.5    </td></tr>
+<tr><td>70   </td><td>4.6    </td></tr>
+<tr><td>71   </td><td>4.7    </td></tr>
+<tr><td>72   </td><td>4.8    </td></tr>
+<tr><td>73   </td><td>4.9    </td></tr>
+<tr><td>80   </td><td>5.0    </td></tr>
+<tr><td>81   </td><td>5.1    </td></tr>
+<tr><td>82   </td><td>5.2    </td></tr>
+<tr><td>83   </td><td>5.3    </td></tr>
+<tr><td>84   </td><td>5.4    </td></tr>
+<tr><td>85   </td><td>5.5    </td></tr>
+<tr><td>86   </td><td>5.6    </td></tr>
+<tr><td>87   </td><td>5.7    </td></tr>
+<tr><td>88   </td><td>5.8    </td></tr>
+<tr><td>89   </td><td>5.9    </td></tr>
+</table>
+
+</td></tr>
+</table>
+
+<hr>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

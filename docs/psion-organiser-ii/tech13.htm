@@ -1,0 +1,968 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 13 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech13.htm", "name": "Chapter 13" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 13</li>
+</ol>
+
+
+<PRE>                                CHAPTER 13
+
+                                 _________
+                                 UTILITIES
+
+
+
+The operating  system  includes  several  utility  routines  likely  to  be
+required by the general user.
+
+The greatest care has gone into making these highly efficient,  since  they
+are expected to be used frequently.
+
+The majority of these routines are concerned with buffer handling,  integer
+arithmetic and display handling.
+
+
+
+      _______________________________
+<a id="p13.1">13.1</a>  BUFFER HANDLING SYSTEM SERVICES
+
+        _______
+<a id="p13.1.1">13.1.1</a>  UT$CPYB
+
+VECTOR NUMBER:          109
+INPUT PARAMETERS:       X register - Address of source buffer.
+                        D register - Address of destination buffer.
+                        UTW_S0     - Number of bytes to be copied.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    Copies the buffer of length UTW_S0 at X to the buffer at D.
+
+    The two buffers can overlap in any way required.  There may seem to  be
+    a difficulty when they overlap, since simply copying in ascending order
+    could then result in some source bytes being over-written before  being
+    copied.   To  deal with this, if the source address is greater than the
+    destination address the  bytes  are  copied  in  ascending  order,  and
+    otherwise in descending order.
+
+    The rate of copying large blocks of data is 81K per second.
+
+    If UTW_S0=0 or if X=D, the routine does nothing.
+
+EXAMPLE:
+
+    Copies 1000 bytes from address SOURCE to address DESTINATION.
+
+        LDD     #1000
+        STD     UTW_S0:
+        LDX     #SOURCE
+        LDD     #DESTINATION
+        OS      UT$CPYB
+
+ERRORS:                None.
+
+
+
+        _______
+<a id="p13.1.2">13.1.2</a>  UT$ICPB
+
+VECTOR NUMBER:          114
+INPUT PARAMETERS:       X register - Address of one string.
+                        UTW_S0     - Address of other string.
+                        A register - length of string at X.
+                        B register - length of string at UTW_S0.
+OUTPUT VALUES:          B register -  0 : matched and same length.
+                                    &lt; 0 : string at X first alphabetically.
+                                    &gt; 0 : string at UTW_S0 is first
+                                          alphabetically.
+                        Z flag     - according to B register.
+                        N flag     - according to B register.
+REGISTERS PRESERVED:    X
+
+DESCRIPTION
+
+    Case independent buffer compare.  The bytes are compared  from  low  to
+    high  memory.   If  the strings match but are of different lengths, the
+    shorter string precedes the other alphabetically.
+
+    So,
+        "ABCD" precedes "bcd",
+        "abcd" precedes "BCD",
+        "A" precedes "AA",
+        "ABCD","abcd" and "AbcD" are all equal.
+
+EXAMPLE:
+
+    Compares BUF1, length LENBUF1, with BUF2, length LENBUF2, branching
+    according to the return value.
+
+        LDX     #BUF1           ; point to buffer BUF1
+        LDD     #BUF2
+        STD     UTW_S0:         ; point to buffer BUF2
+        LDA     A,#LENBUF1
+        LDA     B,#LENBUF2
+        OS      UT$ICPB
+        BEQ     MATCHED         ; branch to code for matched strings
+        BMI     BUF1FIRST       ; branch to code for BUF1 first
+BUF2FIRST:                      ; here if BUF2 first
+
+ERRORS:                None.
+
+
+
+        _______
+<a id="p13.1.3">13.1.3</a>  UT$FILL
+
+VECTOR NUMBER:          113
+INPUT PARAMETERS:       X register - Address of buffer to be filled.
+                        A register - The buffer is filled with this byte.
+                        B register - Number of bytes to be filled.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    Fills a buffer of the given length with the specified byte, filling two
+    bytes  at  a  time  for  efficiency.  Nothing is done if the B register
+    input equals 0.
+
+    Because of the 110 microsecond overhead of  the  SWI  instruction  when
+    calling this service, the following code would be faster for filling up
+    to 13 characters:-
+
+        LDA     B,NUMCHARS
+LOOP:   STA     A,0,X           ; Store the fill character
+        INX                     ; Point to the next byte
+        DEC     B               ; Decrement the counter
+        BNE     LOOP            ; Branch back up if the counter is not 0
+
+EXAMPLES:
+
+    Fill 100 bytes of buffer at address BUF1 with 0.
+
+        LDX     #BUF1
+        CLR     A
+        LDA     B,#100
+        OS      UT$FILL
+
+    Fill 4 bytes of buffer at address BUF2 with spaces.
+
+        LDX     #BUF2
+        LDA     A,#^A/ /        ; ASCII space character specified
+        LDA     B,#4
+        OS      UT$FILL
+
+ERRORS:                None.
+
+
+
+        _______
+<a id="p13.1.4">13.1.4</a>  UT$ISBF
+
+VECTOR NUMBER:          115
+INPUT PARAMETERS:       X register - Address of major buffer.
+                        UTW_S0     - Address of minor buffer.
+                        A register - Length of major buffer.
+                        B register - Length of minor buffer.
+OUTPUT VALUES:          B register - Position within major buffer,
+                                     of found minor buffer, or length
+                                     of major buffer if not found.
+
+DESCRIPTION
+
+    Finds the occurrence of the minor buffer at  UTW_S0  within  the  major
+    buffer at X.
+
+    If found, the return value is the index  within  the  major  buffer  at
+    which the minor buffer occurs; otherwise the length of the major buffer
+    is returned.  The index of the first letter of the major buffer is 0.
+
+    For example, if the major buffer contains "APPLYING",
+        1.  "PLYING" occurs at index 2
+        2.  "APPLY" occurs at index 0
+        3.  "APPLE" occurs at index 8 (the length of the "APPLYING")
+
+EXAMPLE:
+
+MAJOR_BUFFER:
+        .ASCII  "APPLYING"      ; 8-character major buffer
+
+MINOR_BUFFER:
+        .ASCII  "PLYING"        ; this buffer's at index 2 in MAJOR_BUFFER
+
+    The following finds and saves the index of MINOR_BUFFER within
+    MAJOR_BUFFER, and then if found, makes the X register point to the
+    found position in MAJOR_BUFFER.
+
+        LDX     #MAJOR_BUFFER
+        PSHX                    ; save address of MAJOR_BUFFER
+        LDD     #MINOR_BUFFER   ; point to minor buffer
+        STD     UTW_S0:
+        LDD     #$0805          ; A=8, B=5
+        OS      UT$ISBF
+        PULX                    ; restore address of MAJOR_BUFFER
+        STA     B,INDEX
+        CMP     B,#8
+        BEQ     NOT_FOUND
+FOUND:                          ; here if found
+        ABX                     ; X points to found position
+
+ERRORS:                None.
+
+
+
+        _______
+<a id="p13.1.5">13.1.5</a>  UT$SPLT
+
+VECTOR NUMBER:          119
+INPUT PARAMETERS:       X register - Address of buffer to split field from.
+                        UTW_S0     - Length of buffer.
+                        A register - Field separator character.
+                        B register - Field number to be split out.
+OUTPUT VALUES:
+                        If field was found then
+                            X register - Address of field.
+                            D register - Length of field.
+                            C flag     - Clear.
+                        else
+                            UTW_S0     - Number of fields less than input
+                                          specification, in the buffer.
+                            C flag     - Set.
+
+DESCRIPTION
+
+    Finds the address and length of a field in a buffer  where  the  fields
+    are  separated  by  the character specified.  No separator character is
+    expected at the end of the last  field.   The  first  field  has  field
+    number 0.
+
+    If the field does not exist within the buffer, then 0  is  returned  in
+    the  X  register,  and  UTW_S0  holds  the input field number minus the
+    number of fields found in the buffer.  That is, if the sixth  field  is
+    required and the buffer contains only two fields, 4 will be returned in
+    UTW_S0.
+
+EXAMPLE:
+
+    Code to find address and length of the sixth field in a 500-byte
+    buffer, with the separator character ':' between fields.
+
+        LDX     #BUFFER
+        LDD     #500                    ; length of BUFFER
+        STD     UTW_S0:
+        LDA     A,#^A/:/                ; separator is a colon
+        LDA     B,#5                    ; 6th field has field number 5
+        OS      UT$SPLT
+        BCS     NOT_FOUND               ; C-flag set if not found
+FOUND:  STD     FIELD_LENGTH
+        STX     FIELD_ADDRESS
+
+ERRORS:                None.
+
+
+
+        _______
+<a id="p13.1.6">13.1.6</a>  UT$UTOB
+
+VECTOR NUMBER:          122
+INPUT PARAMETERS:       X register - Address of destination buffer.
+                        D register - Unsigned binary number for conversion.
+OUTPUT VALUES:          B register - Length of converted ascii buffer.
+REGISTERS PRESERVED:    X
+
+DESCRIPTION
+
+    Converts the unsigned binary number in D to ASCII decimal in the buffer
+    at X, returning the length of the buffer in B.
+
+EXAMPLE:
+
+    Convert $ffff to count-preceded ASCII decimal buffer.
+    Resulting bytes are: 5,'6','5','5','3','5' at BUFFER-1.
+
+        LDX     #BUFFER
+        LDD     #$FFFF          ; $FFFF = 65535 decimal
+        OS      UT$UTOB         ; preserves X
+        DEX                     ; point one before BUFFER
+        STA     B,0,X           ; length into count-byte
+
+ERRORS:                None.
+
+
+
+        _______
+<a id="p13.1.7">13.1.7</a>  UT$XTOB
+
+VECTOR NUMBER:          124
+INPUT PARAMETERS:       X register - Address of destination buffer.
+                        D register - Unsigned binary number for conversion.
+OUTPUT VALUES:          B register - Length of converted ascii buffer.
+REGISTERS PRESERVED:    X
+
+DESCRIPTION
+
+    Converts the unsigned binary number in D to ASCII  hexadecimal  in  the
+    buffer at X, returning the length of the buffer in B.
+
+EXAMPLE:
+
+    Convert 2475 to count-preceded ASCII hexadecimal buffer.
+    Resulting bytes are: 3,'9','A','B' at BUFFER-1.
+
+        LDX     #BUFFER
+        LDD     #2475           ; 2475 decimal = $9AB
+        OS      UT$UTOB         ; preserves X
+        DEX                     ; point one before BUFFER
+        STA     B,0,X           ; length into count-byte
+
+ERRORS:                None.
+
+
+
+      ________________________________
+<a id="p13.2">13.2</a>  DISPLAY HANDLING SYSTEM SERVICES
+
+These services provide complex display handling,  displaying  any  required
+parameters  according to the format control string parameter.  Display will
+start at the cursor position.
+
+_________________________
+THE FORMAT CONTROL STRING
+Format descriptors interspersed between literal text in the format control
+string, allow the display of variables formatted in the specified way. In
+the simplest case, these descriptors are prefixed by a '%' character
+followed by the type-specifier, in which case the text is displayed left
+justified at the cursor position.
+      __________                ____________________
+      descriptor                type to be displayed
+        %a              ASCII coded character
+        %i              signed integer word value
+        %j              signed integer byte value
+        %u              unsigned integer word value
+        %v              unsigned integer byte value
+        %x              unsigned integer word value in HEX
+        %y              unsigned integer byte value in HEX
+        %s              string that has a leading byte count
+        %b              text buffer (address and length byte given)
+        %f              fill field (for this type a field width
+                        must be included; see below)
+
+Optionally, the programmer can justify the text within a field of chosen
+width, where the field is filled with a specified character. A number
+after the '%' signifies the field width within which the text is to be
+left justified with the SPACE fill character. Instead of '%', '+' can be
+used for left and '-' for right justification, followed by the mandatory
+fill character and field width.
+
+The maximum field width is 99 and vertical scrolling will begin after the
+text fills the whole LCD display. If the field is not wide enough, the text
+is truncated on the side opposite to the justification specified (e.g. right
+justification causes truncation on the left).
+
+For convenience, '}' has been defined as equivalent to the commonly used
+descriptor "-02v".
+
+The required format for a descriptor field is therefore
+        %[&lt;field width&gt;]&lt;type specifier&gt;
+or
+        +&lt;fill character&gt;&lt;field width&gt;&lt;type specifier&gt;
+or
+        -&lt;fill character&gt;&lt;field width&gt;&lt;type specifier&gt;.
+
+Some examples:
+        "%x"    - left justified HEX representation of word integer.
+        "%6x"   - left justified HEX representation of word integer,
+                  filling to the right with spaces in field width of 6.
+        "-06x"  - right justified HEX representation of word integer,
+                  filling to the left with zeroes.
+        "-*14i" - right justification of a signed word integer parameter
+                  in a 14-byte field, filled to the left with stars.
+        "%18f"  - 18 spaces.
+        "+*18f" - 18 stars ('+' needed only to specify the star).
+
+All display is done through the service routine DP$EMIT (see section
+<a href="tech08.htm#p8.3.4">8.3.4</a>), so that control characters (such as 16 for beep) can be used in the
+format control string.
+
+The characters '%', '+', '-' and '}' themselves can be displayed by
+preceding them by an extra '%' character.
+        ________________________        ________ ______ _______ ______
+E.g.     Sequence to be displayed        Required format control string
+        70% + 3% - 1%                   "70%% %+ 3%% %- 1%%"
+        %%                              "%%%%"
+        ++                              "%+%+"
+        --                              "%-%-"
+        {2/{3*4}}                       "{2/{3*4%}%}"
+
+_______________________________
+PASSING THE VARIABLE PARAMETERS
+Variable parameters must be pushed onto the machine stack in reverse order
+to that in which they will be displayed. For a buffer parameter, the length
+byte must be pushed before the address.
+
+________
+WARNINGS
+    The variable parameters must correspond in number and in type to the
+    specification of the format control string.
+
+    The type-specifiers must be in lower-case.
+
+
+
+        _______
+<a id="p13.2.1">13.2.1</a>  UT$DISP
+
+VECTOR NUMBER:          111
+INPUT PARAMETERS:       On machine stack - variables to display.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    Displays literal text and variables according  to  the  format  control
+    string  which  is  inserted in-line directly after the operating system
+    call to UT$DISP.  The LCD display  is  not  cleared  and  the  text  is
+    displayed from the current cursor position.
+
+    See the general discussion for this section for details of  the  format
+    control string and the passing of parameters on the stack.
+
+EXAMPLES:
+
+    To display "A simple string" after clearing the screen.
+
+        OS      UT$DISP
+        .BYTE   D_FF            ; clear display - control character 12
+        .ASCIZ  "A simple string"
+
+    To display an unsigned word variable. If WORD_VAR contains 43210
+    for instance, "WORD_VAR=43210" will be displayed.
+
+        LDX     WORD_VAR
+        PSHX                    ; push word variable value
+        OS      UT$DISP
+        .ASCIZ  "WORD_VAR=%u"   ; the format control string
+
+    To display a signed word variable, right justified in a field width of
+    9. If WORD_VAR contains -3210 for instance, "WORD_VAR=    -3210" will
+    be displayed.
+
+        LDX     WORD_VAR
+        PSHX                    ; push word variable value
+        OS      UT$DISP
+        .ASCIZ  "WORD_VAR=- 9i"
+
+    To display the date and time in the form
+                ------------------
+                |TUE 18 NOV 1986 |
+                |    17:40:35    |
+                ------------------
+    where the order of the system variables in memory are:
+        TMB_YEAR,TMB_MONS,TMB_DAYS,TMB_HOUR,TMB_MINS,TMB_SECS
+
+MONTH_NAME_TABLE:
+        .ASCII  "JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC"
+
+DISPLAY_DATE_TIME:
+        LDX     #TMB_YEAR       ; point to 6-byte date/time buffer
+        LDD     4,X             ; minutes into A, seconds into B
+        PSH     B
+        PSH     A
+        LDA     A,3,X           ; hour into A
+        PSH     A
+        LDD     0,X             ; year into A, month into B
+        PSH     A
+        LDA     A,#3            ; month names are 3 characters long
+        PSH     A               ; buffer length pushed before address
+        MUL                     ; multiply index into table by 3
+        LDX     #MONTH_NAME_TABLE
+        ABX                     ; point to month name
+        PSHX                    ; push address of month buffer
+        LDX     #TMB_YEAR
+        LDA     A,2,X           ; day of month into A
+        INC     A               ; day 0 means 1st of month
+        PSH     A
+        LDA     A,#3
+        PSH     A               ; day (of week) name length
+                                ; X still points to 6-byte date buffer
+        OS      TM$DAYV         ; puts address of day name into X
+        PSHX
+        OS      UT$DISP
+        .BYTE   D_HM            ; HOME the cursor - control character 11
+        .ASCII  "%b - 2v %b 19}"
+        .ASCIZ  "%5f}:}:}%4f"   ; must fill display as not cleared
+        RTS
+
+ERRORS:                None.
+
+
+
+        _______
+<a id="p13.2.2">13.2.2</a>  UT$DDSP
+
+VECTOR NUMBER:          110
+INPUT PARAMETERS:       D register - address of format control string.
+                        On machine stack - variables to be displayed.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    Displays literal text and variables according  to  the  format  control
+    string  the  address of which is in the D register.  The LCD display is
+    not cleared and the text is displayed from the current cursor position.
+
+    This is identical to UT$DISP except that the format control  string  is
+    not inserted in-line.
+
+    See the general discussion for this section for details of  the  format
+    control string and the passing of parameters on the stack.
+
+EXAMPLE:
+
+    To clear the display and then display "A simple string".
+
+CONTROL_STRING:
+        .BYTE   D_FF            ; clear display - control character 12
+        .ASCIZ  "A simple string"
+
+DISP:   LDD     #CONTROL_STRING  ; D points to format control string
+        OS      UT$DDSP
+
+    See UT$DISP for further relevant examples, where the only difference is
+    that in that routine the format control string is inserted in-line.
+
+ERRORS:                None.
+
+
+
+      __________________________________
+<a id="p13.3">13.3</a>  INTEGER ARITHMETIC SYSTEM SERVICES
+
+        _______
+<a id="p13.3.1">13.3.1</a>  UT$SDIV
+
+VECTOR NUMBER:          117
+INPUT PARAMETERS:       X register - Numerator.
+                        D register - Denominator.
+OUTPUT VALUES:          X register - Quotient.
+
+DESCRIPTION
+
+    2-byte by 2-byte signed integer division  routine.   Divides  X  by  D,
+    putting the result into X.
+
+EXAMPLE:
+
+        LDD     SIGNED_DENOMINATOR
+        BEQ     ERROR           ; divide by zero not checked for in UT$SDIV
+        LDX     SIGNED_NUMERATOR
+        OS      UT$SDIV
+        INX                     ; test X
+        DEX
+        BMI     NEGATIVE_QUOTIENT
+
+ERRORS:                None.
+
+BUGS
+
+    Does not check for division by zero, which will cause an infinite loop.
+
+
+
+        _______
+<a id="p13.3.2">13.3.2</a>  UT$SMUL
+
+VECTOR NUMBER:          118
+INPUT PARAMETERS:       X register - Signed integer.
+                        D register - Signed integer.
+OUTPUT VALUES:          X register - Less significant word of product.
+                        D register - More significant word of product.
+
+DESCRIPTION
+
+    2-byte by 2-byte signed integer multiply routine.  Multiplies  D  by  X
+    putting  the  product  back into D and X.  The more significant word of
+    the product goes into D.
+
+EXAMPLE:
+        LDX     SIGNED_MULTIPLIER
+        LDD     SIGNED_MULTIPLICAND
+        OS      UT$SMUL
+        TST     A                       ; test the most significant byte
+        BMI     NEGATIVE_PRODUCT
+
+
+
+        _______
+<a id="p13.3.3">13.3.3</a>  UT$UDIV
+
+VECTOR NUMBER:          120
+INPUT PARAMETERS:       X register - Numerator.
+                        D register - Denominator.
+OUTPUT VALUES:          X register - Quotient.
+                        D register - Remainder.
+                        UTW_S2     - Quotient (a copy of X).
+
+DESCRIPTION
+
+    2-byte by 2-byte unsigned integer division routine.  Divides  X  by  D,
+    putting  the  quotient into X and also into UTW_S2, and X modulo D into
+    D.
+
+EXAMPLE:
+        LDD     UNSIGNED_DENOMINATOR
+        BEQ     ERROR           ; divide by zero not checked for in UT$SDIV
+        LDX     UNSIGNED_NUMERATOR
+        OS      UT$UDIV
+        STX     QUOTIENT
+        STD     REMAINDER
+
+ERRORS:                None.
+
+BUGS
+
+    Does not check for division by zero, which will cause an infinite loop.
+
+
+
+        _______
+<a id="p13.3.4">13.3.4</a>  UT$UMUL
+
+VECTOR NUMBER:          121
+INPUT PARAMETERS:       D register - unsigned integer.
+                        X register - unsigned integer.
+OUTPUT VALUES:          D register - More significant word of product.
+                        X register - Less significant word of product.
+                        UTW_S1     - More significant word of product.
+                        UTW_S2     - Less significant word of product.
+
+DESCRIPTION
+
+    2-byte by 2-byte unsigned integer multiply routine.  Multiplies D by  X
+    putting  the  product  back  into  D  and  X, (and also into UTW_S1 and
+    UTW_S2).  The more significant word of the product  goes  into  D  (and
+    into UTW_S1).
+
+EXAMPLE:
+        LDX     UNSIGNED_MULTIPLIER
+        LDD     UNSIGNED_MULTIPLICAND
+        OS      UT$UMUL
+
+ERRORS:                None.
+
+
+
+      _____________________________
+<a id="p13.4">13.4</a>  MISCELLANEOUS SYSTEM SERVICES
+
+        _______
+<a id="p13.4.1">13.4.1</a>  UT$ENTR
+
+VECTOR NUMBER:          112
+INPUT PARAMETERS:       X register - Address of routine to be entered.
+                        D register - Parameter to be passed to the routine.
+OUTPUT VALUES:          B register - Code number (generally an error code).
+                        C-flag     - Clear if B register is zero, else set.
+
+DESCRIPTION
+
+    Allows a routine at X to be called in such a way that it may be  exited
+    from  any  of  the  routines  nested  within it.  The parameter in D is
+    passed to the routine at X.
+
+    The most important use for UT$ENTR (together with UT$LEAV) is for error
+    handling:  they can mimic the ON ERROR and RAISE facilities in OPL.
+
+    UT$ENTR establishes a new  <u>control  region</u>,  meaning  that  an  entered
+    routine  can be terminated early by a call to UT$LEAV.  That is, any of
+    the routines (to any depth) used within the entered  routine  can  call
+    UT$LEAV  which  will  cause 'immediate' return to the instruction after
+    the call to UT$ENTR.  The B register will then contain the value passed
+    to UT$LEAV.
+
+    So, in the same way that an 'RTS' instruction causes control to  return
+    from  a  normal  subroutine to the calling routine, the call to UT$LEAV
+    causes control to return from within UT$ENTR to the routine that called
+    UT$ENTR.  In both cases the stack is adjusted appropriately for return.
+
+    Calls to UT$ENTR can be nested to any depth, with a control region  for
+    each  call.  UT$LEAV dis-establishes only the most recently established
+    region, returning to the instruction after the last UT$ENTR call.
+
+    Note that a new control  region  is  disestablished  <u>either</u>  by  normal
+    return  from  UT$ENTR,  <u>or</u>  by  a call to UT$LEAV within the new region
+    (unless called within a nested control region).
+
+    The entered routine <u>must</u> return an appropriate code number (generally 0
+    to indicate non-error) in the B register.
+
+    The locations UTW_S1 through UTW_S5 may be used for passing  parameters
+    to the entered routine.  <u>UTW_S0 is corrupted prior to entry, however.</u>
+
+    See UT$LEAV in section <a href="#p13.4.2">13.4.2</a>.
+
+    This routine is best illustrated by the examples.
+
+EXAMPLES:
+
+    To enter ROUTINE_1, which calls other routines, any of which may call
+    UT$LEAV on error. Pass the value 1 to ROUTINE_1.
+
+ENTER_ROUTINE_1:
+        LDX     #ROUTINE_1      ; UT$ENTR calls the routine at address X
+        LDD     #1              ; Set parameter for ROUTINE_1
+        OS      UT$ENTR         ; Establish new control region
+; Region now dis-established
+        BCS     ERROR           ; On error, B set to error code, C-flag set
+        RTS
+
+ROUTINE_1:
+        STD     ROUTINE_1_PARAMETER
+        BCC     NO_ERROR_1
+        LDA     B,#ERROR_CODE_1
+        OS      UT$LEAV ; <u>return B to ENTER_ROUTINE_1, setting C-flag</u>
+NO_ERROR_1:
+        JSR     ROUTINE_2       ; if either of these 2 routines call
+        JSR     ROUTINE_3       ;   UT$LEAV, control doesn't return to
+                                ;   <u>this</u> routine
+        CLR     B               ; B must be cleared to indicate non-error
+        RTS
+
+ROUTINE_2:
+        .
+        .
+        BCC     NO_ERROR_2
+        LDA     B,#ERROR_CODE_2
+        OS      UT$LEAV ; <u>return B to ENTER_ROUTINE_1, setting C-flag</u>
+NO_ERROR_2:
+        RTS                     ; no need to clear B here as not called
+                                ; directly by UT$ENTR
+
+
+    The following example establishes <u>nested</u> control regions,
+    clarifying where control continues after calling UT$LEAV. (In this
+    example, 0 in the B register is used to signify non-error return from
+    UT$ENTR).
+
+MAIN:
+        .
+        .
+        LDX     #REGION_1
+        LDD     P1              ; set D to parameter for REGION_1
+        OS      UT$ENTR         ; <u>Establish a new control region</u>
+; REGION_1 now dis-established
+        BCS     ERROR           ; On error, B set to error code, C-flag set
+        RTS
+
+REGION_1:
+        STD     PARAMETER_1
+        .
+        .
+        BCC     NO_ERROR_1
+        LDA     B,#CODE1
+        OS      UT$LEAV         ; return B register to MAIN, setting C-flag
+NO_ERROR_1:
+        JSR     RTN1            ; if RTN1 calls UT$LEAV,
+        .                       ;    control returns to MAIN
+        .
+        LDX     #REGION_2
+        LDD     P2              ; set D to parameter for REGION_2
+        OS      UT$ENTR         ; <u>Establish a new control region</u>
+; REGION_2 now dis-established
+        BCS     ERROR           ; On error, B set to error code, C-flag set
+        CLR     B               ; B must be cleared for normal return
+        RTS
+
+REGION_2:
+        STD     PARAMETER_2
+        .
+        .
+        BCC     NO_ERROR_2
+        LDA     B,#CODE2
+        OS      UT$LEAV         ; return to REGION_1, setting C-flag
+NO_ERROR_2:
+        JSR     RTN2            ; if RTN2 calls UT$LEAV,
+                                ;    control returns to REGION_1
+        .
+        .
+        LDX     #REGION_3
+        LDD     P3              ; set D to parameter for REGION_3
+        OS      UT$ENTR         ; <u>Establish a new control region</u>
+; REGION_3 now dis-established
+        BCS     ERROR           ; On error, B set to error code, C-flag set
+        CLR     B               ; B must be cleared for normal return
+        RTS
+
+ERRORS:                None.
+
+
+
+        _______
+<a id="p13.4.2">13.4.2</a>  UT$LEAV
+
+VECTOR NUMBER:          116
+INPUT PARAMETERS:       B register - Code number to be returned by UT$ENTR.
+OUTPUT VALUES:          B register - Code number to be returned by UT$ENTR.
+                        C-flag     - Clear if B register is zero, else set.
+
+DESCRIPTION
+
+    <u>SEE UT$ENTR for full description of control regions.</u>
+
+    Causes an exit from the control region established by the  most  recent
+    UT$ENTR  call.   Execution resumes as if UT$ENTR had returned the value
+    in the B register,  so  that  UT$LEAV  never  returns  to  the  calling
+    routine.   Routines  to  any  depth  may be terminated early by calling
+    UT$LEAV, provided that all are dynamic  descendants  of  at  least  one
+    UT$ENTR call.
+
+EXAMPLE:
+
+    (<u>SEE UT$ENTR</u> for more examples).
+
+    To restart a routine after each error message.
+
+LOOP:
+        LDX     #ERROR_PRONE_ROUTINE
+        LDD     PARAMETER
+        OS      UT$ENTR
+        BCC     EXIT_LOOP
+        JSR     DISPLAY_MESSAGE        ; display the message corresponding
+                                        ;     to the value in B
+        BRA     LOOP
+EXIT_LOOP:
+
+  (Then in any of ERROR_PRONE_ROUTINE's dynamic descendants UT$LEAV may
+   be called with the appropriate error code in B.)
+
+DYNAMIC_DESCENDANT:
+        .
+        .
+        BCC     NO_ERROR
+        LDA     B,#ERROR_CODE_1
+        OS      UT$LEAV         ; cause UT$ENTR to return B, setting C-flag
+NO_ERROR:
+
+ERRORS:                None.
+
+
+
+        _______
+<a id="p13.4.3">13.4.3</a>  UT$XCAT
+
+VECTOR NUMBER:          123
+INPUT PARAMETERS:       UTW_S0     : record type of filename ($81 to $8F)
+                                     - least significant byte only.
+OUTPUT VALUES:          None.
+
+DESCRIPTION
+
+    See chapter 12 for description of OS file handling.
+
+         Displays all filenames of the  given  record  type  (in  the  byte
+    UTW_S0+1) on the current device.  A record type of $81 in UTW_S0+1 will
+    do a directory of files, as in the OPL DIR$  function,  and  any  other
+    value  up  to  $8F  inclusive will do a directory of block files of the
+    given type.
+
+    Waits for EXE or ON/CLEAR to be pressed after displaying each filename.
+    If  EXE is pressed the next filename is displayed, while ON/CLEAR exits
+    UT$XCAT.
+
+    Displays "END OF PACK" message when no more filenames found,  and  then
+    pressing EXE displays the first filename again, and ON/CLEAR exits.
+
+    Other error messages possibly reported are for
+
+    1.  no pak in slot
+
+    2.  bad or damaged pak in slot
+
+    3.  an invalid pak selected
+
+    after any of which UT$XCAT is exited.
+
+    See also sections <a href="tech12.htm#p12.2.2">12.2.2</a> FL$BCAT, <a href="tech12.htm#p12.1.3">12.1.3</a> block files, <a href="tech12.htm#p12.1.2">12.1.2</a> files.
+
+EXAMPLE:
+
+    Display names of all diary files saved.
+
+DIARY_DIRECTORY:
+        LDA     A,#BDIATYP  ; BDIATYP ($82) is diary filename record type
+        STA     A,UTW_S0+1: ; Store in LSB of UTW_S0
+        OS      UT$XCAT
+
+ERRORS:                None.
+
+
+
+        _______
+<a id="p13.4.4">13.4.4</a>  UT$YSNO
+
+VECTOR NUMBER:          125
+INPUT PARAMETERS:       None.
+OUTPUT VALUES:          B register - The key pressed.
+                        C-flag     - Set for 'Y' or 'y' pressed.
+                                   - Clear for 'N', 'n' or ON/CLEAR.
+
+DESCRIPTION
+
+    Waits for 'Y', 'y', 'N', 'n' or ON/CLEAR to be pressed,  returning  the
+    key  pressed  in B.  If 'Y' or 'y' pressed, return C-flag set.  If 'N',
+    'n' or ON/CLEAR, return C-flag clear.
+
+    UT$YSNO calls KB$STAT to set  the  keyboard  to  alpha  shift,  so  the
+    previous keyboard status will be destroyed.
+
+EXAMPLE:
+
+    Display " Y/N" then call UT$YSNO.
+
+        OS      UT$DISP
+        .ASCIZ  " Y/N"
+        OS      UT$YSNO
+
+ERRORS:                None.
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech12.htm">Ch. 12</a></li>
+<li class=navactive>Ch. 13</li>
+<li><a href="tech14.htm">Ch. 14</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

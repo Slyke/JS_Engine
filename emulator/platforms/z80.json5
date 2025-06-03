@@ -1,0 +1,35 @@
+{
+  cpu: {
+    alu: "./cpu/alu/z80.js",
+    registers: "./cpu/registers/z80.js",
+    control: "./cpu/control/z80.js",
+    decoder: "./cpu/decoder/z80.js"
+  },
+  controls: {
+    commandHotkeys: { pause: "KeyP", step: "KeyN", reset: "Shift+KeyT", saveState: "KeyI", loadState: "KeyO" },
+    inputHotkeys: { coin: "KeyC", start1: "Digit1", start2: "Digit2", left: "KeyA", right: "KeyD", shoot: "Space" }
+  },
+  memory: {
+    mmu: "./memory/mmu/z80.js",
+    devices: [
+      { type: "ram", index: 0, module: "./memory/ram/z80.js", start: 0, size: 8192 },
+      { type: "rom", index: 0, module: "./memory/rom/z80.js", start: 49152, size: 8192 },
+      { type: "io", index: 0, module: "./memory/io/z80.js", start: 0, size: 16 },
+      { type: "io", index: 0, module: "./audio/z80.js", start: 16, size: 16 }
+    ]
+  },
+  io: {
+    devices: [
+      { type: "io", index: 0, module: "./memory/io/z80.js", portStart: 0, size: 16 },
+      { type: "io", index: 1, module: "./audio/z80.js", portStart: 16, size: 16 }
+    ]
+  },
+  video: {
+    module: "./video/z80-video.js",
+    source: { type: "ram", index: 0 },
+    width: 256,
+    height: 192,
+    scale: 2,
+    fps: 50
+  }
+}

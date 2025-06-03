@@ -1,0 +1,1103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Top Slot Technical Data - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<style type="text/css">
+td
+{
+  padding-right: 15px;
+}
+</style>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "topslot.htm", "name": "Top Slot" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li>Top Slot</li>
+</ol>
+
+<h1>Psion Organiser II Top Slot Technical Data</h1>
+
+<p>
+These are number of technical documents relating to the top slot of the Psion
+Organiser II, which were sent by Psion Technical Support to some of their customers.
+Note that there are references in the text to a figure 2.1 in appendix B, which
+is missing.
+</p>
+
+<ul>
+  <li><a href="#p5">Connecting Peripherals to the Organiser Top Slot Interface Board</a>
+   <ul>
+     <li><a href="#p6">General Wiring Layout for the Organiser Top Slot Interface</a>
+     <li><a href="#p7">Wiring Connections for a Comms Link Interface</a></li>
+     <li><a href="#p8">Wiring Connections for a Bar Code Interface</a></li>
+     <li><a href="#p9">Wiring Connections for a Magnetic Card Reader</a></li>
+     <li><a href="#p10">Wiring Connections for a Dual Bar Code Reader / Comms Link Interface</a></li>
+     <li><a href="#p11">Wiring Connections for a Dual Magnetic Card Reader / Comms Link Interface</a></li>
+   </ul>
+  <li><a href="#p15">Maximum Current Drain From the Organiser Top Slot Interface</a></li>
+  <li><a href="#p16">The Top Slot - A Hardware Overview</a></li>
+  <li><a href="#p19">Organiser II Top Slot Pin Out Diagram</a></li>
+  <li><a href="#p20">Top Slot Interfacing</a></li>
+  <li><a href="#p22">The 8 Bit Latch - An Example of Interfacing</a></li>
+</ul>
+
+
+<hr>
+
+<a id="p5"></a>
+<h1>Connecting Peripherals to the Organiser Top Slot Interface Board</h1>
+
+<p>
+There are quite often requirements to wire your own interfaces with different bar code readers or comms
+cables. For that reason on the following pages the various pin allocations are shown, along with their function.
+</p>
+
+<p>
+There are diagrams with all of them for ease of understanding and the following variations are shown:</p>
+
+<ul>
+  <li><a href="#p6">General Interface Layout Showing All Possible Variations</a></li>
+  <li><a href="#p7">Comms Link Interface</a></li>
+  <li><a href="#p8">Bar Code Interface</a></li>
+  <li><a href="#p9">Magnetic Card Reader</a></li>
+  <li><a href="#p10">Dual Bar Code Reader / Comms Link</a></li>
+  <li><a href="#p11">Dual Magnetic Card Reader / Comms Link</a></li>
+</ul>
+
+<hr>
+
+<a id="p6"></a>
+<h1>General Wiring Layout for the Organiser Top Slot Interface</h1>
+
+<div align=center>
+<img src="pics/topslot/topgen.gif" width=214 height=284 alt="">
+</div>
+
+<table summary="">
+  <tr>
+    <td>Pin&nbsp;1</td>
+    <td>GND</td>
+    <td>Ground (All)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;2</td>
+    <td>GND</td>
+    <td>Ground (All)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;3</td>
+    <td>DSR</td>
+    <td>Data Set Ready (Comms Link)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;4</td>
+    <td>DTR</td>
+    <td>Data Terminal Ready (Comms Link)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;5</td>
+    <td>RTS</td>
+    <td>Request To Send (Comms Link)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;6</td>
+    <td>CTS</td>
+    <td>Clear To Send (Comms Link)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;7</td>
+    <td>TxD</td>
+    <td>Transmit Data (Comms Link)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;8</td>
+    <td>RxD</td>
+    <td>Receive Data (Comms Link)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;9</td>
+    <td>RDD</td>
+    <td>Read Data (Magnetic Card Reader)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;10</td>
+    <td>RCP</td>
+    <td>Clock Pulse For Data Synchronisation (Magnetic
+    Card Reader). Bar Code Data (Bar Code Reader)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;11</td>
+    <td>CLS</td>
+    <td>Card Detect (Magnetic Card Reader)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;12</td>
+    <td>Vcc</td>
+    <td>Supply Voltage +5 Volts (Magnetic Card Reader,
+    Bar Code Reader)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;13</td>
+    <td>GND</td>
+    <td>Ground</td>
+  </tr>
+</table>
+
+<p>&nbsp;<br>
+The above pin allocations show all of the possible usages for the various connections on
+an interface board.
+I have also shown Pin 13 which is the additional ground connection and is linked
+to pins 1 and 2 by the same circuit. This is generally used on the Dual Interface boards
+but can be used as a normal ground.</p>
+
+<hr>
+
+<a id="p7"></a>
+<h1>Wiring Connections for a Comms Link Interface</h1>
+
+<div align=center>
+<img src="pics/topslot/topcomms.gif" width=214 height=284 alt="">
+</div>
+
+<h3>Comms Link Wiring Connections</h3>
+
+<table summary="">
+  <tr>
+    <td>Pin&nbsp;1</td>
+    <td>GND</td>
+    <td>Ground</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;2</td>
+    <td>GND</td>
+    <td>Ground</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;3</td>
+    <td>DSR</td>
+    <td>Data Set Ready (Comms Link)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;4</td>
+    <td>DTR</td>
+    <td>Data Terminal Ready (Comms Link)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;5</td>
+    <td>RTS</td>
+    <td>Request To Send (Comms Link)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;6</td>
+    <td>CTS</td>
+    <td>Clear To Send (Comms Link)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;7</td>
+    <td>TxD</td>
+    <td>Transmit Data (Comms Link)</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;8</td>
+    <td>RxD</td>
+    <td>Receive Data (Comms Link)</td>
+  </tr>
+</table>
+
+<p>The rest of the pins are not used but pin 13 can
+be used for a ground. The Ground Pins 1 and 2 and Pin 13 are all linked together on the
+same Circuit and thus are interchangeable.</p>
+
+<hr>
+
+<a id="p8"></a>
+<h1>Wiring Connections for a Bar Code Interface</h1>
+
+<div align=center>
+<img src="pics/topslot/topbar.gif" width=214 height=284 alt="">
+</div>
+
+<h3>Bar Code Reader Wiring Connections</h3>
+
+<table summary="">
+  <tr>
+    <td>Pin&nbsp;10</td>
+    <td>Vo</td>
+    <td>Bar Code Data</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;12</td>
+    <td>Vcc</td>
+    <td>Power Supply +5 Volts</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;13</td>
+    <td>GND</td>
+    <td>Ground</td>
+  </tr>
+</table>
+
+<p>
+None of the other pins are connected though pins 1 and 2 can also be used
+as the ground as they are connected to pin 13 by the same circuit.
+</p>
+
+<hr>
+
+<a id="p9"></a>
+<h1>Wiring Connections for a Magnetic Card Reader</h1>
+
+<div align=center>
+<img src="pics/topslot/topmag.gif" width=214 height=284 alt="">
+</div>
+
+<h3>Magnetic Card Reader Wiring Connections</h3>
+
+<table summary="">
+  <tr>
+    <td>Pin&nbsp;1</td>
+    <td>GND</td>
+    <td>Ground</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;9</td>
+    <td>RDD</td>
+    <td>Read Data Line (This changes to a logic
+    &quot;1&quot; level when a &quot;1&quot; bit is read from the card).</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;10</td>
+    <td>RCP</td>
+    <td>Clock Pulse for synchronisation of reading
+    data (This is used to sample the data line and changes to a logic &quot;1&quot; when clock
+    signals encoded on a card are detected).</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;11</td>
+    <td>CLS</td>
+    <td>Card Detect detects presence of a card in the
+    Swipe Reader (This goes to a logic &quot;1&quot; while Data is being read from the card).</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;12</td>
+    <td>Vcc</td>
+    <td>Power Supply +5 Volts</td>
+  </tr>
+</table>
+
+<p>
+The other pins are not used though Pin 13 can be used for Ground as it is connected
+to the same circuit as pins 1 and 2 which are also Ground.
+</p>
+
+<hr>
+
+<a id="p10"></a>
+<h1>Wiring Connections for a Dual Bar Code Reader / Comms Link Interface</h1>
+
+<div align=center>
+<img src="pics/topslot/topbarcom.gif" width=214 height=284 alt="">
+</div>
+
+<h3>Dual Bar Code Reader / Comms Link Interface Wiring Connections</h3>
+
+<h3>Comms Link Connections</h3>
+
+<table summary="" cellpadding="2">
+  <tr>
+    <td>Pin&nbsp;1</td>
+    <td>GND</td>
+    <td>Ground</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;2</td>
+    <td>GND</td>
+    <td>Ground</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;3</td>
+    <td>DSR</td>
+    <td>Data Set Ready</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;4</td>
+    <td>DTR</td>
+    <td>Data Terminal Ready</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;5</td>
+    <td>RTS</td>
+    <td>Request to Send</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;6</td>
+    <td>CLS</td>
+    <td>Clear to Send</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;7</td>
+    <td>TxD</td>
+    <td>Transmit Data</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;8</td>
+    <td>RxD</td>
+    <td>Receive Data</td>
+  </tr>
+</table>
+
+<h3>Bar Code Reader Connections</h3>
+
+<table summary="" cellpadding="2">
+  <tr>
+    <td>Pin&nbsp;10</td>
+    <td>Vo</td>
+    <td>Bar Code Data</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;12</td>
+    <td>Vcc</td>
+    <td>Power Supply +5 Volts</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;13</td>
+    <td>GND</td>
+    <td>Ground</td>
+  </tr>
+</table>
+
+<hr>
+
+<a id="p11"></a>
+<h1>Wiring Connections for a Dual Magnetic Card Reader / Comms Link Interface</h1>
+
+<div align=center>
+<img src="pics/topslot/topmagcom.gif" width=214 height=284 alt="">
+</div>
+
+<h3>Dual Magnetic Card Reader / Comms Link Interface Wiring Connections</h3>
+
+<h3>Comms Link Connections</h3>
+
+<table summary="">
+  <tr>
+    <td>Pin&nbsp;1</td>
+    <td>GND</td>
+    <td>Ground.</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;2</td>
+    <td>GND</td>
+    <td>Ground.</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;3</td>
+    <td>DSR</td>
+    <td>Data Set Ready.</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;4</td>
+    <td>DTR</td>
+    <td>Data Terminal Ready.</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;5</td>
+    <td>RTS</td>
+    <td>Request to Send.</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;6</td>
+    <td>CLS</td>
+    <td>Clear to Send.</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;7</td>
+    <td>TxD</td>
+    <td>Transmit Data.</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;8</td>
+    <td><p>RxD</td>
+    <td>Receive Data.</td>
+  </tr>
+</table>
+
+<h3>Magnetic Card Reader Connections</h3>
+
+<table summary="">
+  <tr>
+    <td>Pin&nbsp;13</td>
+    <td>GND</td>
+    <td>Ground.</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;9</td>
+    <td>RDD</td>
+    <td>Read Data Line (This changes
+    to a logic &quot;1&quot; level when a &quot;1&quot; bit is read from the card).</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;10</td>
+    <td>RCP</td>
+    <td>Clock Pulse for
+    synchronisation of reading-data (This is used to sample the data line and changes to a
+    logic &quot;1&quot; when clock signals encoded on a card are detected).</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;11</td>
+    <td>CLS</td>
+    <td>Card Detect. Detects presence
+    of a card in the Swipe Reader (This goes to logic &quot;1&quot; while Data is being read
+    from the card).</td>
+  </tr>
+  <tr>
+    <td>Pin&nbsp;12</td>
+    <td>Vcc</td>
+    <td>Power Supply +5 Volts.</td>
+  </tr>
+</table>
+
+<hr>
+
+<a id="p15"></a>
+<h1>Maximum Current Drain From the Organiser Top Slot Interface</h1>
+
+<p>
+This section specifies the maximum current drain from the top slot interface. The Current figure obtained
+is the highest safe limit for a bar code reader or magnetic card reader to draw. This will help in selecting
+suitable bar coding wands, scanners, laser guns or card readers for the Organiser Interface boards.
+</p>
+
+<p>
+The total maximum current that can be drawn from the Vcc3 regulator is <b><u>150 mA</u></b> when an external power
+supply of 10.5 Volts is used.
+</p>
+
+<p>
+This figure has been determined so that no damage can occur to the Organiser II power supply providing
+this figure is not exceeded.
+</p>
+
+<p>
+So in the case of third party companies or yourselves designing and developing your own interfaces, the
+following restrictions apply.</p>
+
+<ol>
+  <li>An external power supply with a <b>maximum</b> voltage output of 10.5 Volts at 150 mA should be used. </li>
+  <li>This will then permit a third slot peripheral device to draw up to a <b>maximum of 80 mA when
+      active</b> and <b>20 mA when passive</b>. </li>
+</ol>
+
+<p>More details on how these figures are arrived at are covered on the following pages of this document, where
+other top slot issues are discussed.</p>
+
+<hr>
+
+<a id="p16"></a>
+<h1>The Top Slot - A Hardware Overview</h1>
+
+<h3>Introduction</h3>
+
+<p>
+It is my intention in this paper to give an overview of the hardware of the Organiser TOP SLOT so a reader
+can gain a broad understanding of its basic structure and function.
+</p>
+
+<p>
+It is impossible to describe the structure of the top slot without also describing the structure of all 3 interface
+slots, as all are linked internally. The structure consists of an 8 bit bi-directional bus coupled with 7 control
+lines (3 of which are used as device selects) and 2 power lines. Figure 2.1 in appendix 2, shows a schematic
+circuit diagram of how the slots B, C, and the Top slot (D) are linked together in this fashion. We can divide
+this schematic into 3 separate sections of interest:
+</p>
+
+<p class=indent>
+<a href="#A">A) Power related lines.</a><br>
+<a href="#B">B) Data related lines.</a><br>
+<a href="#C">C) Control lines.</a>
+</p>
+
+<a name="A"></a>
+<h3>A) The Power Lines</h3>
+
+<h3><u>The VB line (pin 11 Slot D only)</u></h3>
+
+<div class=indent>
+<p>
+This is commonly used as the external power supply input. All the internal power lines found in
+the Organiser can be derived from this line. This line is isolated from the battery with a service
+diode. If an external supply is not used, then VB can be used as a power output.
+</p>
+
+<p>
+As an output the battery voltage (minus a diode drop) will appear on this line (5.5 - 8.5 Volts
+dependant on battery condition).
+</p>
+
+<p>
+As an input the external voltage applied should be higher than the battery to ensure no drain from
+the battery. However it is advised that any external power supply should also feed through a
+forward diode, so as to ensure no reverse current to the external source when it is powered off.
+</p>
+
+<p>
+It should be noted that VB only occurs in the TOP SLOT, slots B and C have an SVPP line on
+pin 16, which is linked through a 21 volt regulator for use when writing to DataPaks.
+</p>
+</div>
+
+<h3><u>The SVCC line (pin 13 in Top slot, Pin 15 for B &amp; C) Also called VCC3</u></h3>
+
+<div class=indent>
+<p>
+This is the main power supply line to the slots, and is regulated to 5 Volts (+/- 5%), it is derived
+from the VB rail.
+</p>
+
+<p>
+The power budget allocated for each slot is 40 mA for an unselected device and 70 mA for a
+selected device. (However in some cases such as the 128k datapak up to l00 mA is allowable). As
+only one slot is active at a time this will give 40+40+70=150 mA as a peak power drain.
+</p>
+
+<p>
+SVCC is switched on and off by the PACON signal from bit 7 of processor PORT 6.
+</p>
+</div>
+
+<h3><u>The GND line (pin 9 on Top slot, Pin 13 on B &amp;C)</u></h3>
+
+<p class=indent>This is the 0 Volts signal ground line.</p>
+
+
+
+<a name="B"></a>
+<h3>B) The Data lines.</h3>
+
+<p>
+All of the lines that make up the data bus have their origins in port 2 of the HD6303X processor. The
+primary use of port 2 is as an 8 bit bi-directional data bus.
+</p>
+
+<p>
+It can be controlled by 2 registers.......
+</p>
+
+<p class=indent>
+Port 2 - DDR (Data Direction Register) at $0001
+<br>Port 2 - Data register at $0003
+</p>
+
+<p>
+The DDR determines which I/O direction is to be used, (0 for input, 1 for output) only 2 bits of the DDR
+are used:
+</p>
+
+<p class=indent>
+Bit 0 - defines the I/O direction of SD0
+<br>Bit 1 - defines the I/O direction of SD1-7
+</p>
+
+<p>
+<b>WARNING. THE DDR IS A WRITE ONLY REGISTER, NO ATTEMPT SHOULD BE MADE
+TO READ FROM IT.</b>
+</p>
+
+<p>
+When the Organiser is off (i.e. the processor is in standby mode) the DDR is automatically set for input. In
+subsequent operation this should be used as a default state, in particular the DDR should always be set to
+input when SVCC is turned off.
+</p>
+
+<p>
+With DDR set to output, data can be set onto the bus by a write to the data register at $0003. The bus is
+configured as follows:
+</p>
+
+<table summary="" cellspacing=3>
+  <tr>
+    <td>SD0</td>
+    <td>line from bit 0</td>
+    <td>(pin 2 on all slots)</td>
+  </tr>
+  <tr>
+    <td>SD1</td>
+    <td>line from bit 1</td>
+    <td>(pin 4 on Top slot, pin 1 on B &amp; C)</td>
+  </tr>
+  <tr>
+    <td>SD2</td>
+    <td>line from bit 2</td>
+    <td>(pin 6 on Top slot, pin 4 on B &amp; C)</td>
+  </tr>
+  <tr>
+    <td>SD3</td>
+    <td>line from bit 3</td>
+    <td>(pin 8 on Top slot, pin 3 on B &amp; C)</td>
+  </tr>
+  <tr>
+    <td>SD4</td>
+    <td>line from bit 4</td>
+    <td>(pin 7 on Top slot, pin 6 on B &amp; C)</td>
+  </tr>
+  <tr>
+    <td>SD5</td>
+    <td>line from bit 5</td>
+    <td>(pin 5 on Top slot, pin 5 on B &amp; C)</td>
+  </tr>
+  <tr>
+    <td>SD6</td>
+    <td>line from bit 6</td>
+    <td>(pin 3 on Top slot, pin 8 on B &amp; C)</td>
+  </tr>
+  <tr>
+    <td>SD7</td>
+    <td>line from bit 7</td>
+    <td>(pin 1 on Top slot, pin 7 on B &amp; C)</td>
+  </tr>
+</table>
+
+
+
+<a name="C"></a>
+<h3>C) Control lines</h3>
+
+<p>
+The majority of these lines are controlled from Processor port 6, which again has one data register, and one
+Data direction register (DDR). The Port 6 DDR is controlled in the same way as Port 2 DDR.
+</p>
+
+<h3><u>The SS1, SS2 and SS3 lines (pin 12 an all slots)</u></h3>
+
+<p class=indent>
+These lines are defined as the slot select lines, they are controlled by bits 4,5 and 6 of Port 6
+accordingly. The inactive state here is with all bits set high and thus all slots are de-selected.
+</p>
+
+<p class=indent>
+Only one slot should be selected at any one time.
+</p>
+
+<h3><u>The AC line (pin 14 on Slot D only)</u></h3>
+
+<p class=indent>
+The AC signal from slot 3 can be used to allow an external device to turn the Organiser on. In
+order to activate this function, the AC signal should be pulled low by an external device. For
+instance the Comms link does this by use of an Open-collector npn transistor.
+</p>
+
+<h3><u>The SCK line (pin 10 on all slots)</u></h3>
+
+<h3><u>The SMR line (pin 16 on Top slot, pin 9 an B &amp; C)</u></h3>
+
+<h3><u>The SPGM line (pin 14 on Slot B &amp; C only)</u></h3>
+
+<h3><u>The SQE line (pin 15 on Top slot, pin 11 an B &amp; C)</u></h3>
+
+<p class=indent>
+These remaining control lines are general purpose, they are controlled by bits 0,1,2 and 3 of
+processor port 6. Their use is defined by the device that is currently selected. It should be noted
+that SPGM is not available on slot 3.
+</p>
+
+<hr>
+
+<a id="p19"></a>
+<h1>Organiser II Top Slot Pin Out Diagram</h1>
+
+<div align=center>
+<img src="pics/topslot/topslot_pinouts.gif" width=295 height=243 alt="">
+</div>
+
+<h3>Pin Assignments For The Top Slot</h3>
+
+<table summary="">
+  <tr>
+    <th>Pin</th>
+    <th>Signal</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>SD7</td>
+    <td>Data Bit 7</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>SD0</td>
+    <td>Data Bit 0</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>SD6</td>
+    <td>Data Bit 6</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>SD1</td>
+    <td>Data Bit 1</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>SD5</td>
+    <td>Data Bit 5</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>SD2</td>
+    <td>Data Bit 2</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td>SD4</td>
+    <td>Data Bit 4</td>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td>SD3</td>
+    <td>Data Bit 3</td>
+  </tr>
+  <tr>
+    <td>9</td>
+    <td>GND</td>
+    <td>0 Volts</td>
+  </tr>
+  <tr>
+    <td>10</td>
+    <td>SCK</td>
+    <td>Undefined Control Line</td>
+  </tr>
+  <tr>
+    <td>11</td>
+    <td>SVB</td>
+    <td>External Power Input / Battery Output Voltage -
+    0.6 Volt</td>
+  </tr>
+  <tr>
+    <td>12</td>
+    <td>SS3</td>
+    <td>Slot Select 3</td>
+  </tr>
+  <tr>
+    <td>13</td>
+    <td>SCVV</td>
+    <td>+5 Volts</td>
+  </tr>
+  <tr>
+    <td>14</td>
+    <td>AC</td>
+    <td>External On/Clear</td>
+  </tr>
+  <tr>
+    <td>15</td>
+    <td>SOE</td>
+    <td>Undefined Control Line</td>
+  </tr>
+  <tr>
+    <td>16</td>
+    <td>SMR</td>
+    <td>Undefined Control Line</td>
+  </tr>
+</table>
+
+<hr>
+
+<a id="p20"></a>
+<h1>Top Slot Interfacing</h1>
+
+<h3>Introduction</h3>
+
+<p>
+Now we have learned the basic structure of the top slot and its relation to the other
+Organiser slots, we can attempt to design an interface for it.
+</p>
+
+<p class=indent>
+In this part of the paper we shall discuss the rules and restrictions that must be observed, and the
+conventions used when interfacing to the Top slot. We shall also discuss external wake up and
+power supplies in a deeper fashion, and lastly we shall design a sample hardware interface and
+assembler program to drive it.
+</p>
+
+<p class=indent>
+As previously explained the top slot shares common data lines, control lines (except slot select),
+and supply voltage with slots B and C. (See fig 2.1 in Appendix 2)
+</p>
+
+<h3>Rules &amp; Restrictions.</h3>
+
+<p class=indent>
+No voltages should be present on the top slot when the slots are turned off (i.e. SVCC is at 0 volts)
+as permanent damage can occur.
+</p>
+
+<h3>Conventions.</h3>
+
+<p class=indent>
+A set of conventions have been drawn up by Psion to aid the design of hardware and software
+which will access the Organiser Top slot.
+</p>
+
+<h3>Standard Control line states.</h3>
+
+<p>
+A conventional table of control line states has been defined, to help with top slot interfacing.
+</p>
+
+<table summary="">
+  <tr>
+    <th>SOE</th>
+    <th>SMR</th>
+    <th>SCK</th>
+    <th>State</th>
+  </tr>
+  <tr>
+    <td>0</td>
+    <td>0</td>
+    <td>0/1</td>
+    <td>Toggle up pack address.</td>
+  </tr>
+  <tr>
+    <td>0</td>
+    <td>1</td>
+    <td>0</td>
+    <td>Reset pack address.</td>
+  </tr>
+  <tr>
+    <td>0</td>
+    <td>1</td>
+    <td>1</td>
+    <td>Undefined for Top slot.</td>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>0</td>
+    <td>0</td>
+    <td>Access Top slot device.</td>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>0</td>
+    <td>1</td>
+    <td>Reserved for further expansion.</td>
+  </tr>
+  <tr>
+    <td>1</td>
+    <td>1</td>
+    <td>0/1</td>
+    <td>Access printer control latch.</td>
+  </tr>
+</table>
+
+
+<h3>Changing Control Lines</h3>
+
+<p>
+To help prevent problems when changing Control lines a routine has been defined. This is as follows...
+</p>
+
+<ul>
+  <li>Ensure SS3 is High</li>
+  <li>Change line</li>
+  <li>Change direction of data bus if needed</li>
+  <li>Drive SS3 low</li>
+  <li>Drive SS3 high before changing any other lines</li>
+</ul>
+
+
+<h3>External Switch On.</h3>
+
+<p>
+The AC line which has its origin in the top slot can be used to as an external switch on (See previous paper),
+when the AC line is driven low it has the same effect as an ON/CLEAR. However software can be used to
+detect if the ON/CLEAR key has been pressed if a differentiation needs to be made.<br>
+</p>
+
+<p>
+<b>NB. AC being driven low does not switch on the SVCC power line.</b>
+</p>
+
+<h3>External Power Supply.</h3>
+
+<p>
+An external power supply to the Organiser should observe the following rules.
+</p>
+
+<ul>
+  <li>It should Supply into the VB pin of the Top slot.</li>
+  <li>It should be diode isolated to prevent reverse Voltage 'Leaking' into it when it is switched off.</li>
+  <li>It must supply a greater voltage, than the battery voltage plus diode drop, and thus prevent
+  any drain on the battery.</li>
+</ul>
+
+<hr>
+
+<a id="p22"></a>
+<h1>The 8 Bit Latch - An Example of Interfacing</h1>
+
+<p>
+Now we have looked at all the considerations associated with interfacing to the Top slot let us now attempt
+to create a programme that will do this.
+</p>
+
+<h3>The Hardware.</h3>
+
+<p class=indent>
+In this example an 8 bit latch has been created to interface with the Top slot (fig 2.2). It comprises
+of one 74HC373 8 bit latch, and a 74HC00 quad 2 input nand gate. In this example the outputs
+of the latch are un-continued but in its simplest form this latch could represent a piece of test
+equipment with LCD attached to the 8 outputs.
+</p>
+
+<h3>The Software.</h3>
+
+<p>
+An Assembler program to write to this latch must observe all of the rules that we have previously stated.
+The write sequence should be as follows...
+</p>
+
+<ul>
+  <li>Turn on SVCC line</li>
+  <li>Make sure SS3 is high (Top slot deselected)</li>
+  <li>Put SOE high</li>
+  <li>Switch Port 2 to output (Port 2 DDR)</li>
+  <li>Output data to latch</li>
+  <li>Put SS3 low (Select Top slot)</li>
+  <li>Put SS3 High (Deselect Top slot)</li>
+  <li>Put SOE low</li>
+</ul>
+
+<p>
+<b>NB Waiting for a key press normally turns slots off.</b>
+</p>
+
+<h3>Sample Program to Write to the 8 Bit Latch.</h3>
+
+<p>
+Data to write is passed in Accumulator B
+</p>
+
+<table class=indent summary="">
+  <tr>
+    <td>psh</td>
+    <td>b</td>
+    <td>;save data</td>
+  </tr>
+  <tr>
+    <td>lda</td>
+    <td>b,#3</td>
+    <td>;select Top slot</td>
+  </tr>
+  <tr>
+    <td>os</td>
+    <td>pk$setp</td>
+    <td>;and turn on power</td>
+  </tr>
+  <tr>
+    <td>oim</td>
+    <td>CS3,POB_PORT6</td>
+    <td>;deselect Top slot</td>
+  </tr>
+  <tr>
+    <td>oim</td>
+    <td>0E,POB_PORT6</td>
+    <td>;set SOE high</td>
+  </tr>
+  <tr>
+    <td>oim</td>
+    <td>^xFF,POB_DD2</td>
+    <td>;set port 2 to output</td>
+  </tr>
+  <tr>
+    <td>pul</td>
+    <td>b</td>
+    <td>;restore data</td>
+  </tr>
+  <tr>
+    <td>sta</td>
+    <td>b,POB_PORT&quot;</td>
+    <td>;Output data on port 2</td>
+  </tr>
+  <tr>
+    <td>aim</td>
+    <td>^C&lt;CS3&gt;,POB_PORT6</td>
+    <td>;take SS3 low</td>
+  </tr>
+  <tr>
+    <td>OIM</td>
+    <td>CS3,POB_PORT6</td>
+    <td>;take SS3 high</td>
+  </tr>
+  <tr>
+    <td>aim</td>
+    <td>0,POB_DDR2</td>
+    <td>;set port 2 to input</td>
+  </tr>
+  <tr>
+    <td>aim</td>
+    <td>^C&lt;0E&gt;,POB_PORT6</td>
+    <td>;take SOE low.</td>
+  </tr>
+</table>
+
+<p>&nbsp;</p>
+
+<table class=indent summary="">
+  <tr>
+    <th>Location</th>
+    <th>Mnemonic</th>
+    <th>Address</th>
+  </tr>
+  <tr>
+    <td>Port 6 Data register</td>
+    <td>Pob_port6</td>
+    <td>$17</td>
+  </tr>
+  <tr>
+    <td>Port 2 Data register</td>
+    <td>Pob_port2</td>
+    <td>$03</td>
+  </tr>
+  <tr>
+    <td>Port 2 Data direction Register</td>
+    <td>Pob_DDR2</td>
+    <td>$01</td>
+  </tr>
+</table>
+
+<p>&nbsp;</p>
+
+<div align=center>
+<img src="pics/topslot/latch.gif" width=667 height=285 alt="Example 8 bit latch circuit">
+<p>Fig 2.2.</p>
+</div>
+
+
+<hr>
+
+<div class=nav><ul>
+<li><a href="index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>

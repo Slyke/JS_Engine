@@ -1,0 +1,1560 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Technical Reference Manual, Chapter 5 - Jaap's Psion Organiser II Page</title>
+<link rel="stylesheet" type="text/css" href="psion.css">
+<link rel="shortcut icon" href="pics/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org", "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem", "position": 1,
+    "item": { "@id": "../index.htm", "name": "Home" }
+  },{
+    "@type": "ListItem", "position": 2,
+    "item": { "@id": "index.htm", "name": "Psion II" }
+  },{
+    "@type": "ListItem", "position": 3,
+    "item": { "@id": "tech.htm", "name": "Technical Reference Manual" }
+  },{
+    "@type": "ListItem", "position": 4,
+    "item": { "@id": "tech05.htm", "name": "Chapter 5" }
+  }]
+}
+</script>
+</head>
+<body>
+<div class=header><h1>Jaap's Psion II Page</h1><a href="index.htm" class=jpp></a></div>
+<ol class="breadcrumb">
+  <li><a href="../index.htm">Home</a> /</li>
+  <li><a href="index.htm">Psion II</a> /</li>
+  <li><a href="tech.htm">Technical Reference Manual</a> /</li>
+  <li>Chapter 5</li>
+</ol>
+
+
+<PRE>                                 CHAPTER 5
+
+                             ________________
+                             OPERATING SYSTEM
+
+
+
+     The system ROM in an ORGANISER MKII occupies the  memory  map  between
+$8000 and $ffff.  The ROM is divided into a number of functional areas:
+
+     1.  The operating system.
+
+     2.  The OPL language.
+
+     3.  The applications.
+
+
+     This document is  mainly  concerned  with  describing  the  facilities
+provided  by the operating system to application programmers.  Both the OPL
+language and the applications (e.g.  the diary ) call the operating  system
+via the standard operating system interface.
+
+
+
+     ________________
+<a id="p5.1">5.1</a>  SYSTEM INTERFACE
+
+       _______________________
+<a id="p5.1.1">5.1.1</a>  CALLING SYSTEM SERVICES
+
+     The interface  to  the  operating  system  is  via  the  SWI  hardware
+instruction  followed  by the vector number of the operating system service
+required, i.e.
+
+            SWI                 ; software interrupt
+    .BYTE   VECTOR_NUMBER       ; required service vector
+HERE:
+
+
+     After execution of the SWI call, execution continues  after  the  byte
+containing the vector number, at the label HERE in the example above.
+
+     Parameters to the service are passed in one or more of the A,B (or D),
+and  X  registers  and  for  a small number of services in memory locations
+UTW_S0 and UTW_S1 which are zero page  locations.   Certain  services  also
+require  information in the runtime buffer RTT_BF.  The description of each
+service details the information required to be passed to it.   In  addition
+the  results  of a system service are returned in the machine registers A,B
+(or D) or X as required.  The addresses of UTW_S0 and UTW_S1 are  described
+in chapter 6.
+
+
+
+       _____________________
+<a id="p5.1.2">5.1.2</a>  REGISTER PRESERVATION
+
+     In general it should be assumed that all registers  (A,B  and  X)  are
+trashed  by  system  services.   If  this  is  not the case then the system
+service description will explicitly state which registers are preserved.
+
+
+
+       ______________
+<a id="p5.1.3">5.1.3</a>  ERROR HANDLING
+
+     All system services which indicate that they have  error  returns  may
+set  the  carry  flag  on exit from the system service and return the error
+code in the B register.  Note that system services such as  KB$GETK,  which
+do not return any errors, may not clear the carry flag.
+
+
+
+       ____________
+<a id="p5.1.4">5.1.4</a>  THE OS MACRO
+
+     Throughout the operating system description examples will be  provided
+which use a macro called OS which is as follows:
+
+    .MACRO      OS      XX
+    .BYTE       $3f,XX
+    .ENDM
+
+
+     Using this macro to get a key, for example, will be coded as follows:
+
+    OS          KB$GETK
+
+
+     and calling a system service which can return an error such as AL$GRAB
+should be called as follows:
+
+    CLR         A
+    CLR         B
+    OS          AL$GRAB
+    BCC         1$
+    ; HANDLE THE ERROR WHOSE CODE IS IN THE B REGISTER.
+1$:
+    ; CALL SUCCESSFUL AND X HAS THE TAG OF THE CELL.
+
+
+
+       ____________
+<a id="p5.1.5">5.1.5</a>  MEMORY USAGE
+
+     In the following description refer to chapter 6 for the  addresses  of
+the variables described.
+
+     The six words of memory storage labelled UTW_S0 to UTW_S5 are a set of
+scratch  variables used by the operating system which any service may trash
+as required.  Thus no values can be held in these words while making a call
+to  an  operating  system  service,  although  they may be used for storing
+intermediate values between calls to the operating system.
+
+     The seven words of memory storage labelled UTW_R0 to UTW_R6 are a  set
+of  fixed  variables  which are not trashed by the operating system service
+routines.  The service routines actually use  these  variables  but  always
+push  their  contents  on  the  stack  before  use and then recover them by
+popping them off the stack  again.   Application  programs  may  use  these
+variables as long as they maintain their integrity by pushing and popping.
+
+     As a code saving device there is a system  service  to  push  and  pop
+these variables as follows:
+
+    OS          BT$PPRG                 ; PUSH UTW_R0
+    .BYTE       1                       ; INSTRUCTION BYTE TO BT$PPRG
+    ; CAN NOW USE UTW_R0
+    OS          BT$PPRG                 ; POP UTW_R0
+    .BYTE       $81                     ; INSTRUCTION BYTE TO BT$PPRG
+
+
+     The byte following the call to BT$PPRG instructs the  service  whether
+to  push or pop the variables from the stack and which variables to push or
+pop.  The format of the byte is as follows:
+
+    BIT 7 - If set then pop the variables else push the variables
+    BIT 6 - If set then push or pop UTW_R6
+    BIT 5 - If set then push or pop UTW_R5
+    BIT 4 - If set then push or pop UTW_R4
+    BIT 3 - If set then push or pop UTW_R3
+    BIT 2 - If set then push or pop UTW_R2
+    BIT 1 - If set then push or pop UTW_R1
+    BIT 0 - If set then push or pop UTW_R0
+
+
+     Thus if the byte value is $5 then UTW_R2 and UTW_R0 will be pushed.
+
+     When pushing, the higher address variables are pushed first  and  when
+popping,  the lower address variables are popped first.  Thus if UTW_R5 and
+UTW_R2 are pushed and UTW_R2 and UTW_R1 are popped then UTW_R1 will get the
+old value of UTW_R2 and UTW_R2 will get the old value of UTW_R5.
+
+
+
+       ___________________________
+<a id="p5.1.6">5.1.6</a>  SYSTEM CONSTANTS AND MACROS
+
+     The following is a set of useful constants  and  macros  used  in  the
+description of the system services and in the examples.
+;
+; MBSET MACRO
+; ===========
+;
+        .MACRO  MBSET   MASK,ADDR
+                OIM     #MASK,ADDR
+        .ENDM   MBSET
+;
+; MBCLR MACRO
+; ===========
+;
+        .MACRO  MBCLR   MASK,ADDR
+                AIM     #XFF-&lt;MASK&gt;,ADDR
+        .ENDM   MBCLR
+;
+; MBTGL MACRO
+; ===========
+;
+        .MACRO  MBTGL   MASK,ADDR
+                EIM     #MASK,ADDR
+        .ENDM
+;
+; MBTST MACRO
+; ===========
+;
+        .MACRO  MBTST   MASK,ADDR
+                TIM     #MASK,ADDR
+        .ENDM
+;
+; CONSTANTS USED BY MPSH AND MPUL MACROS
+; ======================================
+;
+$mtr0   equ     1
+$mtr1   equ     2
+$mtr2   equ     4
+$mtr3   equ     8
+$mtr4   equ     16
+$mtr5   equ     32
+$mtr6   equ     64
+;
+; THE MPSH MACRO
+; ==============
+;
+        .MACRO  MPSH    P0,P1,P2,P3,P4,P5,P6
+        $MSK    EQU     0
+        .IF     NB &lt;P0&gt;
+        $MSK    EQU     $MSK ! $MT'P0
+        .IF     NB &lt;P1&gt;
+        $MSK    EQU     $MSK ! $MT'P1
+        .IF     NB &lt;P2&gt;
+        $MSK    EQU     $MSK ! $MT'P2
+        .IF     NB &lt;P3&gt;
+        $MSK    EQU     $MSK ! $MT'P3
+        .IF     NB &lt;P4&gt;
+        $MSK    EQU     $MSK ! $MT'P4
+        .IF     NB &lt;P5&gt;
+        $MSK    EQU     $MSK ! $MT'P5
+        .IF     NB &lt;P6&gt;
+        $MSK    EQU     $MSK ! $MT'P6
+        .ENDC
+        .ENDC
+        .ENDC
+        .ENDC
+        .ENDC
+        .ENDC
+        .ENDC
+        OS      BT$PPRG
+        FCB     $MSK
+        .ENDM   MPSH
+;
+; THE MPUL MACRO
+; ==============
+;
+        .MACRO  MPUL    P0,P1,P2,P3,P4,P5,P6
+        $MSK    EQU     0
+        .IF     NB &lt;P0&gt;
+        $MSK    EQU     $MSK ! $MT'P0
+        .IF     NB &lt;P1&gt;
+        $MSK    EQU     $MSK ! $MT'P1
+        .IF     NB &lt;P2&gt;
+        $MSK    EQU     $MSK ! $MT'P2
+        .IF     NB &lt;P3&gt;
+        $MSK    EQU     $MSK ! $MT'P3
+        .IF     NB &lt;P4&gt;
+        $MSK    EQU     $MSK ! $MT'P4
+        .IF     NB &lt;P5&gt;
+        $MSK    EQU     $MSK ! $MT'P5
+        .IF     NB &lt;P6&gt;
+        $MSK    EQU     $MSK ! $MT'P6
+        .ENDC
+        .ENDC
+        .ENDC
+        .ENDC
+        .ENDC
+        .ENDC
+        .ENDC
+        OS      BT$PPRG
+        FCB     X80 ! $MSK
+        .ENDM MPUL
+;
+; ZERO PAGE PORTS
+; ===============
+;
+POB_DDR2   EQU  $01     ; PORT 2 DATA DIRECTION REGISTER
+POB_PORT2  EQU  $03     ; PORT 2 DATA REGISTER
+POB_TCSR1  EQU  $08     ; TIMER CONTROL STATUS REGISTER 1
+POW_FRC    EQU  $09     ; FREE RUNNING COUNTER
+POW_OCR1   EQU  $0B     ; OUTPUT COMPARE REGISTER 1
+POB_TCSR2  EQU  $0F     ; TIMER 2 CONTROL/STATUS REGISTER
+POB_RMCR   EQU  $10     ; RATE MODE CONTROL REGISTER
+POB_TRCSR  EQU  $11     ; TX/RX CONTROL STATUS REGISTER
+POB_RDR    EQU  $12     ; RECEIVE DATA REGISTER
+POB_TDR    EQU  $13     ; TRANSMIT DATA REGISTER
+POB_RCR    EQU  $14     ; RAM/PORT 5 CONTROL REGISTER
+POB_PORT5  EQU  $15     ; PORT 5 DATA REGISTER
+POB_DDR6   EQU  $16     ; PORT 6 DATA DIRECTION REGISTER
+POB_PORT6  EQU  $17     ; PORT 6 DATA REGISTER
+POB_TCSR3  EQU  $1B     ; TIMER 3 CONTROL/STATUS REGISTER
+POB_TCONR  EQU  $1C     ; TIMER CONSTANT REGISTER
+;
+; SEMI-CUSTOM CHIP ADDRESSES
+; ==========================
+;
+SCA_LCDCONTROL   EQU    $0180   ; LCD CONTROL REGISTER
+SCA_LCDDATA      EQU    $0181   ; LCD DATA REGISTER
+SCA_SWITCHOFF    EQU    $01C0   ; SWITCH OFF
+SCA_PULSEENABLE  EQU    $0200   ; PULSE ENABLE
+SCA_PULSEDISABLE EQU    $0240   ; PULSE DISABLE
+SCA_ALARMHIGH    EQU    $0280   ; BUZZER ON
+SCA_ALARMLOW     EQU    $02C0   ; BUZZER OFF
+SCA_COUNTERRESET EQU    $0300   ; SET COUNTER TO 0
+SCA_COUNTERCLOCK EQU    $0340   ; CLOCK COUNTER ONCE
+SCA_NMIMPU       EQU    $0380   ; ENABLE NMI TO PROCESSOR
+SCA_NMICOUNTER   EQU    $03C0   ; ENABLE NMI TO COUNTER
+;
+; PORT 5 BITS
+; ===========
+;
+ONCLR      EQU  $80     ; ON/CLEAR LINE
+ACOUT      EQU  $02     ; ACOUT LINE
+LOWBATTERY EQU  $01     ; LOW BATTERY LINE
+;
+; PORT 6 BITS
+; ===========
+;
+PACON   EQU     $80     ; PACK VCC ENABLE SIGNAL
+CS3     EQU     $40     ; CHIP SELECT 3 SIGNAL
+CS2     EQU     $20     ; CHIP SELECT 2 SIGNAL
+CS1     EQU     $10     ; CHIP SELECT 1 SIGNAL
+OE      EQU     $08     ; OUTPUT ENABLE SIGNAL
+PGM     EQU     $04     ; PROGRAM SIGNAL
+MR      EQU     $02     ; MASTER RESET SIGNAL
+CLK     EQU     $01     ; CLOCK SIGNAL
+;
+; TCSR1 BITS
+; ==========
+;
+EOCI1   EQU     $08     ; TIMER 1 INTERRUPT ENABLE
+;
+; KBB_STAT BITS
+; =============
+;
+KY_SHFT EQU     $80             ; SHIFT
+KY_NUMB EQU     $40             ; NUMERIC LOCK
+KY_CPNM EQU     $02             ; CAPS / NUMB FLAG
+KY_CAPS EQU     $01             ; CAPS LOCK
+;
+; PACK CONTROL DELAYS
+; ===================
+;
+PACONDEL     EQU        11520           ; FOR 50MS DELAY
+VPPONDEL     EQU        2304            ; FOR 10MS DELAY
+VPPOFFDEL    EQU        46080           ; FOR 200MS DELAY
+PK_OVERBLOW  EQU        5               ; 5*X OVERBLOW
+;
+; MISCELLANEOUS CONSTANTS
+; =======================
+;
+RAMBASE         EQU     $2000           ; MACHINE RAM BASE
+RAMFREE         EQU     BTT_RAMF        ; FIRST FREE RAM BYTE
+MACHINE_STACK   EQU     $0100           ; SIZE OF MACHINE STACK
+MINEVL_STACK    EQU     $0100           ; MIN. SIZE OF EVALUATOR STACK
+ALLCELLS        EQU     32              ; NUMBER OF ALLOCATOR CELLS
+PERMCELL        EQU     0               ; PERMANENT CELL
+MENUCELL        EQU     1               ; TOP LEVEL MENU CELL
+DIRYCELL        EQU     2               ; DIARY CELL
+TEXTCELL        EQU     3               ; LANGUAGE TEXT CELL
+SYMBCELL        EQU     4               ; SYMBOL TABLE CELL
+GLOBCELL        EQU     5               ; GLOBAL RECORD CELL
+OCODCELL        EQU     6               ; QCODE OUTPUT CELL
+FSY1CELL        EQU     7               ; FIELD NAME SYMBOL TABLE 1
+FSY2CELL        EQU     8               ; FIELD NAME SYMBOL TABLE 2
+FSY3CELL        EQU     9               ; FIELD NAME SYMBOL TABLE 3
+FSY4CELL        EQU     10              ; FIELD NAME SYMBOL TABLE 4
+FBF1CELL        EQU     11              ; FIELD BUFFER CELL 1
+FBF2CELL        EQU     12              ; FIELD BUFFER CELL 2
+FBF3CELL        EQU     13              ; FIELD BUFFER CELL 3
+FBF4CELL        EQU     14              ; FIELD BUFFER CELL 4
+DATACELL        EQU     15              ; DATABASE CELL
+PREALLOC        EQU     16              ; NUMBER OF CELLS TO PREALLOCATE
+SWIDTH          EQU     $10             ; SCREEN WIDTH
+CURS_ON         EQU     $80             ; CURSOR ON FLAG
+CURS_OFF        EQU     $00             ; CURSOR OFF
+CURSOR_BLOCK    EQU     $00             ; CURSOR IN BLOCK FORM
+CURSOR_LINE     EQU     $01             ; CURSOR IN LINE FORM
+TIMEOUT         EQU     300             ; AUTOMATIC TIMEOUT IN 5 MINS
+BSIZE           EQU     &lt;256+64&gt;        ; RTT_BF BUFFER SIZE
+FSIZE           EQU     32              ; RTT_FF BUFFER SIZE
+DELIM           EQU     9               ; BUFFER DELIMITER
+KEY_TIME        EQU     $b3dd           ; GIVES 50.000MS KEY POLLING
+KEY_DELAY       EQU     14              ; DELAY BEFORE KEY REPEAT
+KEY_REPEAT      EQU     0               ; RATE OF KEY REPEAT 0=FASTEST
+KEY_CLICK       EQU     1               ; LENGTH OF KEY CLICK
+TYPEAHEAD       EQU     16              ; 16 CHARACTER TYPE AHEAD
+HDELAY          EQU     4               ; HORIZONTAL SCROLLING DELAY
+VDELAY          EQU     10              ; VERTICAL SCROLLING DELAY
+REGSIZE         EQU     32              ; NUMBER OF TABLE REGISTERS
+REGBASE         EQU     &lt;256-REGSIZE&gt;   ; FIRST REGISTER NUMBER
+STACKSIZE       EQU     32              ; TABLE STACK SIZE
+;
+; SYMBOLIC KEY CODE NAMES
+; ========================
+;
+K_AC            EQU     1               ; ON/CLEAR KEY
+K_MODE          EQU     2               ; MODE KEY
+K_UP            EQU     3               ; UP ARROW
+K_DOWN          EQU     4               ; DOWN ARROW
+K_LEFT          EQU     5               ; LEFT ARROW
+K_RGHT          EQU     6               ; RIGHT ARROW
+K_DELR          EQU     7               ; DELETE RIGHT KEY
+K_DEL           EQU     8               ; DELETE KEY
+K_EXE           EQU     13              ; EXECUTE KEY
+;
+; SCREEN DISPLAY CONTROL CODES
+; ============================
+;
+D_BS            EQU     8               ; BACK SPACE
+D_HT            EQU     9               ; NEAREST POSITION MODULO 8
+D_LF            EQU     10              ; LINE FEED
+D_HM            EQU     11              ; POSITION CURSOR TOP LEFT
+D_FF            EQU     12              ; CLEAR ENTIRE DISPLAY
+D_CR            EQU     13              ; GOTO START OF LINE
+D_CT            EQU     14              ; CLEAR TOP LINE
+D_CB            EQU     15              ; CLEAR BOTTOM LINE
+D_BL            EQU     16              ; BELL
+D_RE            EQU     17              ; REFRESH BOTH LINES
+D_TR            EQU     18              ; REFRESH TOP LINE
+D_BR            EQU     19              ; REFRESH BOTTOM LINE
+;
+; SLOT SYMBOLIC NAME
+; ==================
+;
+PAKA            EQU     0               ; RAM DATA PACK
+PAKB            EQU     1               ; FIRST PACK SLOT
+PAKC            EQU     2               ; SECOND PACK SLOT
+PAKD            EQU     3               ; TOP SLOT
+;
+; DATAPACK FIRST BYTE BITS
+; ========================
+;
+EPROM           EQU     $02             ; SET IF EPROM PACK (NOT RAM PACK)
+PGCPK           EQU     $04             ; SET IF PACK WITH PAGE COUNTER
+RDWRT           EQU     $08             ; CLEAR IF PACK WRITE PROTECTED
+NOBOOT          EQU     $10             ; CLEAR IF PACK BOOTABLE
+COPYPK          EQU     $20             ; SET IF PACK COPYABLE
+NYIMPL          EQU     $40             ; SET FOR FUTURE EXPANSION
+MK1PAK          EQU     $80             ; SET IF MARK I PACK
+;
+; FILING SYSTEM
+; =============
+;
+MAXFILE         EQU     4               ; MAXIMUM NUMBER OF OPEN FILES
+BBODTYP         EQU     $80             ; BLOCK BODY RECORDS
+NAMETYP         EQU     $81             ; RECORD TYPE FOR FILE NAMES
+BDIATYP         EQU     $82             ; BLOCK NAME TYPE FOR DIARY
+BLANTYP         EQU     $83             ; BLOCK NAME TYPE FOR OPL
+FRECTYP         EQU     $91             ; FIRST FREE RECORD TYPE
+NAMELEN         EQU     8               ; MAX LEN OF A FILE NAME
+TLRECT          EQU     &lt;FRECTYP-1&gt;     ; RECORD TYPE FOR MAIN
+
+
+
+       _____________
+<a id="p5.1.7">5.1.7</a>  ERROR NUMBERS
+
+     Included below are  all  the  symbolic  names  of  the  error  numbers
+returned by the operating system services.
+
+     These error numbers are always returned in the  B  register  after  an
+operating system service has signaled an error by returning with the carry
+flag set.
+ER_AL_NC EQU    255     ; NO MORE ALLOCATOR CELLS
+ER_AL_NR EQU    254     ; NO MORE ROOM
+ER_MT_EX EQU    253     ; EXPONENT OVERFLOW (OR UNDERFLOW)
+ER_MT_IS EQU    252     ; CONVERSION FROM STRING TO NUMERIC FAILED
+ER_MT_DI EQU    251     ; DIVIDE BY ZERO
+ER_MT_FL EQU    250     ; CONVERSION FROM NUMERIC TO STRING FAILED
+ER_IM_OV EQU    249     ; BCD STACK OVERFLOW
+ER_IM_UN EQU    248     ; BCD STACK UNDERFLOW
+ER_FN_BA EQU    247     ; BAD ARGUMENT IN FUNCTION CALL
+ER_PK_NP EQU    246     ; NO PACK IN SLOT
+ER_PK_DE EQU    245     ; DATAPACK ERROR (WRITE ERROR)
+ER_PK_RO EQU    244     ; ATTEMPTED WRITE TO READ ONLY PACK
+ER_PK_DV EQU    243     ; BAD DEVICE NAME
+ER_PK_CH EQU    242     ; PACK CHANGED
+ER_PK_NB EQU    241     ; PACK NOT BLANK
+ER_PK_IV EQU    240     ; UNKNOWN PACK TYPE
+ER_FL_PF EQU    239     ; PACK FULL
+ER_FL_EF EQU    238     ; END OF FILE
+ER_FL_BR EQU    237     ; BAD RECORD TYPE
+ER_FL_BN EQU    236     ; BAD FILE NAME
+ER_FL_EX EQU    235     ; FILE ALREADY EXISTS
+ER_FL_NX EQU    234     ; FILE DOES NOT EXIST
+ER_FL_DF EQU    233     ; DIRECTORY FULL
+ER_FL_CY EQU    232     ; PACK NOT COPYABLE
+ER_DV_CA EQU    231     ; INVALID DEVICE CALL
+ER_DV_NP EQU    230     ; DEVICE NOT PRESENT
+ER_DV_CS EQU    229     ; CHECKSUM ERROR
+ER_EX_SY EQU    228     ; SYNTAX ERROR
+ER_EX_MM EQU    227     ; MISMATCHED BRACKETS
+ER_EX_FA EQU    226     ; WRONG NUMBER OF FUNCTION ARGS
+ER_EX_AR EQU    225     ; SUBSCRIPT OR DIMENSION ERROR
+ER_EX_TV EQU    224     ; TYPE VIOLATION
+ER_LX_ID EQU    223     ; IDENTIFIER TOO LONG
+ER_LX_FV EQU    222     ; BAD FIELD VARIABLE NAME
+ER_LX_MQ EQU    221     ; UNMATCHED QUOTES IN STRING
+ER_LX_ST EQU    220     ; STRING TOO LONG
+ER_LX_US EQU    219     ; UNRECOGNISED SYMBOL
+ER_LX_NM EQU    218     ; NON-VALID NUMERIC FORMAT
+ER_TR_PC EQU    217     ; MISSING PROCEDURE DECLARATION
+ER_TR_DC EQU    216     ; ILLEGAL DECLARATION
+ER_TR_IN EQU    215     ; NON-INTEGER DIMENSION
+ER_TR_DD EQU    214     ; NAME ALREADY DECLARED
+ER_TR_ST EQU    213     ; STRUCTURE ERROR
+ER_TR_ND EQU    212     ; NESTING TOO DEEP
+ER_TR_NL EQU    211     ; LABEL REQUIRED
+ER_TR_CM EQU    210     ; MISSING COMMA
+ER_TR_BL EQU    209     ; BAD LOGICAL FILE NAME
+ER_TR_PA EQU    208     ; ARGUMENTS MAY NOT BE TARGET OF ASSIGN
+ER_TR_FL EQU    207     ; TOO MANY FIELDS
+ER_RT_BK EQU    206     ; BREAK KEY
+ER_RT_NP EQU    205     ; WRONG NUMBER OF PARAMETERS
+ER_RT_UE EQU    204     ; UNDEFINED EXTERNAL
+ER_RT_PN EQU    203     ; PROCEDURE NOT FOUND
+ER_RT_ME EQU    202     ; MENU ERROR
+ER_RT_NF EQU    201     ; FIELD NOT FOUND
+ER_PK_BR EQU    200     ; PACK BAD READ ERROR
+ER_RT_FO EQU    199     ; FILE ALREADY OPEN (OPEN/DELETE)
+ER_RT_RB EQU    198     ; RECORD TOO BIG
+ER_LG_BN EQU    197     ; BAD PROCEDURE NAME
+ER_RT_FC EQU    196     ; FILE NOT OPEN (CLOSE)
+ER_RT_IO EQU    195     ; INTEGER OVERFLOW
+ER_GN_BL EQU    194     ; BATTERY TOO LOW
+ER_GN_RF EQU    193     ; DEVICE READ FAIL
+ER_GN_WF EQU    192     ; DEVICE WRITE FAIL
+
+
+
+       ______________
+<a id="p5.1.8">5.1.8</a>  VECTOR NUMBERS
+
+     Included below are all the operating system service names and  numbers
+which may be used to set up an include file for machine code applications.
+
+    AL$FREE 000  AL$GRAB 001  AL$GROW 002  AL$REPL 003  AL$SHNK 004
+    AL$SIZE 005  AL$ZERO 006  BT$NMDN 007  BT$NMEN 008  BT$NOF  009
+    BT$NON  010  BT$PPRG 011  BT$SWOF 012  BZ$ALRM 013  BZ$BELL 014
+    BZ$TONE 015  DP$EMIT 016  DP$PRNT 017  DP$REST 018  DP$SAVE 019
+    DP$STAT 020  DP$VIEW 021  DP$WRDY 022  DV$BOOT 023  DV$CLER 024
+    DV$LKUP 025  DV$LOAD 026  DV$VECT 027  ED$EDIT 028  ED$EPOS 029
+    ED$VIEW 030  ER$LKUP 031  ER$MESS 032  FL$BACK 033  FL$BCAT 034
+    FL$BDEL 035  FL$BOPN 036  FL$BSAV 037  FL$CATL 038  FL$COPY 039
+    FL$CRET 040  FL$DELN 041  FL$ERAS 042  FL$FFND 043  FL$FIND 044
+    FL$FREC 045  FL$NEXT 046  FL$OPEN 047  FL$PARS 048  FL$READ 049
+    FL$RECT 050  FL$RENM 051  FL$RSET 052  FL$SETP 053  FL$SIZE 054
+    FL$WRIT 055  FN$ATAN 056  FN$COS  057  FN$EXP  058  FN$LN   059
+    FN$LOG  060  FN$POWR 061  FN$RND  062  FN$SIN  063  FN$SQRT 064
+    FN$TAN  065  IT$GVAL 066  IT$RADD 067  IT$STRT 068  IT$TADD 069
+    KB$BREK 070  KB$FLSH 071  KB$GETK 072  KB$INIT 073  KB$STAT 074
+    KB$TEST 075  KB$UGET 076  LG$NEWP 077  LG$RLED 078  LN$STRT 079
+    MN$DISP 080  MT$BTOF 081  MT$FADD 082  MT$FBDC 083  MT$FBEX 084
+    MT$FBGN 085  MT$FBIN 086  MT$FDIV 087  MT$FMUL 088  MT$FNGT 089
+    MT$FSUB 090  PK$PKOF 091  PK$QADD 092  PK$RBYT 093  PK$READ 094
+    PK$RWRD 095  PK$SADD 096  PK$SAVE 097  PK$SETP 098  PK$SKIP 099
+    RM$RUNP 100  TL$ADDI 101  TL$CPYX 102  TL$DELI 103  TL$XXMD 104
+    TM$DAYV 105  TM$TGET 106  TM$UPDT 107  TM$WAIT 108  UT$CPYB 109
+    UT$DDSP 110  UT$DISP 111  UT$ENTR 112  UT$FILL 113  UT$ICPB 114
+    UT$ISBF 115  UT$LEAV 116  UT$SDIV 117  UT$SMUL 118  UT$SPLT 119
+    UT$UDIV 120  UT$UMUL 121  UT$UTOB 122  UT$XCAT 123  UT$XTOB 124
+    UT$YSNO 125
+    UT$CDSP 126  ;AVAILABLE ON VERSION 2.5 AND ABOVE ONLY
+    TL$RSTR 127  ;AVAILABLE ON VERSION 2.7 AND ABOVE ONLY
+
+
+
+     _______________
+<a id="p5.2">5.2</a>  SYSTEM VERSIONS
+
+     There are 3 machine variants supplied by PSION differing only  in  the
+amount of external RAM memory available.
+
+     1.  CM - 8K RAM
+
+     2.  XP - 16K RAM
+
+     3.  LA - 31K RAM
+
+
+     The LA and XP variants can  also  be  produced  with  just  a  numeric
+keyboard  which are additionally labelled as POS200 machines, so that there
+exist two other machines known as the XP POS200 and  the  LA  POS200.   The
+only differences between the 5 machines lie in the operating system portion
+of the machine and as such there are 5 operating system variants:
+
+     1.  CM/OS - CM machine operating system.
+
+     2.  XP/OS - XP machine operating system.
+
+     3.  XP2/OS - XP POS 200 machine operating system.
+
+     4.  LA/OS - LA machine operating system.
+
+     5.  LA2/OS - LA POS 200 machine operating system.
+
+
+     The difference between the normal operating system  and  the  POS  200
+variant  is  in the handling of the top level.  The normal operating system
+enters the top level menu and  then  dispatches  to  the  various  services
+available, while the POS 200 does the following:
+
+     1.  Boot all devices.
+
+     2.  Scan all devices for an OPL procedure called BOOT.
+
+     3.  If the procedure is not found then display INSERT PACK and  switch
+         off after 1 second.
+
+     4.  If the procedure is found then run the procedure.
+
+     5.  Repeat the above steps.
+
+
+     Also,  the  POS200  variants   support   the   numeric-only   keyboard
+automatically.
+
+     In order to allow the machine type to be determined  as  well  as  the
+software  revision  level of the ROM, two bytes are permanently reserved in
+the ROM at the following addresses.
+
+    $FFE8 - Machine type.
+    $FFE9 - Software revision level number.
+
+
+
+       _____
+<a id="p5.2.1">5.2.1</a>  CM/OS
+
+     $FFE8 = $00
+
+     The CM/OS is the base operating system from which all other  operating
+system  variants  are  derived.  As such any software written to run on the
+CM/OS is guaranteed to run on all  other  operating  system  variants.   In
+other words software is upwardly compatible between the operating systems.
+
+
+
+       ________________
+<a id="p5.2.2">5.2.2</a>  XP/OS AND XP2/OS
+
+
+    $FFE8 = $01 XP/OS  - XP machine.
+    $FFE8 = $81 XP2/OS - XP POS 200 machine.
+
+
+     As for the CM/OS but will support the following extra facilities:
+
+     1.  128K DATAPACKS
+
+     2.  RAM DATAPACKS
+
+     3.  BAR CODE READERS
+
+     4.  SWIPE READERS
+
+
+
+
+       ________________
+<a id="p5.2.3">5.2.3</a>  LA/OS AND LA2/OS
+
+
+    $FFE8 = $02 LA/OS  - LA machine.
+    $FFE8 = $82 LA2/OS - LA POS 200 machine.
+
+
+     As for the XP/OS with the  exception  that  the  memory  allocator  is
+completely  different.  This is because the system variables are located at
+$2000 in the CM/OS and XP/OS as external RAM only starts at  this  address.
+However  in  the LA machines external RAM starts at address $400.  In order
+to keep the operating systems compatible the  system  variables  are  still
+located  at address $2000 in the LA machines and as such the free RAM is in
+two sections, between $400 and $2000 and above the  system  variables.   In
+order  to  allow the operating system to use the extra 7K of RAM the memory
+allocator effectively joins these two discontinuous areas of RAM  together.
+See the chapter 6 for more information.
+
+
+
+     ________
+<a id="p5.3">5.3</a>  POWER UP
+
+     The machine can be switched on in 3 different ways.
+
+     1.  By pressing the ON/CLEAR key.
+
+     2.  By the clock counter expiring in the semi-custom chip.
+
+     3.  By asserting the ON line from the top slot.
+
+
+     On power up the program counter is  loaded  from  the  system  restart
+vector  at  address  $FFFE in the operating system ROM.  The system restart
+vector is set to address $8000 in all versions  of  the  operating  system,
+which is the base address of the operating system ROM.  The restart code is
+then executed in the following sequence.
+
+     1.  Zero page RAM is enabled by setting the RAME bit in PORT 5 of  the
+         processor.
+
+     2.  The machine stack is initialised temporarily to the  top  of  zero
+         page RAM, i.e.  at address $FF.
+
+     3.  The LCD display is cleared.
+
+     4.  The control lines to the datapack bus are initialised to  a  known
+         state.
+
+
+     The next task performed  by  the  operating  system  is  to  determine
+whether a warm or cold start is required.  Essentially a cold start is when
+the machine is starting up for the first time after a power failure and  as
+such  all  operating system variables must be initialised.  A warm start is
+when the machine only needs to carry on from when it was powered  down,  as
+all RAM values are still valid.
+
+     The Hitachi HD6303X microprocessor has an internal flag  to  determine
+whether power to the internal RAM in the processor has failed at any stage.
+This flag is the top bit in PORT 5.  If the flag is clear then power to the
+internal  RAM has failed at some stage and so a cold start is required.  If
+the flag is still set then the internal RAM is still intact and so  a  warm
+start  is  required.   As the external RAM is on the same power rail as the
+processor the above flag also  serves  to  describe  the  validity  of  the
+external RAM.
+
+
+
+       __________
+<a id="p5.3.1">5.3.1</a>  COLD START
+
+     On  executing  a  cold  start  the  machine  performs  the   following
+procedures:
+
+     1.  Perform a simple RAM test on the external RAM.
+
+     2.  Determine the last address in the external RAM.
+
+     3.  Check that this address is  valid  for  the  three  memory  models
+         available, i.e.  $3fff, $5fff or $7fff.
+
+     4.  If the value does not correspond to one of the valid  values  then
+         the  RAM  must be faulty, so the buzzer is sounded and the machine
+         powered down.
+
+     5.  Use the last address of valid RAM plus 1 to initialise BTA_RTOP.
+
+     6.  Set the machine stack address to BTA_RTOP.
+
+     7.  Subtract 256 from BTA_RTOP and use the value to initialise  RTA_SP
+         and BTA_SBAS.  This leaves 256 bytes for the machine stack.
+
+     8.  Initialise all soft vectors and all operating system variables.
+
+     9.  Enable NMI interrupts to the processor.
+
+    10.  Start the timer to provide keyboard scan interrupts.
+
+    11.  Test that the battery voltage is over 5 volts.  If it is not  then
+         display  low battery message for 4 seconds and then switch off the
+         machine.  Low battery is a hardware flag in POB_PORT5 and  can  be
+         tested as follows.
+
+                LDA             A,POB_PORT5
+                ROR             A
+                BCC             1$
+                ; BATTERY IS LOW
+             1$:
+                ; BATTERY IS OK
+
+    12.  Boot any devices.
+
+    13.  Start at the top level menu.
+
+
+
+
+       __________
+<a id="p5.3.2">5.3.2</a>  WARM START
+
+     On deciding that  a  warm  start  is  required  the  operating  system
+performs the following code:
+
+        LDS     BTA_SAVSTACK
+        LDX     BTA_WRM
+        JMP     0,X
+
+     The power off service BT$SWOF stores the stack pointer in BTA_SAVSTACK
+before  switching  off  the machine to enable the machine to restart at the
+same place it was at when the machine was switched  off.   With  the  stack
+restored  to  the  value  that  it  had  in BT$SWOF, an "RTS" will continue
+execution after the call to BT$SWOF.  Next the vector for warm starting  is
+used  to  jump  to  a  warm  start  routine.  The warm start routine may be
+replaced by another routine but the operating  system  warm  start  routine
+should  be called as well.  If it is not the operating system will not work
+correctly.  See section <a href="#p5.6">5.6</a> on replacing vectored routines.
+
+     The system warm start routine performs the following actions:
+
+     1.  Switch non-maskable interrupts (NMI) on to the processor.
+
+              This is done by testing the ADDRESS SCA_NMIMPU with
+
+              TST               SCA_NMIMPU
+
+     2.  Wait for the first NMI to occur.
+
+              This is necessary as on each switch-on the clock  counter  in
+         the  semi  custom chip gains a second and so the first NMI must be
+         ignored.  See <a href="tech02.htm">chapter 2</a> section <a href="tech02.htm#p2.6">2.6</a> for further details.
+
+     3.  Test the hardware flag ACOUT in POB_PORT5.
+
+              If the flag is true then the counter has expired and the time
+         needs updating as follows:
+
+         1.  Update the system clock by the length of time the machine  has
+             been switched off for.
+
+         2.  Determine whether an alarm is due currently and if so carry on
+             with  the  power-on sequence.  If not then just switch off the
+             machine again.
+
+
+              Otherwise the machine was switched on with the  ON/CLEAR  key
+         or by an external interface.  Update the time the machine has been
+         switched off for.
+
+     4.  Restore the display to its state before power down.
+
+     5.  Set the ALARM_TO_DO flag so that any alarms will be serviced.
+
+     6.  Reset the AUTO_SWITCH_OFF countdown and check  that  it's  greater
+         than 15 seconds.  If it is not then make it 15 seconds.
+
+     7.  Check for low battery as in warm starting.
+
+     8.  Restore the interrupt status and  the  value  in  TIMER  1  STATUS
+         CONTROL REGISTER (TSCR1) which were saved by the BT$SWOF service.
+
+     9.  Wait for the ON/CLEAR key to be released.
+
+    10.  Restore the USER-DEFINED GRAPHICS as saved by the BT$SWOF service.
+
+    11.  Flush the keyboard buffer and restart keyboard scan interrupts.
+
+    12.  Execute a return instruction which  resumes  execution  after  the
+         call to the BT$SWOF service.
+
+
+
+
+     __________
+<a id="p5.4">5.4</a>  POWER DOWN
+
+     The machine can be switched off by  calling  the  POWER  DOWN  service
+routine BT$SWOF.  This routine is vectored through BTA_SOF as follows:
+
+        STS     BTA_SAVSTACK
+        LDX     BTA_SOF
+        JMP     0,X
+
+
+     The power down routine may be replaced  by  another  routine  but  the
+operating system power down routine should be called as well.  If it is not
+the operating system will not work correctly.  See section <a href="#p5.6">5.6</a> on replacing
+vectored routines.
+
+     The system power down service performs the following steps:
+
+     1.  Save the current  value  of  the  status  flag,  to  preserve  the
+         interrupt status.
+
+     2.  Save the value in the TIMER 1 STATUS CONTROL REGISTER (TSCR1).
+
+     3.  Disable interrupts.
+
+     4.  Clear the LCD display.
+
+     5.  Save the current values of the USER DEFINED GRAPHICS in the LCD.
+
+     6.  Switch off the interface slots.
+
+     7.  Reset the COUNTER to 0.
+
+     8.  Check whether any alarms are due to run in the next 34 minutes and
+         8 seconds.  If so, adjust the counter so that the machine is woken
+         up in time to service the  alarm.   See  section  <a href="tech02.htm#p2.6.2">2.6.2</a>  for  more
+         information.
+
+     9.  Switch non-maskable interrupts to the COUNTER.
+
+    10.  Disable the internal RAM by clearing the RAME bit in POB_RCR.
+
+    11.  Test the address SCA_SWITCHOFF to put  the  processor  in  standby
+         mode.
+
+
+
+
+     __________
+<a id="p5.5">5.5</a>  INTERRUPTS
+
+     The operating system uses four  of  the  ten  hardware  interrupts  to
+perform  various  services.   The  remainder  are  just  directed  to a RTI
+instruction.  However, all interrupts are vectored through RAM so that they
+may  be  intercepted  or replaced in total.  For the interrupts used by the
+operating system it is recommended that the interrupt only  be  intercepted
+and  not  be  replaced if it is required that the operating system performs
+according to specification.
+
+
+
+       _______________________
+<a id="p5.5.1">5.5.1</a>  NON-MASKABLE INTERRUPTS
+
+     The semi-custom chip will deliver an NMI to the processor exactly once
+every  second  to  provide  an  accurate system clock, provided the address
+SCA_NMIMPU has been accessed.  The NMIs to the processor can be disabled by
+accessing the address SCA_NMICOUNTER.  Note that this is an unusual feature
+since NMIs, as their name implies, cannot normally be disabled.
+
+     The NMI service routine performs the following actions:
+
+     1.  Clear the flag BTB_NMFL.
+
+              This is to allow code to detect that an NMI has  occurred  as
+         follows:
+
+                INC     BTB_NMFL
+             1$:
+                SLP                     ; Go to sleep until an interrupt
+                TST     BTB_NMFL        ; Test NMI flag
+                BNE     1$              ; Still set - so wrong interrupt
+                ; NMI interrupt occurred.
+
+
+     2.  Test the BTB_IGNM (ignore NMI flag, set on warm starting)
+
+              If it  is  zero  then  set  the  flag  and  return  from  the
+         interrupt.
+
+     3.  Update the system time by one second.
+
+     4.  Check whether the seconds count is exactly  zero,  i.e.   a  whole
+         minute.
+
+              If it is then check the alarms enabled flag AMB_EI.
+
+              If it is set then set AMB_DOIT which will trigger a  scan  of
+         the  alarms  pending  lists  at  the next TIMER 1 interrupt.  Thus
+         alarms are scanned only every minute and are under control of  the
+         processor interrupt flag.  See chapter 2 for more information.
+
+
+     5.  Check the auto switch off flag TMB_SWOF.
+
+              If it's set then decrement the time out count in TMW_TOUT  if
+         it is not already zero.
+
+     6.  Return from the interrupt.
+
+
+
+
+       _________________________
+<a id="p5.5.2">5.5.2</a>  TIMER 1 COMPARE INTERRUPT
+
+     The timer 1 compare interrupt is used to scan the  keyboard  to  allow
+keyboard  buffering  and  to  provide  a timing service.  This interrupt is
+referred to in the documentation  as  the  KEYBOARD  INTERRUPT  (KI).   The
+interrupt  is  generated  every  time  the free running counter matches the
+count in the timer 1 compare register.  As  the  free  running  counter  is
+being  clocked  by the system clock of 921600 HZ, extremely accurate timing
+can be performed using this interrupt.   The  time  between  interrupts  is
+controlled  by  the variable KBW_TDEL which is initialised on cold start to
+be $B3DD.  This value  makes  the  KI  interrupt  occur  exactly  every  50
+milliseconds  and  is  used  extensively by the operating system for timing
+purposes.  The value in KBW_TDEL can be changed, but all system timing will
+be  destroyed  as  a  result  and  the operating system may fail to perform
+correctly.
+
+     The KI service routine performs the following steps:
+
+     1.  Reset the free running counter to zero.
+
+     2.  Set the timer 1 output compare register to the value in KBW_TDEL.
+
+     3.  Check the alarm service required flag AMB_DOIT.
+
+              If it is set then run the alarm service and  clear  the  flag
+         AMB_DOIT.
+
+     4.  Increment the frame counter TMW_FRAM.
+
+     5.  Decrement the word DPW_REDY if it's not already zero.
+
+              This flag is used to perform system timing for the  operating
+         system.   If  a  delay  of 150 milliseconds were required then the
+         following code could be used to achieve that delay:
+
+                LDX     #3        ; Three KI interrupts at 50 ms each
+                STX     DPW_REDY:
+             1$:
+                SLP               ; Wait for interrupt
+                LDD     DPW_REDY: ; See if decremented to zero yet
+                BNE     1$
+                ; 150 ms now elapsed.
+
+
+     6.  Poll the keyboard.  See section <a href="tech07.htm#p7.3.2">7.3.2</a> for more information.
+
+
+
+
+       __________________
+<a id="p5.5.3">5.5.3</a>  SOFTWARE INTERRUPT
+
+     This interrupt is used to provide the interface  between  applications
+and the operating system.  When a SWI instruction is executed the following
+code is executed:
+
+        LDX     BTA_SWI
+        JMP     0,X
+
+
+     The SWI service  routine  provided  by  the  operating  system  is  as
+follows:
+
+        PUL     A
+        STA     A,BTB_4DONTUSE          ;SAVE STATUS FLAG
+        PUL     B
+        PUL     A
+        STD     BTW_1DONTUSE            ;SAVE THE D REGISTER
+        PULX
+        STX     BTW_2DONTUSE            ;SAVE THE X REGISTER
+        PULX                            ;GET THE ADDRESS OF THE BYTE
+        LDA     B,0,X                   ;FOLLOWING THE SWI INSTRUCTION
+        INX                             ;INCREMENT TO SKIP OVER THE BYTE
+        PSHX                            ;PUSH BACK AS RETURN ADDRESS
+        LDX     BTA_VECT                ;GET THE VECTOR TABLE ADDRESS
+        ABX                             ;DOUBLE THE VECTOR NUMBER AND
+        ABX                             ;ADD TO VECTOR TABLE
+        LDX     0,X                     ;GET ADDRESS OF ROUTINE
+        PSHX                            ;SAVE ON STACK FOR DUMMY RETURN
+        LDX     BTW_2DONTUSE            ;RESTORE X REGISTER
+        LDD     BTW_1DONTUSE            ;RESTORE D REGISTER
+        PSH     A                       ;SAVE A REGISTER
+        LDA     A,BTB_4DONTUSE          ;GET STATUS FLAGS
+        TAP                             ;RESTORE STATUS FLAGS
+        PUL     A                       ;RESTORE A REGISTER
+        RTS                             ;JUMP TO REQUIRED ROUTINE
+
+
+
+       ______________
+<a id="p5.5.4">5.5.4</a>  TRAP INTERRUPT
+
+     The operating system routine  to  handle  the  trap  interrupt  simply
+clears  the LCD display and displays "TRAP" on the screen until the battery
+is removed and the machine is COLD started again.  It is intended that this
+trap  remain free for use with a debugger at some time in the future and as
+such should not be used.
+
+
+
+     _______
+<a id="p5.6">5.6</a>  VECTORS
+
+     In order to provide  flexibility  in  the  operating  system  all  the
+hardware  interrupts  are  vectored through RAM vectors so that they may be
+intercepted or even replaced.  In addition a  number  of  operating  system
+services  are  provided  through  vectors  as  well  so  that  they  may be
+intercepted or replaced more easily than intercepting the SWI interrupt.
+
+     If the  operating  system  is  using  an  interrupt,  it  is  strongly
+recommended  that  the  interrupt  is  just  intercepted  and  not replaced
+entirely.  This can be done in the following way for example  to  intercept
+the NMI interrupt routine.
+
+    Initialisation code.
+
+        LDX     BTA_NMI         ; CURRENT SERVICE ROUTINE ADDRESS
+        STX     OLD_NMI         ; SAVE THE ADDRESS SOMEWHERE
+        LDX     #NEW_NMI        ; NEW NMI ROUTINE ADDRESS
+        STX     BTA_NMI         ; RE-DIRECT THE OPERATING SYSTEM
+
+    New NMI routine.
+
+    NEW_NMI:
+        ; PERFORM NEW NMI USER CODE
+        LDX     OLD_NMI         ; OLD NMI ROUTINE ADDRESS
+        JMP     0,X             ; RUN THE OLD ROUTINE
+
+
+
+       ________________
+<a id="p5.6.1">5.6.1</a>  HARDWARE VECTORS
+
+     The following is a list of hardware interrupts and  their  vectors  in
+RAM.   Those  preceded  by  a  * are not used by the operating system.  The
+addresses for the vectors are given in  the  chapter  on  memory  usage  in
+section <a href="tech06.htm#p6.5.1.2">6.5.1.2</a>.
+
+     1.  *IRQ2 - BTA_2IQ  - Interrupt request 2.
+
+     2.  *CMI  - BTA_CMI  - Timer 2 counter match interrupt.
+
+     3.   TRAP - BTA_TRP  - Trap exception interrupt.
+
+     4.  *SIO  - BTA_SIO  - Serial input/output interrupt.
+
+     5.  *TOI  - BTA_TOI  - Timer 1 overflow interrupt.
+
+     6.   OCI  - BTA_OCI  - Timer output compare interrupt.
+
+     7.  *ICI  - BTA_ICI  - Timer 1 input capture interrupt.
+
+     8.  *IRQ1 - BTA_1IQ  - Interrupt request 1 interrupt.
+
+     9.   SWI  - BTA_SWI  - Software interrupt.
+
+    10.   NMI  - BTA_NMI  - Non-maskable interrupt.
+
+
+
+
+       ________________
+<a id="p5.6.2">5.6.2</a>  SOFTWARE VECTORS
+
+The addresses for the vectors are given in the chapter on memory  usage  in
+section <a href="tech06.htm#p6.5.1.2">6.5.1.2</a>.
+
+     1.  WARM - BTA_WRM  - Warm start vector.
+
+     2.  SWOF - BTA_SOF  - Power down vector (switch off).
+
+     3.  POLL - BTA_POLL - Keyboard poll routine vector.
+
+     4.  TRAN - BTA_TRAN - Key translate routine vector.
+
+
+
+
+     _____________
+<a id="p5.7">5.7</a>  RELEASE NOTES
+
+
+
+What follows are notes for the different releases of CM  and  XP  machines.
+All significant enhancements and known bugs are listed.
+
+All the bugs noted are fixed for the following release.
+
+
+
+       _______________________
+<a id="p5.7.1">5.7.1</a>  VERSION 2.3 AND EARLIER
+
+
+Not released in any quantity.  Any  machines  with  this  operating  system
+should be returned to Psion for update.
+
+
+
+       ___________
+<a id="p5.7.2">5.7.2</a>  RELEASE 2.4
+
+
+
+Released on 12th May 1986.
+
+ENHANCEMENTS:
+
+     1.  Devices booted when the Organiser is cold booted.
+
+BUGS:
+
+     1.  If the install code of a device alters the menu a crash may  ensue
+         on a cold boot.
+
+     2.  Re-booting a machine with more than one device installed may cause
+         a crash.
+
+     3.  An attempt to translate the illegal statement "1<u>1</u>SIN" results in a
+         crash.
+
+     4.  If a field is assigned to that is beyond those already assigned to
+         before  it  may  write the data over the diary or operating system
+         variables.  This can, in rare cases, result in a crash.   The  fix
+         is  to  assign  (a  null  string  or zero) to the last field after
+         creating or opening a file and  after  getting  an  END  OF  FILE
+         condition.   (The  END  OF FILE condition is when EOF is non-zero,
+         this means that all values of the fields have been zeroed out.)
+
+     5.  If the diary is backed over midnight  and  then  brought  forward,
+         using the arrow keys, any diary entries seem to have disappeared.
+
+     6.  If RAM is full, editing a procedure can give  OUT  OF  MEMORY  and
+         leave the screen corrupted.
+
+     7.  If an error is encountered when adding to or  subtracting  from  a
+         calculator memory (M0 to M9) then that memory is corrupted.
+
+     8.  Floating point AND produces unreliable results.
+
+     9.  VIEW(1,"") does not work properly.
+
+    10.  VIEW of a 255 character string doesn't scroll.
+
+    11.  Strings longer than 255 can be  declared  (e.g.  256  gives  a  zero
+         length string).
+
+    12.  Declaring arrays which overflow memory size can cause  machine  to
+         crash at run-time.  e.g. LOCAL s$(255,100) or LOCAL a(10000).
+
+    13.  INPUT A.A$ artificially limits the length input to 252  minus  the
+         record  size  (as  found  from  RECSIZE).   It  should  allow  254
+         characters.
+
+    14.  If the machine is turned off in the minute before an alarm is  due
+         it won't go off for 34 minutes.
+
+    15.  If packs are accessed at the same time as the buzzer is used  (e.g.
+         from a key click) the bottom byte of the pack can, very rarely, be
+         blown to zero.
+
+
+
+
+       ___________
+<a id="p5.7.3">5.7.3</a>  RELEASE 2.6
+
+
+
+Released on 15 October 1986.
+
+ENHANCEMENTS:
+
+     1.  Checksum on RAM pack header.
+
+     2.  Battery checking improved.
+
+     3.  Can call OPL programs on device D.
+
+     4.  INFO calculates FREE memory as percentage free of the total memory
+         less the operating system.
+
+     5.  OPL string comparison become case dependant.
+
+     6.  UDGs preserved when the Organiser is turned off.
+
+     7.  Intelligent, faster NEXT - works on one pack at a time.
+
+     8.  A POSITION to an illegal place, e.g. past the end of file,  used  to
+         leave  the  position  alone.   It  now it positions to the last or
+         first record as appropriate.
+
+BUGS:
+
+     1.  If after a successful CLOSE another CLOSE is done  when  no  files
+         are open it can crash the system.
+
+     2.  It is possible but unlikely to get spurious  alarms  when  loading
+         devices.
+
+     3.  If the ON/CLEAR is pressed at the same moment as an alarm  it  may
+         be missed.
+
+     4.  When a translator error is detected some memory may be lost  until
+         the language is run.
+
+     5.  Using MENU with an item  with  more  than  17  letters  causes  an
+         infinite loop.
+
+     6.  When on a null diary entry deleting it causes the next diary entry
+         to be deleted.
+
+     7.  TRAP DELETE "A:"+XXX$:  can cause a crash if there is an error  in
+         XXX$:.
+
+     8.  If logical name D is used then it can  cause  OPEN  to  fail  with
+         error number zero when it should have succeeded.  An error of zero
+         is not reported as an error at the top level.  It  is  safest  not
+         use logical name D.
+
+     9.  POS200 ONLY.  The menu cell is grown every  time  the  machine  is
+         booted  so  memory  eventually fills up.  Solution is to cold boot
+         the machine.
+
+INTRODUCED BUGS:
+
+     1.  Sizing 8, 16 &amp; 32K packs can fail even when the pack is good.
+
+     2.  Erasing records on RAMPAKS followed  by  APPEND  may  corrupt  the
+         PACK.   Can  be  solved  by  avoiding using UPDATE and doing FIRST
+         after using ERASE.
+
+     3.  Copying MK1 packs fails with PACK CHANGED error.
+
+
+
+
+       _______ ___
+<a id="p5.7.4">5.7.4</a>  RELEASE 3.1
+
+
+
+Released on 30 January 1987
+
+ENHANCEMENTS:
+
+     1.  If a file is OPENned/CREATEd/DELETEd without a specified device it
+         takes the last device used (as opposed to a random device).
+
+     2.  Reports CHR$(256) and negative arguments to LEFT$, RIGHT$ and MID$
+         as errors.
+
+     3.  Intelligent NEXT improved  works with 1 file on each device.
+
+     4.  LA split device loader.
+
+     5.  128K RAM packs supported.
+
+     6.  Faster deleting on RAM packs.
+
+
+
+
+     _______________
+<a id="p5.8">5.8</a>  SYSTEM SERVICES
+
+       _______
+<a id="p5.8.1">5.8.1</a>  BT$NMDN
+
+VECTOR NUMBER:          007
+INPUT PARAMETERS:       None
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+
+     This system service routine switches off NMIs to the processor.
+
+     NOTE:  As the NMI interrupt is used to provide the  system  clock  the
+system  time  will be invalid.  It is possible to switch off NMIs and still
+maintain a valid system time.  See the system service BT$NOF.
+
+     If NMIs are switched  off  with  this  service  then  they  should  be
+switched back on with the BT$NMEN service.
+
+ERRORS:                 None
+
+
+       _______
+<a id="p5.8.2">5.8.2</a>  BT$NMEN
+
+VECTOR NUMBER:          008
+INPUT PARAMETERS:       None
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+
+     This system service routine switches on NMIs to the processor.
+
+     BT$NMEN should only be used to re-establish NMIs  if  they  have  been
+disabled with the BT$NMDN service.
+
+ERRORS:                 None
+
+
+
+       ______
+<a id="p5.8.3">5.8.3</a>  BT$NOF
+
+VECTOR NUMBER:          009
+INPUT PARAMETERS:       None
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+
+     This system service routine switches off NMIs to the processor in such
+a way that the system time will be preserved.
+
+     The NMI interrupt is generated from the semi-custom chip every  second
+to  provide  a  very accurate system clock.  When NMIs are switched off the
+processor, an internal counter in the semi-custom chip is connected to  the
+NMI  line so that NMIs can still be counted.  This service ensures that the
+counter in the semi-custom chip is reset properly so that on switching NMIs
+back  to  the  processor  the time can be updated properly.  In order to do
+this it is imperative that the BT$NON service is used to  switch  on  NMIs.
+The  maximum  time  that  can  be stored in the counter is 2048 seconds, so
+BT$NON must be called before this time has elapsed.
+
+     There is a disadvantage to this pair of services, in that on restoring
+NMIs to the processor the BT$NON service must wait for the first NMI before
+counting the number of NMIs that have occurred  while  NMIs  were  switched
+off.   This means that depending on when in the cycle the BT$NON service is
+called a delay of between 0 and 1 second can occur.   See  chapter  10  for
+more information on the timing services.
+
+     Finally note that the  counter  used  to  count  NMIs  when  they  are
+disabled  from  the processor is also used to scan the keyboard and as such
+any keyboard interrupt occurring after BT$NOF has been called will  destroy
+the  NMI  counter.   Thus  to  disable  NMIs  and preserve the system time,
+interrupts  should  also  be  disabled  before  calling  BT$NOF.   Keyboard
+services  must  not be called, as they will poll the keyboard directly when
+interrupts are disabled.
+
+
+     EXAMPLE
+        TPA                     ; GET CURRENT STATUS
+        PSH     A               ; SAVE IT
+        SEI                     ; DISABLE INTERRUPTS
+        OS      BT$NOF          ; SWITCH NMIS OFF.
+        ; CODE PERFORMED WITH NO INTERRUPTS OCCURRING.
+        OS      BT$NON          ; SWITCH NMIS BACK ON AND UPDATE TIME.
+        PUL     A               ; RESTORE PREVIOUS STATUS
+        TAP                     ; SET STATUS REGISTER
+
+ERRORS:                 None
+
+
+       ______
+<a id="p5.8.4">5.8.4</a>  BT$NON
+
+VECTOR NUMBER:          010
+INPUT PARAMETERS:       None
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+
+     This system service routine switches on NMIs to the processor.
+
+     BT$NON should only be used to re-establish  NMIs  if  they  have  been
+disabled with the BT$NOF service.
+
+ERRORS:                 None
+
+
+       _______
+<a id="p5.8.5">5.8.5</a>  BT$PPRG
+
+VECTOR NUMBER:          011
+INPUT PARAMETERS:       None
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+
+     This system service routine will  push  or  pop  the  seven  variables
+UTW_R0 to UTW_R6 on the machine stack.
+
+     This system service must be followed by a control byte which  contains
+the  instructions  for  the service.  Execution of code continues after the
+control byte.
+
+     The format of the control byte is as follows
+
+    BIT 7 - If set then pop the variables else push the variables.
+    BIT 6 - If set then push or pop UTW_R6
+    BIT 5 - If set then push or pop UTW_R5
+    BIT 4 - If set then push or pop UTW_R4
+    BIT 3 - If set then push or pop UTW_R3
+    BIT 2 - If set then push or pop UTW_R2
+    BIT 1 - If set then push or pop UTW_R1
+    BIT 0 - If set then push or pop UTW_R0
+
+Thus if the byte value is $5 then UTW_R2 and UTW_R0 will be pushed.
+
+     When pushing, the higher addressed variables are pushed first and when
+popping,  the lower address variables are popped first.  Thus if UTW_R5 and
+UTW_R2 are pushed and UTW_R2 and UTW_R1 are popped then UTW_R1 will get the
+old value of UTW_R2 and UTW_R2 will get the old value of UTW_R5.
+
+     NOTE:  no check is made to ensure that there is room  on  the  machine
+stack to take all the variables pushed.
+
+EXAMPLE
+
+        OS      BT$PPRG                 ; PUSH UTW_R0
+        .BYTE   1                       ; INSTRUCTION BYTE TO BT$PPRG
+        ; CAN NOW USE UTW_R0
+        OS      BT$PPRG                 ; POP UTW_R0
+        .BYTE   $81                     ; INSTRUCTION BYTE TO BT$PPRG
+
+ERRORS:                 None
+
+
+
+       _______
+<a id="p5.8.6">5.8.6</a>  BT$SWOF
+
+VECTOR NUMBER:          012
+INPUT PARAMETERS:       None
+OUTPUT VALUES:          None
+
+DESCRIPTION
+
+
+     This system service may be called to switch off the Organiser II.
+
+     When switching off, the service saves the entire state of the  machine
+so  that  on  power  up everything is restored to exactly the same state as
+when the service was called.  See the section <a href="#p5.4">5.4</a> for an exact  description
+of the power down procedure.
+
+     NOTE that on power up the top 8 bytes of zero page ram (i.e.  $F9-$FF)
+are always trashed by the operating system.
+
+     It is easier to intercept the warm startup  routine  via  the  BTA_WRM
+vector  to  determine  if the machine has been switched off than to try and
+intercept the switch off service via the SWI vector.
+
+EXAMPLE
+
+        OS      BT$SWOF         ; SWITCH OFF THE MACHINE
+HERE:                           ; RESTARTS HERE ON POWER UP
+
+ERRORS:                 None
+
+</pre>
+
+<div class=nav><ul>
+<li><a href="tech04.htm">Ch. 4</a></li>
+<li class=navactive>Ch. 5</li>
+<li><a href="tech06.htm">Ch. 6</a></li>
+</ul></div>
+
+<div class=nav><ul>
+<li><a href="../index.htm">Home</a></li>
+</ul></div>
+
+</body>
+</html>
