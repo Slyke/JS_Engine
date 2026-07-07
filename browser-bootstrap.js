@@ -1025,6 +1025,15 @@ const loadMemoryFile = async () => {
   await loadUserRomSource(source, { resetFirst: refs['rom-reset']?.checked });
 };
 
+const chooseOrLoadMemoryFile = async () => {
+  const input = refs['rom-file'];
+  if (!diskRomFiles(input?.files).length) {
+    input?.click();
+    return;
+  }
+  await loadMemoryFile();
+};
+
 const loadStartupRoms = async () => {
   const savedSource = romCatalog.savedCatalogRomSource();
   if (savedSource && refs["rom-select"]) refs["rom-select"].value = savedSource.id;
@@ -2331,7 +2340,10 @@ const bindControls = () => {
   refs["btn-load-catalog-rom"].addEventListener("click", () => { loadSelectedCatalogRom().catch(handleControlError); });
   refs["btn-rom-mode-toggle"].addEventListener("click", () => setRomLoaderMode(romLoaderMode === "disk" ? "catalog" : "disk"));
   refs["btn-rom-advanced-toggle"].addEventListener("click", () => setRomAdvancedOpen(Boolean(refs["rom-advanced-controls"]?.hidden)));
-  refs["btn-load-rom"].addEventListener("click", () => { loadMemoryFile().catch(handleControlError); });
+  refs["btn-load-rom"].addEventListener("click", () => { chooseOrLoadMemoryFile().catch(handleControlError); });
+  refs["rom-file"].addEventListener("change", () => {
+    if (diskRomFiles(refs["rom-file"]?.files).length) loadMemoryFile().catch(handleControlError);
+  });
   refs["rom-autorun"]?.addEventListener("change", saveGlobalRomLoaderState);
   refs["btn-debug-reset-defaults"].addEventListener("click", resetDebuggerUiDefaults);
   refs["btn-read-memory"].addEventListener("click", () => readMemoryEditor("compact"));
