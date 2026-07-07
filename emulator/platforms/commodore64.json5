@@ -112,7 +112,7 @@
     }
   },
   roms: [
-    { path: "/roms/commodore64/64c.251913-01.bin", offset: 0, target: "system", label: "C64C BASIC + KERNAL ROM 251913-01" }
+    { path: "./roms/commodore64/64c.251913-01.bin", offset: 0, target: "system", label: "C64C BASIC + KERNAL ROM 251913-01" }
   ],
   romLoading: { defaultOffset: "0x0000" },
   video: {

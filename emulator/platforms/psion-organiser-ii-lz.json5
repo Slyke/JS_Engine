@@ -149,7 +149,7 @@
     map: { start: 0, size: 65536, columns: 256, rows: 256, bytesPerCell: 1, valueMode: "max", samplesPerCell: 16 }
   },
   roms: [
-    { path: "/roms/psion-organiser-ii/46-lz.rom", offset: 0, target: "rom", label: "Psion Organiser II LZ OS 4.6" }
+    { path: "./roms/psion-organiser-ii/46-lz.rom", offset: 0, target: "rom", label: "Psion Organiser II LZ OS 4.6" }
   ],
   video: { module: "./video/psion-lcd.js", driver: "psion-lcd", width: 200, height: 64, columns: 20, rows: 4, fps: 20 },
   websocket: {

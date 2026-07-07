@@ -27,49 +27,6 @@
       ]
     },
     {
-      "id": "atari2600-space-invaders",
-      "label": "Atari 2600 Space Invaders",
-      "platforms": [
-        "atari2600"
-      ],
-      "files": [
-        {
-          "path": "atari 2600/Space Invaders.bin",
-          "offset": "0x0000",
-          "target": "cartridge"
-        }
-      ]
-    },
-    {
-      "id": "atari2600-pitfall",
-      "label": "Atari 2600 Pitfall",
-      "platforms": [
-        "atari2600"
-      ],
-      "files": [
-        {
-          "path": "atari 2600/Pitfall.bin",
-          "offset": "0x0000",
-          "target": "cartridge"
-        }
-      ]
-    },
-    {
-      "id": "atari2600-stargate",
-      "label": "Atari 2600 Stargate",
-      "platforms": [
-        "atari2600"
-      ],
-      "files": [
-        {
-          "path": "atari 2600/Stargate.bin",
-          "offset": "0x0000",
-          "target": "cartridge",
-          "mapper": "F8SC"
-        }
-      ]
-    },
-    {
       "id": "psion-organiser-ii-cm-2.6",
       "label": "Psion Organiser II CM OS 2.6",
       "platforms": [

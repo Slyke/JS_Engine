@@ -127,7 +127,7 @@
     }
   },
   roms: [
-    { path: "/roms/psion-organiser-ii/31-xp.rom", offset: 32768, label: "Psion Organiser II XP OS 3.1" }
+    { path: "./roms/psion-organiser-ii/31-xp.rom", offset: 32768, label: "Psion Organiser II XP OS 3.1" }
   ],
   video: { module: "./video/psion-lcd.js", driver: "psion-lcd", width: 160, height: 32, columns: 16, rows: 2, fps: 20 },
   websocket: {

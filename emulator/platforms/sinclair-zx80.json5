@@ -177,7 +177,7 @@
     ]
   },
   roms: [
-    { path: "/roms/sinclair-zx80/zx80.rom", offset: 0, label: "Sinclair ZX80 4K BASIC ROM" }
+    { path: "./roms/sinclair-zx80/zx80.rom", offset: 0, label: "Sinclair ZX80 4K BASIC ROM" }
   ],
   video: {
     module: "./video/sinclair-zx80-display-file.js?v=20260706-zx80-plus-render",

@@ -59,10 +59,10 @@
     }
   },
   roms: [
-    { path: "/real_roms/invaders/invaders1.h.bin", offset: 0 },
-    { path: "/real_roms/invaders/invaders2.g.bin", offset: 2048 },
-    { path: "/real_roms/invaders/invaders3.f.bin", offset: 4096 },
-    { path: "/real_roms/invaders/invaders4.e.bin", offset: 6144 }
+    { path: "./roms/invaders/invaders1.h.bin", offset: 0 },
+    { path: "./roms/invaders/invaders2.g.bin", offset: 2048 },
+    { path: "./roms/invaders/invaders3.f.bin", offset: 4096 },
+    { path: "./roms/invaders/invaders4.e.bin", offset: 6144 }
   ],
   video: {
     module: "./video/midway-8080-bitmap.js",
